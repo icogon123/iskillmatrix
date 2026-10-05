@@ -45,7 +45,7 @@ export default function Login({ admin = false }) {
         <Input
           label={admin ? 'Username' : 'Username / Member ID'}
           icon={admin ? ShieldCheck : User}
-          placeholder={admin ? 'admin' : 'e.g. ISM100002'}
+          placeholder={admin ? 'Admin username' : 'Your username or member ID'}
           autoComplete="username"
           value={form.identifier}
           onChange={(e) => setForm({ ...form, identifier: e.target.value })}

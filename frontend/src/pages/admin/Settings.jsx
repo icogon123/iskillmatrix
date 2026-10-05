@@ -114,7 +114,7 @@ export default function Settings() {
           <Card className="card-pad">
             <CardHeader title="QR code image" />
             <div className="mt-4 grid place-items-center rounded-2xl bg-white p-4">
-              {s.payment.qrImage ? <img src={`/uploads/public/${s.payment.qrImage}`} alt="Payment QR" className="aspect-square w-full max-w-48 object-contain" />
+              {s.payment.qrImage ? <img src={/^https?:\/\//.test(s.payment.qrImage) ? s.payment.qrImage : `/uploads/public/${s.payment.qrImage}`} alt="Payment QR" className="aspect-square w-full max-w-48 object-contain" />
                 : <p className="py-16 text-sm text-gray-500">No QR uploaded</p>}
             </div>
             <label className="mt-4 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-line p-3 text-sm text-muted hover:border-brand-500/50">

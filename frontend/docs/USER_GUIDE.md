@@ -65,7 +65,12 @@ Badges never expire. **Achievements** shows your progress.
 
 ## Part B — Administrators
 
-Log in at **`/admin/login`**. The sidebar shows how many items wait in each queue.
+Log in at **`/admin/login`** with the admin username and the password set in `backend/.env` when the
+site was first started. Change it right away with the **key icon** next to your name at the bottom of the
+sidebar. The sidebar also shows how many items wait in each queue.
+
+The company's own member account is **ISM100001** (username `iskillmatrix`). Give this code to your first
+members as their sponsor code. You can set its password from Members → iSkillMatrix → Reset password.
 
 ### Daily routine
 1. **Registrations** — check each applicant (name, Aadhaar, sponsor) → **Approve** or **Reject** with a reason.

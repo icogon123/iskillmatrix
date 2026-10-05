@@ -6,7 +6,7 @@ Public website, member panel and admin panel for iSkillMatrix, built from the
 | Layer     | Tech |
 |-----------|------|
 | Frontend  | React 19, Redux Toolkit (+ RTK Query), React Router 7, Tailwind CSS 4, Recharts, Vite 8 |
-| Backend   | Node.js, Express 5, Mongoose 9, JWT (httpOnly cookie), Multer, node-cron, Zod |
+| Backend   | Node.js, Express 5, Mongoose 9, JWT (httpOnly cookie), Cloudinary (file storage), node-cron, Zod |
 | Database  | MongoDB (an embedded MongoDB is used automatically in development) |
 
 ```
@@ -35,14 +35,13 @@ iskillmatrix/
 
 ## 1. Run it locally
 
-Requires Node.js 20+. No MongoDB install is needed for development.
+Requires Node.js 20+ and a MongoDB database (this project uses **MongoDB Atlas**).
 
 ```bash
 # Terminal 1 — API on http://localhost:5050
 cd backend
 npm install
-cp .env.example .env        # then set JWT_SECRET, ADMIN_PASSWORD
-npm run seed:demo           # optional: demo network with income, KYC, withdrawals
+cp .env.example .env        # set MONGODB_URI, JWT_SECRET, ADMIN_PASSWORD (see backend/README.md)
 npm run dev
 
 # Terminal 2 — website on http://localhost:5173
@@ -51,26 +50,29 @@ npm install
 npm run dev
 ```
 
-With `MONGODB_URI=memory` (the default in `.env.example`) the API starts an embedded
-MongoDB whose data is kept in `backend/.data`. Delete that folder to start fresh.
+On the first start the API connects to MongoDB and creates the settings, the 5 packages, the
+administrator and the company root member. There is no demo or sample data: every member, payment
+and transaction is real and stored in the database.
 
 > Port 5000 is taken by AirPlay Receiver on macOS, so the API uses **5050**.
+> In MongoDB Atlas → **Network Access**, allow the IP address of every machine/server that runs the API.
 
 ### Logins
 
 | Who | Where | Username | Password |
 |-----|-------|----------|----------|
-| Administrator | `/admin/login` | `ADMIN_USERNAME` from `.env` (`admin`) | `ADMIN_PASSWORD` from `.env` |
-| Company root member (first sponsor, `ISM100001`) | `/login` | `iskillmatrix` | same as `ADMIN_PASSWORD` |
-| Demo member (after `seed:demo`) | `/login` | `rajesh` | `Demo@1234` (transaction password `Txn@1234`) |
+| Administrator | `/admin/login` | `ADMIN_USERNAME` from `backend/.env` (`admin`) | `ADMIN_PASSWORD` from `backend/.env` |
+| Company root member `ISM100001` (first sponsor code) | `/login` | `iskillmatrix` or `ISM100001` | `ROOT_PASSWORD` from `backend/.env` |
+| Members | `/login` | their username or member ID | chosen at registration (after admin approval) |
 
-The admin and root member are created automatically on first start. **Change the admin
-password before going live.** All demo members share the demo passwords.
+`ADMIN_PASSWORD` / `ROOT_PASSWORD` are only used when those accounts are first created. After that,
+the admin changes their password with the key icon in the admin sidebar, and members from
+Profile & Security.
 
 ### Checks
 
 ```bash
-cd backend && npm run test:engine   # 17 end-to-end checks of the income engine (throwaway DB)
+cd backend && npm run test:engine   # 17 end-to-end checks of the income engine (throwaway in-memory DB, never touches Atlas)
 cd frontend && npm run build        # production build
 ```
 
@@ -159,6 +161,6 @@ transactions are never recalculated.
 5. **Reverse proxy + HTTPS** — point Nginx (or your host's proxy) for `iskillmatrix.com` to
    `http://127.0.0.1:5050` and enable SSL (e.g. Let's Encrypt). Set `client_max_body_size 6m;`
    for document uploads.
-6. **Back up** the database and `backend/uploads/` (KYC documents, payment proofs, QR image).
+6. **Back up** the database (uploaded files are stored in Cloudinary).
 7. **Before launch**, in the admin panel: upload the payment QR, set UPI ID, contact details,
    and review package benefits and income settings.

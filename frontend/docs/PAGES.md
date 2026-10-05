@@ -6,7 +6,7 @@ All routes are defined in `src/App.jsx`. Files are under `src/pages/`.
 
 | URL | File | Content |
 |-----|------|---------|
-| `/` | `public/Home.jsx` | Hero with dashboard preview, 2 ways of income, 10 trending skills, 6 income types, active vs passive, packages (live from API), badge ladder, 3 secrets, call to action |
+| `/` | `public/Home.jsx` | Hero with a "what you can earn" card, 2 ways of income, 10 trending skills, 6 income types, active vs passive, packages, badge ladder, 3 secrets, call to action. Every amount, level count and percentage is computed from the live packages and settings (`planFacts()`), so it follows the admin's configuration |
 | `/about` | `public/About.jsx` | Mission, vision, values (Learn · Educate · Earn · Together · Repeat), why iSkillMatrix |
 | `/plan` | `public/Plan.jsx` | Price split table (GST/system/package cost), interactive package flow diagram (R → −A → A → B…), team-building level table, weekly / monthly / working bonus, withdrawal example, badges & royalty — all from live settings |
 | `/packages` | `public/Packages.jsx` | Package cards → "Join with …" opens registration with the package pre-selected |
@@ -65,3 +65,5 @@ Shared: `member/LedgerTable.jsx` (ledger table used by Income and Wallet).
 | `/admin/packages` | `admin/Packages.jsx` | Package cards with cost/payout/margin; editor for price, income amounts, levels, bonus, weekly flag, status, benefits |
 | `/admin/settings` | `admin/Settings.jsx` | Tabs: Website, QR payment (QR upload, UPI, GST/system %), Income rules, Badges & royalty, Withdrawal; History modal |
 | `/admin/audit` | `admin/Audit.jsx` | Audit trail with search and action filter |
+
+The admin sidebar also has a **key icon** next to the admin's name that opens *Change admin password*.

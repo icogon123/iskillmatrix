@@ -1,15 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Menu, X, LayoutDashboard, UserPlus, Users, ShieldCheck, QrCode, Banknote, Cog, Network, BookOpen, FileBarChart, Package,
-  Settings, ScrollText, LogOut,
+  Settings, ScrollText, LogOut, KeyRound,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Logo from '../common/Logo';
 import Avatar from '../common/Avatar';
 import { selectUser } from '../../features/auth/authSlice';
 import { toggleSidebar } from '../../features/ui/uiSlice';
-import { useLogoutMutation } from '../../api/publicApi';
+import { useLogoutMutation, useChangePasswordMutation } from '../../api/publicApi';
+import { errorMessage } from '../../app/api';
+import { Modal, Button } from '../ui';
+import PasswordInput from '../common/PasswordInput';
 import { useAdminDashboardQuery } from '../../api/adminApi';
 
 const NAV = [
@@ -43,13 +47,46 @@ const NAV = [
   },
 ];
 
+function ChangePasswordModal({ open, onClose }) {
+  const empty = { currentPassword: '', newPassword: '', confirmPassword: '' };
+  const [form, setForm] = useState(empty);
+  const [change, { isLoading }] = useChangePasswordMutation();
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const close = () => { setForm(empty); onClose(); };
+  const submit = async (e) => {
+    e.preventDefault();
+    try {
+      await change(form).unwrap();
+      toast.success('Password changed');
+      close();
+    } catch (err) {
+      toast.error(errorMessage(err));
+    }
+  };
+  return (
+    <Modal open={open} onClose={close} size="sm" title="Change admin password" subtitle="8+ characters with a letter, a number and a symbol">
+      <form onSubmit={submit} className="space-y-3">
+        <PasswordInput label="Current password" autoComplete="current-password" value={form.currentPassword} onChange={set('currentPassword')} required />
+        <PasswordInput label="New password" autoComplete="new-password" value={form.newPassword} onChange={set('newPassword')} required />
+        <PasswordInput label="Confirm new password" autoComplete="new-password" value={form.confirmPassword} onChange={set('confirmPassword')} required />
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" onClick={close}>Cancel</Button>
+          <Button type="submit" loading={isLoading}>Update password</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 function SideNav({ onNavigate }) {
   const user = useSelector(selectUser);
   const { data } = useAdminDashboardQuery(undefined, { pollingInterval: 60000 });
   const [logout] = useLogoutMutation();
   const navigate = useNavigate();
+  const [pwOpen, setPwOpen] = useState(false);
   return (
     <div className="flex h-full flex-col">
+      <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
       <div className="flex h-16 items-center gap-2 px-5">
         <Logo to="/admin" />
         <span className="rounded-md bg-gold-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-gold-400">ADMIN</span>
@@ -82,6 +119,10 @@ function SideNav({ onNavigate }) {
           <p className="truncate text-sm font-semibold">{user?.fullName}</p>
           <p className="text-xs text-muted">@{user?.username}</p>
         </div>
+        <button type="button" title="Change password" aria-label="Change password" onClick={() => setPwOpen(true)}
+          className="rounded-lg p-2 text-muted hover:bg-white/5 hover:text-fg">
+          <KeyRound className="size-4" />
+        </button>
         <button type="button" title="Logout" aria-label="Logout"
           onClick={async () => { await logout(); navigate('/admin/login'); }}
           className="rounded-lg p-2 text-muted hover:bg-danger/10 hover:text-danger">

@@ -59,16 +59,18 @@ export default function MemberDetail() {
               <div className="mt-1.5 flex flex-wrap gap-1.5"><StatusBadge status={u.status} /><StatusBadge status={u.kycStatus} label={`KYC: ${u.kycStatus.replace('_', ' ')}`} /></div>
             </div>
           </div>
-          {!u.isRoot && (
-            <div className="flex flex-wrap gap-2">
-              {u.status !== 'active' && <Button size="sm" variant="success" onClick={() => setModal('active')}><CheckCircle2 className="size-4" /> Activate</Button>}
-              {u.status === 'active' && <Button size="sm" variant="outline" onClick={() => setModal('inactive')}><PauseCircle className="size-4" /> Deactivate</Button>}
-              {u.status !== 'suspended' && <Button size="sm" variant="danger" onClick={() => setModal('suspended')}><Ban className="size-4" /> Suspend</Button>}
-              <Button size="sm" variant="outline" onClick={() => setModal('wallet')}><Wallet className="size-4" /> Adjust wallet</Button>
-              <Button size="sm" variant="outline" onClick={() => setModal('password')}><KeyRound className="size-4" /> Reset password</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setProfile({ fullName: u.fullName, email: u.email, mobile: u.mobile, country: u.country }); setModal('profile'); }}><Pencil className="size-4" /> Edit</Button>
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {!u.isRoot && (
+              <>
+                {u.status !== 'active' && <Button size="sm" variant="success" onClick={() => setModal('active')}><CheckCircle2 className="size-4" /> Activate</Button>}
+                {u.status === 'active' && <Button size="sm" variant="outline" onClick={() => setModal('inactive')}><PauseCircle className="size-4" /> Deactivate</Button>}
+                {u.status !== 'suspended' && <Button size="sm" variant="danger" onClick={() => setModal('suspended')}><Ban className="size-4" /> Suspend</Button>}
+              </>
+            )}
+            <Button size="sm" variant="outline" onClick={() => setModal('wallet')}><Wallet className="size-4" /> Adjust wallet</Button>
+            <Button size="sm" variant="outline" onClick={() => setModal('password')}><KeyRound className="size-4" /> Reset password</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setProfile({ fullName: u.fullName, email: u.email, mobile: u.mobile, country: u.country }); setModal('profile'); }}><Pencil className="size-4" /> Edit</Button>
+          </div>
         </div>
         {u.statusReason && u.status !== 'active' && <p className="mt-3 text-xs text-danger">Reason: {u.statusReason}</p>}
       </Card>

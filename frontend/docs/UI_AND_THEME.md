@@ -64,7 +64,7 @@ App-specific components (`src/components/common`):
 | `IncomeBreakdown` | Six income types: proportion bar + labelled list + total |
 | `TreeView` | Lazy-loading unilevel tree (expand to load children; "Focus" to re-root) |
 | `ChartTooltip` | Tooltip body for Recharts |
-| `FileLink` | Opens a private upload via `/api/files/:name` |
+| `FileLink` | Opens a private upload (stored in Cloudinary) via `/api/files/:ref`, which checks permission |
 | `PasswordInput` | Password field with show/hide |
 | `Avatar` | Initials avatar |
 

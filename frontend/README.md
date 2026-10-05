@@ -47,8 +47,10 @@ Open **http://localhost:5173**.
 
 | Page | Login |
 |------|-------|
-| Member panel — http://localhost:5173/login | `rajesh` / `Demo@1234` (after `npm run seed:demo` in the backend) |
-| Admin panel — http://localhost:5173/admin/login | `admin` / the `ADMIN_PASSWORD` from `backend/.env` |
+| Admin panel — http://localhost:5173/admin/login | `ADMIN_USERNAME` / `ADMIN_PASSWORD` from `backend/.env` (first start) |
+| Member panel — http://localhost:5173/login | Real member accounts: register at `/register` with a sponsor code (the first one is `ISM100001`), then approve the registration in the admin panel |
+
+All data comes from the real MongoDB database through the API — there are no demo users or sample figures in the frontend.
 
 If the API runs on another port or machine:
 

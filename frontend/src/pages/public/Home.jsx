@@ -8,43 +8,88 @@ import { TRENDING_SKILLS } from '../../lib/constants';
 import { inr } from '../../lib/format';
 import { SectionTitle, PackageCard, CtaBand, SKILL_ICONS } from './sections';
 
-const INCOMES = [
-  { icon: TrendingUp, title: 'Active (Direct) Income', text: 'Earn up to ₹7,000 instantly on every package sold through your referral.' },
-  { icon: Users, title: 'Passive (Team) Income', text: 'Earn on purchases across up to 12 levels of your team network.' },
-  { icon: CalendarCheck, title: 'Weekly Income', text: 'Make 3, 6 or 9 same-package sales in a week and earn 5% on them.' },
-  { icon: Gift, title: 'Working Bonus', text: '₹200 / ₹500 / ₹1,000 extra on every Standard, Premium or Pro sale.' },
-  { icon: Target, title: 'Monthly Bonus', text: 'Hit your monthly direct-income target and earn up to ₹10,000.' },
-  { icon: Crown, title: 'Royalty Income', text: 'From Emerald Executive onwards, earn 5–10% royalty every month.' },
-];
+/** Plan figures shown on the homepage, computed from the live packages and settings. */
+function planFacts(packages, plan) {
+  if (!packages.length || !plan) return null;
+  const top = packages.reduce((a, p) => (p.activeIncome > a.activeIncome ? p : a), packages[0]);
+  const bonusPkgs = packages.filter((p) => p.nonWorkingBonus > 0);
+  const royalty = plan.royalty?.slabs || [];
+  const royaltyKeys = new Set(royalty.map((r) => r.badgeKey));
+  const firstRoyaltyBadge = (plan.badges || []).find((b) => royaltyKeys.has(b.key));
+  const pcts = royalty.map((r) => r.percent);
+  return {
+    packages: packages.length,
+    topPackage: top,
+    maxLevels: Math.max(...packages.map((p) => p.passiveLevels.length)),
+    weeklyPercent: plan.weekly.percent,
+    qualifying: plan.weekly.qualifyingSales,
+    bonusPkgs,
+    maxMonthly: Math.max(0, ...(plan.monthlyBonus?.slabs || []).map((s) => s.bonus)),
+    royaltyBadge: firstRoyaltyBadge,
+    royaltyMin: pcts.length ? Math.min(...pcts) : 0,
+    royaltyMax: pcts.length ? Math.max(...pcts) : 0,
+  };
+}
 
-function HeroPreview() {
+const listOr = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} or ${items[items.length - 1]}` : items[0] || '');
+
+function incomeCards(f) {
+  const q = f?.qualifying;
+  return [
+    { icon: TrendingUp, title: 'Active (Direct) Income', text: f ? `Earn up to ${inr(f.topPackage.activeIncome)} on every package sold through your referral.` : 'Earn on every package sold through your referral.' },
+    { icon: Users, title: 'Passive (Team) Income', text: f ? `Earn on purchases across up to ${f.maxLevels} levels of your team network.` : 'Earn on purchases across your team network.' },
+    { icon: CalendarCheck, title: 'Weekly Income', text: f ? `Make ${q}, ${q * 2} or ${q * 3} same-package sales in a week and earn ${f.weeklyPercent}% on them.` : 'Earn extra on same-package sales made in a week.' },
+    {
+      icon: Gift,
+      title: 'Working Bonus',
+      text: f?.bonusPkgs.length
+        ? `${f.bonusPkgs.map((p) => inr(p.nonWorkingBonus)).join(' / ')} extra on every ${listOr(f.bonusPkgs.map((p) => p.name))} sale.`
+        : 'An extra bonus on qualifying package sales.',
+    },
+    { icon: Target, title: 'Monthly Bonus', text: f ? `Hit your monthly direct-income target and earn up to ${inr(f.maxMonthly)}.` : 'Hit your monthly direct-income target and earn a bonus.' },
+    {
+      icon: Crown,
+      title: 'Royalty Income',
+      text: f?.royaltyBadge
+        ? `From ${f.royaltyBadge.name} onwards, earn ${f.royaltyMin === f.royaltyMax ? f.royaltyMax : `${f.royaltyMin}–${f.royaltyMax}`}% royalty every month.`
+        : 'Top achievers earn a monthly royalty.',
+    },
+  ];
+}
+
+const Value = ({ ready, children }) => (ready ? children : <span className="inline-block h-5 w-20 animate-pulse rounded bg-white/15" />);
+
+/** "What you can earn" card in the hero — real plan figures, no sample balances. */
+function HeroPreview({ facts: f }) {
   return (
     <div className="relative mx-auto w-full max-w-sm">
       <div className="absolute -inset-8 rounded-full bg-brand-600/30 blur-3xl" />
       <div className="relative space-y-3 rounded-[2rem] border border-line bg-ink-900/90 p-4 shadow-2xl">
         <div className="hero-gradient relative overflow-hidden rounded-2xl p-5">
-          <p className="text-xs text-brand-100/80">Total Balance</p>
-          <p className="mt-1 text-2xl font-extrabold text-white">₹5,62,450.00</p>
-          <p className="mt-3 text-xs text-brand-100/80">Wallet Balance</p>
-          <p className="text-lg font-bold text-white">₹1,25,450.00</p>
+          <p className="text-xs text-brand-100/80">Direct income per sale</p>
+          <p className="mt-1 text-2xl font-extrabold text-white">
+            <Value ready={f}>up to {inr(f?.topPackage.activeIncome)}</Value>
+          </p>
+          <p className="mt-3 pr-16 text-xs text-brand-100/80">On the {f?.topPackage.name || '…'} package, credited when the sale is verified</p>
           <Wallet className="absolute right-4 bottom-4 size-14 text-white/25" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-line bg-ink-850 p-3">
-            <p className="text-[11px] text-gold-400">Today's Earning</p>
-            <p className="font-bold">₹6,250</p>
+            <p className="text-[11px] text-gold-400">Team income</p>
+            <p className="font-bold"><Value ready={f}>{f?.maxLevels} levels deep</Value></p>
           </div>
           <div className="rounded-2xl border border-line bg-ink-850 p-3">
-            <p className="text-[11px] text-muted">This Month</p>
-            <p className="font-bold">₹1,05,750</p>
+            <p className="text-[11px] text-muted">Weekly income</p>
+            <p className="font-bold"><Value ready={f}>{f?.weeklyPercent}% of sales</Value></p>
           </div>
         </div>
         <div className="flex items-center justify-between rounded-2xl border border-line bg-ink-850 p-3">
           <div>
-            <p className="text-[11px] text-muted">My Rank</p>
-            <p className="gold-text font-display text-lg font-black">Emerald</p>
+            <p className="text-[11px] text-muted">Royalty from</p>
+            <p className="gold-text font-display text-lg font-black">{f?.royaltyBadge?.name || '…'}</p>
+            {f?.royaltyMax > 0 && <p className="text-[11px] text-muted">up to {f.royaltyMax}% every month</p>}
           </div>
-          <BadgeMedal badgeKey="emerald" size="md" />
+          <BadgeMedal badgeKey={f?.royaltyBadge?.key || 'emerald'} size="md" />
         </div>
       </div>
     </div>
@@ -56,6 +101,8 @@ export default function Home() {
   const { data: site } = useSiteQuery();
   const packages = data?.packages || [];
   const badges = site?.plan?.badges || [];
+  const facts = planFacts(packages, site?.plan);
+  const INCOMES = incomeCards(facts);
 
   return (
     <>
@@ -75,15 +122,15 @@ export default function Home() {
               <span className="gold-text">Build your future.</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-              iSkillMatrix brings you 10 trending digital skills and a transparent team-income plan, so you can earn independently and grow
-              together with your network.
+              iSkillMatrix brings you {TRENDING_SKILLS.length} trending digital skills and a transparent team-income plan, so you can earn
+              independently and grow together with your network.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button to="/register" variant="gold" size="lg">Join Now <ArrowRight className="size-5" /></Button>
               <Button to="/plan" variant="outline" size="lg">Explore Income Plan</Button>
             </div>
             <dl className="mt-10 grid max-w-lg grid-cols-4 gap-4">
-              {[['10', 'Trending skills'], ['6', 'Income types'], ['5', 'Packages'], ['12', 'Team levels']].map(([n, l]) => (
+              {[[TRENDING_SKILLS.length, 'Trending skills'], [INCOMES.length, 'Income types'], [facts?.packages ?? '–', 'Packages'], [facts?.maxLevels ?? '–', 'Team levels']].map(([n, l]) => (
                 <div key={l}>
                   <dt className="font-display text-3xl font-black text-fg">{n}</dt>
                   <dd className="mt-1 text-[11px] leading-tight text-muted">{l}</dd>
@@ -91,7 +138,7 @@ export default function Home() {
               ))}
             </dl>
           </div>
-          <HeroPreview />
+          <HeroPreview facts={facts} />
         </div>
       </section>
 
