@@ -1,11 +1,21 @@
 import { useState } from 'react';
-import { ShieldCheck, Search } from 'lucide-react';
+import { ShieldCheck, Search, CheckCircle2, TriangleAlert } from 'lucide-react';
 import { useAdminKycQuery, useReviewKycMutation } from '../../api/adminApi';
-import { PageHeader, Card, Tabs, Input, DataTable, Pagination, Button, StatusBadge, Modal, KeyValue, Textarea } from '../../components/ui';
+import { PageHeader, Card, Tabs, Input, DataTable, Pagination, Button, StatusBadge, Modal, KeyValue, Textarea, Notice } from '../../components/ui';
 import FileLink from '../../components/common/FileLink';
 import { useAction } from '../../lib/useAction';
 import { useDebounce } from '../../lib/useDebounce';
 import { dateTime } from '../../lib/format';
+
+const spaced = (v) => String(v || '').replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
+
+/** Match / Mismatch flag for the Aadhaar in the KYC against the one given at registration. */
+function AadhaarFlag({ match }) {
+  if (match === null || match === undefined) return <StatusBadge status="not_submitted" label="Not on registration" className="whitespace-nowrap" />;
+  return match
+    ? <StatusBadge status="approved" label="Aadhaar matches" className="whitespace-nowrap" />
+    : <StatusBadge status="rejected" label="Aadhaar mismatch" className="whitespace-nowrap" />;
+}
 
 export default function AdminKyc() {
   const [status, setStatus] = useState('pending');
@@ -40,6 +50,7 @@ export default function AdminKyc() {
           onRowClick={setOpen}
           columns={[
             { key: 'member', header: 'Member', render: (r) => <div><p className="font-semibold">{r.user?.fullName}</p><p className="text-xs text-muted">{r.user?.memberId}</p></div> },
+            { key: 'aadhaar', header: 'Aadhaar check', render: (r) => <AadhaarFlag match={r.aadhaarMatch} /> },
             { key: 'pan', header: 'PAN', render: (r) => r.panNumber },
             { key: 'bank', header: 'Bank', render: (r) => <div className="text-xs"><p>{r.bankName}</p><p className="text-muted">{r.ifsc}</p></div> },
             { key: 'holder', header: 'Account holder', render: (r) => r.accountHolder },
@@ -62,6 +73,30 @@ export default function AdminKyc() {
         )}>
         {open && (
           <div className="space-y-5">
+            <div className={`rounded-xl border p-3 ${open.aadhaarMatch === false ? 'border-danger/40 bg-danger/5' : open.aadhaarMatch ? 'border-success/40 bg-success/5' : 'border-line'}`}>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold">Aadhaar check</p>
+                <AadhaarFlag match={open.aadhaarMatch} />
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-[11px] font-semibold tracking-wide text-subtle uppercase">Given at registration</p>
+                  <p className="mt-0.5 font-mono text-sm">{open.registrationAadhaar ? spaced(open.registrationAadhaar) : '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold tracking-wide text-subtle uppercase">Submitted in KYC</p>
+                  <p className={`mt-0.5 font-mono text-sm ${open.aadhaarMatch === false ? 'text-danger' : ''}`}>{spaced(open.aadhaarNumber)}</p>
+                </div>
+              </div>
+            </div>
+            {open.aadhaarMatch === false && ['submitted', 'under_review'].includes(open.status) && (
+              <Notice tone="red" icon={TriangleAlert} title="The Aadhaar numbers do not match">
+                Check the Aadhaar document carefully. You can still approve, but rejecting with a reason lets the member re-submit the correct number.
+              </Notice>
+            )}
+            {open.aadhaarMatch && ['submitted', 'under_review'].includes(open.status) && (
+              <p className="flex items-center gap-1.5 text-xs text-success"><CheckCircle2 className="size-4" /> Aadhaar number matches the registration. Still check the document image.</p>
+            )}
             <KeyValue items={[
               ['Name on account', open.accountHolder], ['Member name', open.user?.fullName], ['Aadhaar number', open.aadhaarNumber], ['PAN', open.panNumber],
               ['Bank', open.bankName], ['Account number', open.accountNumber], ['IFSC', open.ifsc], ['Status', <StatusBadge status={open.status} />],

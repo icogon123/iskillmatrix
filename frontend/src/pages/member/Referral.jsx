@@ -23,8 +23,8 @@ export default function Referral() {
     <div>
       <PageHeader icon={Share2} title="Refer & Earn" subtitle="Anyone who registers with your code or link joins your team." />
       {!data.user.isPackageActive && (
-        <Notice tone="gold" title="Activate your package to earn from referrals" className="mb-5" action={<Button to="/app/activate" variant="gold" size="sm">Activate</Button>}>
-          People can still join with your code, but income is credited only when your own package is active.
+        <Notice tone="gold" title="Activate your bundle to earn from referrals" className="mb-5" action={<Button to="/app/activate" variant="gold" size="sm">Activate</Button>}>
+          People can still join with your code, but income is credited only when your own bundle is active.
         </Notice>
       )}
       <div className="grid gap-4 lg:grid-cols-2">

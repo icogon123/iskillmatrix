@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
-  Users, UserPlus, QrCode, ShieldCheck, Banknote, IndianRupee, Receipt, Landmark, Wallet, PiggyBank, BadgePercent, ArrowRight, UserCheck,
+  Users, UserPlus, QrCode, ShieldCheck, Banknote, IndianRupee, Receipt, Landmark, Wallet, PiggyBank, BadgePercent, ArrowRight, UserCheck, HandCoins,
 } from 'lucide-react';
 import { useAdminDashboardQuery } from '../../api/adminApi';
 import { PageHeader, Card, CardHeader, StatCard, PageLoader, ErrorState, DataTable } from '../../components/ui';
@@ -12,7 +12,7 @@ import { inr, shortDay, timeAgo, num } from '../../lib/format';
 function Queue({ to, label, count, icon: Icon }) {
   return (
     <Link to={to} className={`card card-pad flex items-center gap-3 transition hover:border-brand-500/50 ${count ? 'border-gold-400/40' : ''}`}>
-      <span className={`grid size-10 place-items-center rounded-xl ${count ? 'bg-gold-400/15 text-gold-400' : 'bg-white/5 text-muted'}`}><Icon className="size-5" /></span>
+      <span className={`grid size-10 place-items-center rounded-xl ${count ? 'bg-gold-400/15 text-gold-400' : 'bg-fg/5 text-muted'}`}><Icon className="size-5" /></span>
       <div className="flex-1">
         <p className="text-xs text-muted">{label}</p>
         <p className="text-xl font-bold">{count}</p>
@@ -27,11 +27,11 @@ function DailyChart({ data, dataKey, name, formatter }) {
     <div className="h-48">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 4, left: 4, bottom: 0 }} barCategoryGap="22%">
-          <CartesianGrid vertical={false} stroke="rgba(139,92,246,0.10)" />
-          <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: '#6f6a9e', fontSize: 10 }} interval="preserveStartEnd" />
-          <YAxis tickLine={false} axisLine={false} width={44} tick={{ fill: '#6f6a9e', fontSize: 10 }} tickFormatter={(v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : v)} allowDecimals={false} />
-          <Tooltip content={<ChartTooltip valueFormatter={formatter} />} cursor={{ fill: 'rgba(139,92,246,0.08)' }} />
-          <Bar dataKey={dataKey} name={name} fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={28} />
+          <CartesianGrid vertical={false} stroke="var(--color-line)" strokeOpacity={0.6} />
+          <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: 'var(--color-subtle)', fontSize: 10 }} interval="preserveStartEnd" />
+          <YAxis tickLine={false} axisLine={false} width={44} tick={{ fill: 'var(--color-subtle)', fontSize: 10 }} tickFormatter={(v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : v)} allowDecimals={false} />
+          <Tooltip content={<ChartTooltip valueFormatter={formatter} />} cursor={{ fill: 'var(--color-brand-500)', fillOpacity: 0.08 }} />
+          <Bar dataKey={dataKey} name={name} fill="var(--color-brand-500)" radius={[4, 4, 0, 0]} maxBarSize={28} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -49,27 +49,28 @@ export default function AdminDashboard() {
     <div className="space-y-5">
       <PageHeader title="Admin Dashboard" subtitle="Members, collections, income and payouts at a glance." />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Queue to="/admin/registrations" label="Pending registrations" count={d.queues.pendingRegistrations} icon={UserPlus} />
         <Queue to="/admin/payments" label="Payments to verify" count={d.queues.pendingPayments} icon={QrCode} />
+        <Queue to="/admin/deposits" label="Deposits to verify" count={d.queues.pendingDeposits} icon={HandCoins} />
         <Queue to="/admin/kyc" label="KYC to review" count={d.queues.pendingKyc} icon={ShieldCheck} />
         <Queue to="/admin/withdrawals" label="Open withdrawals" count={d.queues.pendingWithdrawals} icon={Banknote} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Total members" value={num(d.members.total)} hint={`${d.members.active || 0} approved · ${d.members.pending || 0} pending`} icon={Users} />
-        <StatCard label="Active (with package)" value={num(d.members.withPackage)} hint={`${(d.members.suspended || 0) + (d.members.inactive || 0)} inactive / suspended`} icon={UserCheck} tone="green" />
-        <StatCard label="Total collection" value={inr(f.collection)} hint="Approved package payments" icon={IndianRupee} tone="gold" />
+        <StatCard label="Active (with bundle)" value={num(d.members.withPackage)} hint={`${(d.members.suspended || 0) + (d.members.inactive || 0)} inactive / suspended`} icon={UserCheck} tone="green" />
+        <StatCard label="Total bundle sales" value={inr(f.collection)} hint={`UPI ${inr(f.salesByMethod.upi)} · Wallet ${inr(f.salesByMethod.wallet)}`} icon={IndianRupee} tone="gold" />
         <StatCard label="Income distributed" value={inr(f.incomePaid)} hint="All income types credited" icon={Wallet} tone="blue" />
         <StatCard label="GST (18%)" value={inr(f.gst)} icon={Receipt} tone="pink" />
         <StatCard label="System tax income (12%)" value={inr(f.systemCost)} icon={Landmark} />
-        <StatCard label="Wallet liability" value={inr(f.walletLiability)} hint="Balance held in member wallets" icon={PiggyBank} tone="red" />
+        <StatCard label="Wallet liability" value={inr(f.walletLiability)} hint={`Main ${inr(f.wallets.main)} · Activation ${inr(f.wallets.activation)}`} icon={PiggyBank} tone="red" />
         <StatCard label="Withdrawals paid" value={inr(f.withdrawals.paid)} hint={`TDS ${inr(f.withdrawals.tds)} · Admin ${inr(f.withdrawals.adminCharge)}`} icon={BadgePercent} tone="green" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="card-pad">
-          <CardHeader title="Daily collection" subtitle="Approved package payments, last 14 days" />
+          <CardHeader title="Daily collection" subtitle="Approved bundle payments, last 14 days" />
           <div className="mt-3"><DailyChart data={daily} dataKey="collection" name="Collection" formatter={inr} /></div>
         </Card>
         <Card className="card-pad">
@@ -80,15 +81,15 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <div className="card-pad pb-0"><CardHeader title="Package statistics" subtitle="Sales and tax split of approved payments" /></div>
+          <div className="card-pad pb-0"><CardHeader title="Bundle statistics" subtitle="Sales and tax split of approved payments" /></div>
           <DataTable dense rowKey="key" rows={d.packages}
             columns={[
-              { key: 'name', header: 'Package', render: (r) => <span className="font-semibold">{r.name}</span> },
+              { key: 'name', header: 'Bundle', render: (r) => <span className="font-semibold">{r.name}</span> },
               { key: 'count', header: 'Sold', align: 'right' },
               { key: 'amount', header: 'Collection', align: 'right', render: (r) => inr(r.amount) },
               { key: 'gst', header: 'GST', align: 'right', render: (r) => inr(r.gst) },
               { key: 'systemCost', header: 'System', align: 'right', render: (r) => inr(r.systemCost) },
-              { key: 'packageCost', header: 'Package cost', align: 'right', render: (r) => inr(r.packageCost) },
+              { key: 'packageCost', header: 'Bundle cost', align: 'right', render: (r) => inr(r.packageCost) },
             ]} />
         </Card>
         <Card className="card-pad">

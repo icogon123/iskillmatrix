@@ -13,6 +13,8 @@
   --color-ink-600: #2e2866;
 
   /* Brand violet */
+  --color-brand-50: #1b1640;
+  --color-brand-100: #ede9fe;
   --color-brand-200: #ddd6fe;
   --color-brand-300: #c4b5fd;
   --color-brand-400: #a78bfa;
@@ -29,6 +31,11 @@
   --color-gold-500: #e7a913;
   --color-gold-600: #b98207;
 
+  /* Charcoal — the public website's header and dark panels (same in both themes) */
+  --color-char-950: #1d1e22;
+  --color-char-900: #26272c;
+  --color-char-800: #303137;
+
   --color-fg: #f4f2ff;
   --color-muted: #a6a2cf;
   --color-subtle: #6f6a9e;
@@ -41,9 +48,31 @@
 
   --shadow-glow: 0 10px 40px -10px rgb(124 58 237 / 0.55);
   --shadow-gold: 0 8px 30px -8px rgb(245 197 66 / 0.45);
+
+  /* Success stories marquee: the track holds two identical halves, so sliding by one half loops seamlessly */
+  --animate-marquee: marquee 60s linear infinite;
+  @keyframes marquee {
+    to { transform: translateX(-50%); }
+  }
 }
 
+/* `light:` styles for the few spots tokens can't cover (e.g. `light:btn-cta`) */
+@custom-variant light (&:where(.theme-light, .theme-light *));
+
 @layer base {
+  :root {
+    /* Logo mark and wallet illustration colours, switched by .theme-light */
+    --logo-tile: #17143a;
+    --logo-stroke: rgb(139 92 246 / 0.35);
+    --logo-from: #c4b5fd;
+    --logo-to: #6d28d9;
+    --logo-dot: #f5c542;
+    --art-1: #c4b5fd;
+    --art-2: #8b5cf6;
+    --art-3: #5b21b6;
+    --art-flap: #ddd6fe;
+    --art-clasp: #6d28d9;
+  }
   html {
     color-scheme: dark;
     -webkit-tap-highlight-color: transparent;
@@ -62,6 +91,74 @@
   * {
     scrollbar-width: thin;
     scrollbar-color: #2e2866 transparent;
+  }
+
+  /*
+   * Light theme: white, charcoal and orange (after Ubersuggest). Set on <html> by useThemeClass (and by the
+   * boot script in index.html): always on the website and auth pages, and in the member/admin apps unless the
+   * user picked dark. Tokens keep the roles they have in the dark theme — ink-950 is the page, ink-900 a raised
+   * surface, brand/gold 100–400 are text and icon tones on that page (so here they get darker, not lighter),
+   * brand 500–700 are fills.
+   */
+  :root.theme-light {
+    color-scheme: light;
+    --color-ink-950: #ffffff;
+    --color-ink-900: #f5f6f7;
+    --color-ink-850: #fafafa;
+    --color-ink-800: #eeeff1;
+    --color-ink-700: #e4e4e7;
+    --color-ink-600: #d4d4d8;
+
+    --color-brand-50: #fff3f0;
+    --color-brand-100: #8f3200;
+    --color-brand-200: #a83a00;
+    --color-brand-300: #c24100;
+    --color-brand-400: #ff5e29;
+    --color-brand-500: #f16232;
+    --color-brand-600: #e0501c;
+    --color-brand-700: #c24100;
+    --color-brand-800: #9a3400;
+    --color-brand-900: #6e2600;
+
+    --color-gold-200: #8f3200;
+    --color-gold-300: #a83a00;
+    --color-gold-400: #c24100;
+    --color-gold-500: #e0501c;
+    --color-gold-600: #9a3400;
+
+    --color-fg: #26272c;
+    --color-muted: #5f6066;
+    --color-subtle: #75767b;
+    --color-line: #e7e7e7;
+
+    --logo-tile: #26272c;
+    --logo-stroke: rgb(255 255 255 / 0.14);
+    --logo-from: #ff9d00;
+    --logo-to: #ff5e29;
+    --logo-dot: #ffffff;
+    --art-1: #ffc2a1;
+    --art-2: #ff5e29;
+    --art-3: #c24100;
+    --art-flap: #ffd9c7;
+    --art-clasp: #e0501c;
+  }
+  /* Member and admin apps in light: grey canvas with white cards, sidebar, inputs and dialogs */
+  :root.theme-light.surface-app {
+    --color-ink-950: #f4f5f7;
+    --color-ink-900: #ffffff;
+    --color-ink-850: #ffffff;
+    --color-ink-800: #eef0f2;
+  }
+  .theme-light,
+  .theme-light * {
+    scrollbar-color: #c9c9ce transparent;
+  }
+  .theme-light ::selection {
+    background: rgb(241 98 50 / 0.22);
+  }
+  .theme-light input[type='date']::-webkit-calendar-picker-indicator,
+  .theme-light input[type='month']::-webkit-calendar-picker-indicator {
+    filter: none;
   }
 }
 
@@ -109,6 +206,64 @@
   .input {
     @apply w-full rounded-xl border border-line bg-ink-900 px-3.5 py-2.5 text-sm text-fg placeholder:text-subtle
       outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 disabled:opacity-60;
+  }
+
+
+  /* Course covers (see categoryTone): violet family in the app, orange and charcoal on the website */
+  .cover-0 { background-image: linear-gradient(to bottom right, #4f46e5, #1e1b4b); }
+  .cover-1 { background-image: linear-gradient(to bottom right, #7c3aed, #3b1785); }
+  .cover-2 { background-image: linear-gradient(to bottom right, #a21caf, #3b0764); }
+  .cover-3 { background-image: linear-gradient(to bottom right, #6d28d9, #172554); }
+  .cover-4 { background-image: linear-gradient(to bottom right, #2e2866, #0d0b24); }
+  .cover-5 { background-image: linear-gradient(to bottom right, #7e22ce, #2e1065); }
+  .cover-6 { background-image: linear-gradient(to bottom right, #5b21b6, #1e1b4b); }
+  .cover-7 { background-image: linear-gradient(to bottom right, #4338ca, #2e1065); }
+  .cover-8 { background-image: linear-gradient(to bottom right, #86198f, #1e1b4b); }
+  .theme-light {
+    .cover-0 { background-image: linear-gradient(to bottom right, #3a3b42, #1d1e22); }
+    .cover-1 { background-image: linear-gradient(to bottom right, #ff5e29, #ff9d00); }
+    .cover-2 { background-image: linear-gradient(to bottom right, #f16232, #b83a0c); }
+    .cover-3 { background-image: linear-gradient(to bottom right, #ff8a00, #e0501c); }
+    .cover-4 { background-image: linear-gradient(to bottom right, #4a4b53, #26272c); }
+    .cover-5 { background-image: linear-gradient(to bottom right, #c24100, #6e2600); }
+    .cover-6 { background-image: linear-gradient(to bottom right, #ff7043, #d84315); }
+    .cover-7 { background-image: linear-gradient(to bottom right, #3f3f46, #18181b); }
+    .cover-8 { background-image: linear-gradient(to bottom right, #ffa000, #e65100); }
+
+    .input {
+      @apply bg-white;
+    }
+    .card {
+      box-shadow: 0 1px 2px rgb(38 39 44 / 0.05);
+    }
+    /* Balance and badge cards: charcoal with an orange glow, so white text and orange buttons stand out */
+    .hero-gradient {
+      background:
+        radial-gradient(120% 140% at 100% 0%, rgb(255 94 41 / 0.38) 0%, transparent 55%),
+        linear-gradient(135deg, #3a3b42 0%, #26272c 50%, #1d1e22 100%);
+    }
+    .shadow-glow {
+      --tw-shadow-color: rgb(241 98 50 / 0.35);
+    }
+    .shadow-gold {
+      --tw-shadow-color: rgb(255 94 41 / 0.4);
+    }
+    .gold-text {
+      background-image: linear-gradient(180deg, #ff8a3d 0%, #f16232 55%, #c24100 100%);
+    }
+    .violet-text {
+      background-image: linear-gradient(90deg, #ff5e29, #ff8a00);
+    }
+  }
+}
+
+/* Ubersuggest-style call to action: orange-to-amber gradient with a soft orange shadow */
+@utility btn-cta {
+  background-image: linear-gradient(95deg, #ff5e29 50%, #ff9d00);
+  box-shadow: 0 12px 24px -8px rgb(255 94 41 / 0.4);
+  &:hover {
+    filter: brightness(1.06);
+    box-shadow: 0 14px 28px -8px rgb(255 94 41 / 0.55);
   }
 }
 

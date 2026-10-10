@@ -33,7 +33,7 @@ export function DataTable({ columns, rows = [], loading, empty, rowKey = '_id', 
               <tr
                 key={r[rowKey] ?? i}
                 onClick={onRowClick ? () => onRowClick(r) : undefined}
-                className={`border-b border-line/60 last:border-0 ${onRowClick ? 'cursor-pointer hover:bg-white/[0.03]' : ''}`}
+                className={`border-b border-line/60 last:border-0 ${onRowClick ? 'cursor-pointer hover:bg-fg/[0.03]' : ''}`}
               >
                 {columns.map((c) => (
                   <td key={c.key} className={`px-4 ${dense ? 'py-2' : 'py-3'} align-middle ${c.align === 'right' ? 'text-right' : ''} ${c.className || ''}`}>
@@ -59,11 +59,11 @@ export function Pagination({ page = 1, pages = 1, total, onChange }) {
       </span>
       <div className="flex gap-1">
         <button type="button" disabled={page <= 1} onClick={() => onChange(page - 1)}
-          className="rounded-lg border border-line p-1.5 hover:bg-white/5 disabled:opacity-40" aria-label="Previous page">
+          className="rounded-lg border border-line p-1.5 hover:bg-fg/5 disabled:opacity-40" aria-label="Previous page">
           <ChevronLeft className="size-4" />
         </button>
         <button type="button" disabled={page >= pages} onClick={() => onChange(page + 1)}
-          className="rounded-lg border border-line p-1.5 hover:bg-white/5 disabled:opacity-40" aria-label="Next page">
+          className="rounded-lg border border-line p-1.5 hover:bg-fg/5 disabled:opacity-40" aria-label="Next page">
           <ChevronRight className="size-4" />
         </button>
       </div>

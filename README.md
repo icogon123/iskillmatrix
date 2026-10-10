@@ -50,7 +50,7 @@ npm install
 npm run dev
 ```
 
-On the first start the API connects to MongoDB and creates the settings, the 5 packages, the
+On the first start the API connects to MongoDB and creates the settings, the 10 catalog courses, the 5 packages (course bundles), the
 administrator and the company root member. There is no demo or sample data: every member, payment
 and transaction is real and stored in the database.
 
@@ -80,23 +80,29 @@ cd frontend && npm run build        # production build
 
 ## 2. What is included
 
-**Website** — Home, About, Income Plan (package model diagrams, level table, weekly/monthly/
-working bonus, badges & royalty, withdrawal example), Packages, Contact, Login, Join Now.
+**Website** — an e-learning store with no income content: Home (course search, topics, popular courses, why us,
+vision & mission, FAQ), course catalog with search and category filter, course pages (curriculum, bundles that
+include the course), Why Us, Vision & Mission, Pricing (bundles + comparison table, linked from the footer),
+About, Contact, Login, Join Now. Packages are shown as
+**course bundles**; the income plan is in the member panel (Income Plan).
 
-**Member panel (`/app`)** — dashboard in the requested dark/violet style (total income, wallet,
-today/this month, rank progress, team overview, last-7-days chart, weekly qualification),
-package activation by QR + UTR + screenshot, KYC (Aadhaar, PAN, bank), My Team (level-wise),
-genealogy tree, income ledger by type, wallet ledger, withdrawals (TDS/admin charge preview,
+**Member panel (`/app`)** — dashboard in the requested dark/violet style (total income, Main and Activation
+Wallet, today / last 7 days / this month / weekly income, rank card with profile picture, team overview,
+last-7-days chart, weekly qualification), My Courses (courses in the member's bundle), bundle activation by
+QR + UTR + screenshot or from a wallet, P2P activation of another member by username, deposits (credited to the
+Activation Wallet after admin verification), transfers (Main Wallet → own or upline/downline Activation Wallet),
+income plan, KYC (Aadhaar, PAN, bank), My Team (level-wise), genealogy tree, income ledger by type, wallet
+statement with balance before/after (CSV / print), withdrawals (TDS/admin charge preview,
 transaction password, cancel), achievements, referral link/code sharing, notifications,
 profile, login/transaction password change, forgot/reset password.
 
 **Admin panel (`/admin`)** — dashboard (member, package and financial stats incl. GST and
 system tax income, wallet liability, approval queues, daily charts), registration approval/
 rejection with reason, members (search, filters, profile, network, ledger, status
-activate/deactivate/suspend, wallet credit/debit, password reset), KYC review with documents,
-payment verification, withdrawals (approve → processing → paid with reference / reject with
+activate/deactivate/suspend, credit/debit on either wallet, password reset), KYC review with documents and an
+Aadhaar check against registration, payment verification, fund deposit verification, withdrawals (approve → processing → paid with reference / reject with
 automatic refund), income processing (non-working, weekly, monthly bonus, royalty), network
-tree, financial ledger, 11 reports with CSV (Excel) export and print/PDF, packages & income
+tree, financial ledger, 11 reports with CSV (Excel) export and print/PDF, course catalog editor, bundles & income
 rules editor, system settings (QR, UPI, tax, weekly, monthly slabs, badges, royalty,
 withdrawal rules) with version history, and an audit log.
 
@@ -104,7 +110,8 @@ withdrawal rules) with version history, and an audit log.
 
 ## 3. Business rules as implemented
 
-Everything below is editable in **Admin → Packages & Income** or **Admin → System Settings**.
+Everything below is editable in **Admin → Bundles & Income** or **Admin → System Settings**. Courses are
+edited in **Admin → Course Catalog**.
 Settings are versioned; every ledger entry stores the amount it was created with, so past
 transactions are never recalculated.
 
@@ -117,22 +124,22 @@ transactions are never recalculated.
 | Active income | Direct sponsor: ₹800 / 1,500 / 2,000 / 4,500 / 7,000, credited when the payment is approved |
 | Passive income | Level 1 = **sponsor's sponsor**, then up the chain. Starter 1, Basic 2, Standard 5, Premium 7, Pro 12 levels, amounts as in the package diagrams |
 | Non-working bonus | ₹200 / 500 / 1,000 on Standard / Premium / Pro sales, to the **direct sponsor**, credited at the 12:00 AM IST run |
-| Weekly income | Mon–Sun (IST). Every full set of 3 same-package direct sales (Standard/Premium/Pro) qualifies; pays **5% × qualifying sales × package price** (3 = 1×, 6 = 2×, 9 = 3×). Admin generates, reviews, approves |
+| Weekly income | Mon–Sun (IST). **5% of the company's bundle sales in the week** goes into a pool, shared **equally** by every active member with 3 same-bundle direct sales (Standard/Premium/Pro) that week. Generated and credited automatically on Monday 12:05 AM IST (auto-credit can be turned off to approve manually); live pool on Income Processing |
 | Monthly bonus | Highest slab of the month's Active income: > ₹20,000 → ₹1,500, > ₹50,000 → ₹4,000, > ₹1,00,000 → ₹10,000 (strictly greater; switchable to ≥) |
 | Badges | Lifetime Active + Passive income, Bronze ₹5,000 … Sapphire Director ₹1 crore; permanent once achieved |
 | Royalty | Emerald 5%, Sr. Emerald 6%, Director 7%, Sr. Director 8%, Sapphire 10% of the month's **team (downline) Active + Passive income** (switchable to the member's own income) |
 | Eligibility | Income for an upline who is not active or has no package is recorded as *lapsed*, not credited (switchable) |
-| Wallet | Balance is always derived from the ledger (completed credits − debits) |
+| Wallets | Two per member, each derived from the ledger (completed credits − debits). **Main**: all income; withdraw, transfer, buy bundles. **Activation**: deposits and transfers received; only buys bundles (self or P2P). Transfers go to your own or an upline/downline member's Activation Wallet |
 | Withdrawal | Approved KYC + transaction password; min ₹500 / max ₹1,00,000; TDS 2% + admin 5% of the requested amount (₹10,000 → ₹9,300). The amount is held on request and returned if rejected/cancelled |
-| Duplicates | Unique idempotency keys on every payout (package activation, bonuses, runs, withdrawals); one live run per period; atomic status transitions; per-member wallet lock |
+| Duplicates | Unique idempotency keys on every payout and wallet move (package activation, bonuses, runs, withdrawals, deposits, transfers, wallet purchases); one live run per period; atomic status transitions; per-member wallet lock |
 
 ### Assumptions to confirm with the client
 
 - The spec and the webinar deck differ in places (monthly first slab ₹20,000 vs ₹24,000;
   Premium/Pro deep-level amounts). The **spec values** are used.
-- Royalty basis defaults to *team* income. Weekly income uses the customer price as the sale value.
-- The course list per package on the Packages page is placeholder text; edit it under
-  Admin → Packages & Income.
+- Royalty basis defaults to *team* income. The weekly pool uses the amount received for bundles (configurable: after GST and system cost).
+- The course descriptions and curricula are starter content; edit them under Admin → Course Catalog, and
+  which courses each bundle includes under Admin → Bundles & Income.
 
 ---
 

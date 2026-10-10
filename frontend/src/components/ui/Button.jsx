@@ -4,11 +4,16 @@ import { Link } from 'react-router-dom';
 const VARIANTS = {
   primary:
     'text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-glow hover:from-brand-400 hover:to-brand-600 focus-visible:ring-brand-400',
-  gold: 'text-ink-950 bg-gradient-to-b from-gold-300 to-gold-500 shadow-gold hover:from-gold-200 hover:to-gold-400 focus-visible:ring-gold-300',
-  outline: 'text-fg border border-line bg-white/[0.03] hover:bg-white/[0.07] hover:border-brand-500/40 focus-visible:ring-brand-400',
-  ghost: 'text-muted hover:text-fg hover:bg-white/[0.06] focus-visible:ring-brand-400',
+  gold: 'text-ink-950 bg-gradient-to-b from-gold-300 to-gold-500 shadow-gold hover:from-gold-200 hover:to-gold-400 focus-visible:ring-gold-300 light:btn-cta light:text-white',
+  outline: 'text-fg border border-line bg-fg/[0.03] hover:bg-fg/[0.07] hover:border-brand-500/40 focus-visible:ring-brand-400',
+  ghost: 'text-muted hover:text-fg hover:bg-fg/[0.06] focus-visible:ring-brand-400',
   danger: 'text-white bg-danger/90 hover:bg-danger focus-visible:ring-danger',
   success: 'text-white bg-success/90 hover:bg-success focus-visible:ring-success',
+  // Flat variants used on the public website.
+  solid: 'text-white bg-brand-600 hover:bg-brand-500 focus-visible:ring-brand-400',
+  accent: 'btn-cta text-white focus-visible:ring-brand-400',
+  quiet: 'text-fg border border-fg/15 hover:border-fg/30 hover:bg-fg/[0.04] focus-visible:ring-brand-400',
+  onBrand: 'text-white border border-white/30 hover:bg-white/10 focus-visible:ring-white',
 };
 const SIZES = {
   sm: 'h-8 px-3 text-xs gap-1.5 rounded-lg',

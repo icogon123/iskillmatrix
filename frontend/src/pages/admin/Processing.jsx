@@ -1,11 +1,66 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Cog, Moon, CalendarRange, CalendarDays, Crown, Play } from 'lucide-react';
-import { useProcessingQuery, useRunNonWorkingMutation, useGenerateRunMutation } from '../../api/adminApi';
-import { PageHeader, Card, CardHeader, Button, Input, DataTable, StatusBadge, PageLoader, ErrorState, ConfirmModal } from '../../components/ui';
+import { Link, useNavigate } from 'react-router-dom';
+import { Cog, Moon, CalendarRange, CalendarDays, Crown, Play, Coins, Users, IndianRupee, Gift } from 'lucide-react';
+import { useProcessingQuery, useWeeklyPoolQuery, useRunNonWorkingMutation, useGenerateRunMutation } from '../../api/adminApi';
+import {
+  PageHeader, Card, CardHeader, Button, Input, DataTable, StatusBadge, PageLoader, ErrorState, ConfirmModal, StatCard, Tabs, Spinner,
+} from '../../components/ui';
 import { useAction } from '../../lib/useAction';
 import { RUN_LABELS } from '../../lib/constants';
-import { inr, dateTime } from '../../lib/format';
+import { inr, date, dateTime } from '../../lib/format';
+
+function poolStatus(d) {
+  if (d.run) {
+    return <>Processed: <Link to={`/admin/processing/${d.run._id}`} className="font-semibold text-brand-300 hover:text-brand-200">{d.run.itemsCount} shares · {inr(d.run.totalAmount)}</Link> <StatusBadge status={d.run.status} className="ml-1" />{d.run.trigger === 'auto' && ' (automatic)'}</>;
+  }
+  if (!d.auto.process) return d.closed ? 'Week closed. Automatic processing is off — generate it below.' : 'Live estimate. Automatic processing is off — generate it below after the week ends.';
+  if (d.closed) return 'Week closed. It is processed automatically within a few minutes of Monday 12:05 AM IST; you can also generate it below.';
+  return `Live estimate — updates as payments are approved. ${d.auto.approve ? 'Credited' : 'Generated for your approval'} automatically on Monday 12:05 AM IST.`;
+}
+
+function WeeklyPool({ lastWeek }) {
+  const [which, setWhich] = useState('current');
+  const { data: d, isFetching, error } = useWeeklyPoolQuery(which === 'last' ? lastWeek : undefined, { refetchOnMountOrArgChange: true });
+  return (
+    <Card>
+      <div className="card-pad pb-0">
+        <CardHeader
+          title="Weekly bonus pool"
+          subtitle={d ? `Week ${date(d.weekStart)} – ${date(new Date(d.weekEnd) - 1)} · ${d.percent}% of company sales, shared equally by every member with ${d.qualifyingSales}+ same-bundle direct sales` : 'Loading…'}
+          action={<div className="flex items-center gap-2">{isFetching && <Spinner className="size-4" />}<Tabs value={which} onChange={setWhich} tabs={[{ value: 'current', label: 'This week' }, { value: 'last', label: 'Last week' }]} /></div>} />
+        {error && <p className="mt-3 text-sm text-danger">{error?.data?.message || 'Could not load the weekly pool.'}</p>}
+        {d && (
+          <>
+            <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard label="Company sales" value={inr(d.companyIncome)} hint={`${d.salesCount} bundle${d.salesCount === 1 ? '' : 's'} · ${d.basis === 'net' ? 'after GST & system cost' : 'amount received'}`} icon={IndianRupee} tone="blue" />
+              <StatCard label={`Pool (${d.percent}%)`} value={inr(d.amount)} icon={Coins} tone="gold" />
+              <StatCard label="Eligible members" value={d.eligible} hint={d.members.length > d.eligible ? `${d.members.length - d.eligible} qualified but inactive` : undefined} icon={Users} tone="green" />
+              <StatCard label="Share per member" value={inr(d.share)} hint={d.eligible ? `${inr(d.distributed)} distributed` : 'Nobody qualifies yet'} icon={Gift} tone="violet" />
+            </div>
+            <p className="mt-3 text-xs text-muted">{poolStatus(d)}</p>
+          </>
+        )}
+      </div>
+      <DataTable
+        dense
+        loading={!d && !error}
+        rows={d?.members || []}
+        columns={[
+          { key: 'member', header: 'Member', render: (r) => <Link to={`/admin/members/${r._id}`} className="hover:text-brand-200"><p className="font-semibold">{r.fullName}</p><p className="text-xs text-muted">{r.memberId}</p></Link> },
+          { key: 'sales', header: 'Qualifying direct sales', render: (r) => <span className="text-xs">{r.sales.map((x) => `${x.count} × ${x.package}`).join(', ')}</span> },
+          {
+            key: 'status', header: 'Status',
+            render: (r) => (r.eligible
+              ? <StatusBadge status="active" label="Eligible" />
+              : <StatusBadge status="inactive" label={r.status !== 'active' ? `Not eligible: ${r.status}` : 'Not eligible: no bundle'} />),
+          },
+          { key: 'wallet', header: 'Wallet', render: (r) => (r.walletSuspended ? <StatusBadge status="suspended" label="Suspended" /> : <span className="text-xs text-subtle">—</span>) },
+          { key: 'share', header: 'Share', align: 'right', render: (r) => <span className="font-bold">{r.eligible ? inr(d.share) : '—'}</span> },
+        ]}
+        empty={<p className="py-8 text-center text-sm text-subtle">No member has {d?.qualifyingSales ?? 3} same-bundle direct sales in this week yet.</p>} />
+    </Card>
+  );
+}
 
 function Generator({ type, icon: Icon, title, text, inputType, value, onChange, onGenerate, loading }) {
   return (
@@ -69,8 +124,10 @@ export default function Processing() {
         </div>
       </Card>
 
+      <WeeklyPool lastWeek={data.suggestions.week} />
+
       <div className="grid gap-4 lg:grid-cols-3">
-        <Generator type="weekly" icon={CalendarRange} title="Weekly income" text="Week runs Monday–Sunday (IST). 5% of qualifying same-package direct sales (sets of 3)." inputType="date"
+        <Generator type="weekly" icon={CalendarRange} title="Weekly income" text="Week runs Monday–Sunday (IST). Shares the week’s pool equally among qualified members — use for a week that was not processed automatically." inputType="date"
           value={week} onChange={setWeek} onGenerate={onGenerate} loading={busy('weekly')} />
         <Generator type="monthly_bonus" icon={CalendarDays} title="Monthly bonus" text="Slab bonus on the member’s Active income credited in the month." inputType="month"
           value={month} onChange={setMonth} onGenerate={onGenerate} loading={busy('monthly_bonus')} />
@@ -89,8 +146,8 @@ export default function Processing() {
             { key: 'items', header: 'Entries', align: 'right', render: (r) => r.itemsCount },
             { key: 'total', header: 'Amount', align: 'right', render: (r) => inr(r.totalAmount) },
             { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-            { key: 'by', header: 'Generated', render: (r) => <span className="text-xs text-muted">{dateTime(r.createdAt)} · {r.generatedBy?.fullName}</span> },
-            { key: 'approved', header: 'Approved', render: (r) => <span className="text-xs text-muted">{r.approvedAt ? `${dateTime(r.approvedAt)} · ${r.approvedBy?.fullName}` : '—'}</span> },
+            { key: 'by', header: 'Generated', render: (r) => <span className="text-xs text-muted">{dateTime(r.createdAt)} · {r.generatedBy?.fullName || (r.trigger === 'auto' ? 'Automatic' : '—')}</span> },
+            { key: 'approved', header: 'Approved', render: (r) => <span className="text-xs text-muted">{r.approvedAt ? `${dateTime(r.approvedAt)} · ${r.approvedBy?.fullName || 'Automatic'}` : '—'}</span> },
           ]}
           empty={<p className="py-10 text-center text-sm text-subtle">No runs yet. Generate one above.</p>}
         />

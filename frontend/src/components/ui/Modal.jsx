@@ -28,7 +28,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
             <h2 className="text-base font-bold text-fg">{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-1 text-muted hover:bg-white/5 hover:text-fg" aria-label="Close">
+          <button type="button" onClick={onClose} className="rounded-lg p-1 text-muted hover:bg-fg/5 hover:text-fg" aria-label="Close">
             <X className="size-5" />
           </button>
         </div>

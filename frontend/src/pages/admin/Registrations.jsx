@@ -34,7 +34,7 @@ export default function Registrations() {
             { key: 'contact', header: 'Contact', render: (r) => <div className="text-xs"><p>{r.mobile}</p><p className="text-muted">{r.email}</p></div> },
             { key: 'dob', header: 'DOB / Country', render: (r) => <div className="text-xs"><p>{date(r.dob)}</p><p className="text-muted">{r.country}</p></div> },
             { key: 'sponsor', header: 'Sponsor', render: (r) => <div className="text-xs"><p className="font-semibold">{r.sponsor?.memberId}</p><p className="text-muted">{r.sponsor?.fullName}</p></div> },
-            { key: 'package', header: 'Package', render: (r) => r.selectedPackage?.name },
+            { key: 'package', header: 'Bundle', render: (r) => r.selectedPackage?.name },
             { key: 'createdAt', header: 'Submitted', render: (r) => <span className="text-xs">{dateTime(r.createdAt)}</span> },
             status === 'rejected'
               ? { key: 'reason', header: 'Reason', render: (r) => <span className="text-xs text-danger">{r.statusReason}</span> }

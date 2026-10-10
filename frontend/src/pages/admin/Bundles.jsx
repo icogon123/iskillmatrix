@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Package, Plus, Trash2, Pencil, AlertTriangle } from 'lucide-react';
-import { useAdminPackagesQuery, useUpdatePackageMutation } from '../../api/adminApi';
+import { useAdminPackagesQuery, useUpdatePackageMutation, useAdminCoursesQuery } from '../../api/adminApi';
 import { PageHeader, Card, Button, Modal, Input, Select, Textarea, Toggle, StatusBadge, PageLoader, ErrorState, Notice } from '../../components/ui';
 import { useAction } from '../../lib/useAction';
 import { inr } from '../../lib/format';
 
 const sum = (a) => a.reduce((x, y) => x + (Number(y) || 0), 0);
 
-function Editor({ pkg, tax, onClose }) {
+function Editor({ pkg, tax, courses, onClose }) {
   const [form, setForm] = useState({
     name: pkg.name, price: pkg.price, activeIncome: pkg.activeIncome, passiveLevels: [...pkg.passiveLevels], nonWorkingBonus: pkg.nonWorkingBonus,
     weeklyEligible: pkg.weeklyEligible, status: pkg.status, description: pkg.description || '', benefits: (pkg.benefits || []).join('\n'),
+    courses: [...(pkg.courses || [])],
   });
+  const toggleCourse = (slug) => setForm((f) => ({ ...f, courses: f.courses.includes(slug) ? f.courses.filter((s) => s !== slug) : [...f.courses, slug] }));
   const [updateT, { isLoading }] = useUpdatePackageMutation();
   const update = useAction(updateT);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -29,11 +31,11 @@ function Editor({ pkg, tax, onClose }) {
   };
 
   return (
-    <Modal open onClose={onClose} size="lg" title={`Edit ${pkg.name} package`} subtitle="Changes apply to new sales only. Past ledger entries keep the amounts they were created with."
-      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button loading={isLoading} onClick={save}>Save package</Button></>}>
+    <Modal open onClose={onClose} size="lg" title={`Edit ${pkg.name} bundle`} subtitle="Changes apply to new sales only. Past ledger entries keep the amounts they were created with."
+      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button loading={isLoading} onClick={save}>Save bundle</Button></>}>
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-3">
-          <Input label="Package name" value={form.name} onChange={set('name')} />
+          <Input label="Bundle name" value={form.name} onChange={set('name')} />
           <Input label="Customer price (₹)" type="number" value={form.price} onChange={set('price')} />
           <Select label="Status" value={form.status} onChange={set('status')} options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive (hidden)' }]} />
           <Input label="Active income to sponsor (₹)" type="number" value={form.activeIncome} onChange={set('activeIncome')} />
@@ -59,22 +61,39 @@ function Editor({ pkg, tax, onClose }) {
           </div>
         </div>
 
-        <div className="grid gap-2 rounded-xl bg-white/[0.04] p-3 text-sm sm:grid-cols-3">
-          <p><span className="text-muted">Package cost after GST & system:</span> <b>{inr(cost)}</b></p>
+        <div className="grid gap-2 rounded-xl bg-fg/[0.04] p-3 text-sm sm:grid-cols-3">
+          <p><span className="text-muted">Bundle cost after GST & system:</span> <b>{inr(cost)}</b></p>
           <p><span className="text-muted">Total payout per sale:</span> <b>{inr(payout)}</b></p>
           <p><span className="text-muted">Company margin:</span> <b className={cost - payout < 0 ? 'text-danger' : 'text-success'}>{inr(cost - payout)}</b></p>
         </div>
-        {payout > cost && <Notice tone="red" icon={AlertTriangle} title="Payout exceeds the package cost">This package would pay out more than it earns after GST and system cost.</Notice>}
+        {payout > cost && <Notice tone="red" icon={AlertTriangle} title="Payout exceeds the bundle cost">This bundle would pay out more than it earns after GST and system cost.</Notice>}
 
-        <Textarea label="Description" value={form.description} onChange={set('description')} rows={2} />
-        <Textarea label="Benefits (one per line)" value={form.benefits} onChange={set('benefits')} rows={5} />
+        <div>
+          <p className="mb-2 text-xs font-semibold tracking-wide text-muted">Included courses ({form.courses.length}) — shown on the website</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {courses.map((c) => (
+              <label key={c.slug} className={`flex cursor-pointer items-center gap-2.5 rounded-xl border p-2.5 text-sm transition ${form.courses.includes(c.slug) ? 'border-gold-400/50 bg-gold-400/10' : 'border-line hover:border-brand-500/40'}`}>
+                <input type="checkbox" className="size-4 accent-gold-400" checked={form.courses.includes(c.slug)} onChange={() => toggleCourse(c.slug)} />
+                <span className="flex-1">{c.title}</span>
+                {c.status !== 'active' && <span className="text-[10px] text-subtle uppercase">Hidden</span>}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <Textarea label="Description (shown on the website)" value={form.description} onChange={set('description')} rows={2} />
+        <Textarea label="Member benefits (one per line)" value={form.benefits} onChange={set('benefits')} rows={5}
+          hint="Shown to logged-in members when they choose a bundle to activate. Not shown on the public website." />
       </div>
     </Modal>
   );
 }
 
-export default function AdminPackages() {
+export default function AdminBundles() {
   const { data, isLoading, error, refetch } = useAdminPackagesQuery();
+  const { data: courseData } = useAdminCoursesQuery();
+  const courses = courseData?.courses || [];
+  const titles = Object.fromEntries(courses.map((c) => [c.slug, c.title]));
   const [editing, setEditing] = useState(null);
   if (isLoading) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
@@ -82,7 +101,7 @@ export default function AdminPackages() {
 
   return (
     <div>
-      <PageHeader icon={Package} title="Packages & Income Rules" subtitle={`Prices include GST ${tax.gstPercent}% and system cost ${tax.systemCostPercent}%. Package upgrades are not supported.`} />
+      <PageHeader icon={Package} title="Bundles & Income Rules" subtitle={`Prices include GST ${tax.gstPercent}% and system cost ${tax.systemCostPercent}%. Bundle upgrades are not supported.`} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {packages.map((p) => {
           const cost = p.price * (1 - (tax.gstPercent + tax.systemCostPercent) / 100);
@@ -98,18 +117,22 @@ export default function AdminPackages() {
               </div>
               <dl className="mt-4 space-y-2 text-sm">
                 {[
-                  ['Package cost', inr(cost)], ['Active income', inr(p.activeIncome)], ['Passive', `${p.passiveLevels.length} level${p.passiveLevels.length === 1 ? '' : 's'} · ${inr(sum(p.passiveLevels))}`],
+                  ['Bundle cost', inr(cost)], ['Active income', inr(p.activeIncome)], ['Passive', `${p.passiveLevels.length} level${p.passiveLevels.length === 1 ? '' : 's'} · ${inr(sum(p.passiveLevels))}`],
                   ['Non-working bonus', p.nonWorkingBonus ? inr(p.nonWorkingBonus) : '—'], ['Weekly income', p.weeklyEligible ? 'Eligible' : 'No'],
                   ['Payout / margin', `${inr(payout)} / ${inr(cost - payout)}`],
                 ].map(([k, v]) => <div key={k} className="flex justify-between gap-3"><dt className="text-muted">{k}</dt><dd className="text-right font-medium">{v}</dd></div>)}
               </dl>
               <p className="mt-3 text-xs text-subtle">Levels: {p.passiveLevels.map((x) => `₹${x}`).join(' · ')}</p>
-              <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => setEditing(p)}><Pencil className="size-3.5" /> Edit package</Button>
+              <p className="mt-2 text-xs text-muted">
+                <span className="font-semibold text-fg">{(p.courses || []).filter((s) => titles[s]).length} courses:</span>{' '}
+                {(p.courses || []).map((s) => titles[s]).filter(Boolean).join(', ') || '—'}
+              </p>
+              <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => setEditing(p)}><Pencil className="size-3.5" /> Edit bundle</Button>
             </Card>
           );
         })}
       </div>
-      {editing && <Editor pkg={editing} tax={tax} onClose={() => setEditing(null)} />}
+      {editing && <Editor pkg={editing} tax={tax} courses={courses} onClose={() => setEditing(null)} />}
     </div>
   );
 }

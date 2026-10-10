@@ -4,6 +4,7 @@ import { setUser, loggedOut } from '../features/auth/authSlice';
 export const publicApi = api.injectEndpoints({
   endpoints: (b) => ({
     packages: b.query({ query: () => '/public/packages', providesTags: ['Packages'] }),
+    courses: b.query({ query: () => '/public/courses', providesTags: ['Courses', 'Packages'] }),
     site: b.query({ query: () => '/public/site' }),
     sponsor: b.query({ query: (code) => `/public/sponsor/${encodeURIComponent(code)}` }),
     checkUsername: b.query({ query: (u) => `/auth/check-username?username=${encodeURIComponent(u)}` }),
@@ -46,6 +47,6 @@ export const publicApi = api.injectEndpoints({
 });
 
 export const {
-  usePackagesQuery, useSiteQuery, useLazySponsorQuery, useLazyCheckUsernameQuery, useMeQuery, useLoginMutation,
+  usePackagesQuery, useCoursesQuery, useSiteQuery, useLazySponsorQuery, useLazyCheckUsernameQuery, useMeQuery, useLoginMutation,
   useLogoutMutation, useRegisterMutation, useForgotPasswordMutation, useResetPasswordMutation, useChangePasswordMutation,
 } = publicApi;

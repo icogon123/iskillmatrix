@@ -17,9 +17,9 @@ export const api = createApi({
   reducerPath: 'api',
   baseQuery,
   tagTypes: [
-    'Me', 'Dashboard', 'Payments', 'Kyc', 'Team', 'Ledger', 'Wallet', 'Withdrawals', 'Notifications', 'Achievements',
+    'Me', 'Dashboard', 'Payments', 'Kyc', 'Team', 'Ledger', 'Wallet', 'Withdrawals', 'Notifications', 'Achievements', 'Transfers', 'Deposits',
     'AdminDashboard', 'Registrations', 'Members', 'Member', 'AdminKyc', 'AdminPayments', 'AdminWithdrawals', 'Processing',
-    'Packages', 'Settings', 'AdminLedger', 'Audit',
+    'Packages', 'Courses', 'Settings', 'AdminLedger', 'Audit', 'AdminDeposits',
   ],
   endpoints: () => ({}),
 });

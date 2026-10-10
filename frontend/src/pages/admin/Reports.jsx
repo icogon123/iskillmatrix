@@ -41,7 +41,7 @@ export default function Reports() {
 
   return (
     <div>
-      <PageHeader icon={FileBarChart} title="Reports" subtitle="Filter by date, member, package and type. Export to CSV (Excel) or print / save as PDF." />
+      <PageHeader icon={FileBarChart} title="Reports" subtitle="Filter by date, member, bundle and type. Export to CSV (Excel) or print / save as PDF." />
       <Card className="card-pad no-print">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Select label="Report" value={type} onChange={(e) => { setType(e.target.value); setF((x) => ({ ...x, status: '', category: '' })); }}
@@ -50,7 +50,7 @@ export default function Reports() {
           <Input label="To" type="date" value={f.to} onChange={set('to')} />
           <Input label="Member" placeholder="Name or member ID" value={f.search} onChange={set('search')} />
           {STATUS_OPTIONS[type] && <Select label="Status" value={f.status} onChange={set('status')} placeholder="All" options={STATUS_OPTIONS[type].map((s) => ({ value: s, label: s.replace('_', ' ') }))} />}
-          {WITH_PACKAGE.includes(type) && <Select label="Package" value={f.package} onChange={set('package')} placeholder="All" options={(pk?.packages || []).map((p) => ({ value: p._id, label: p.name }))} />}
+          {WITH_PACKAGE.includes(type) && <Select label="Bundle" value={f.package} onChange={set('package')} placeholder="All" options={(pk?.packages || []).map((p) => ({ value: p._id, label: p.name }))} />}
           {type === 'income' && <Select label="Income type" value={f.category} onChange={set('category')} placeholder="All" options={INCOME_TYPES.map((t) => ({ value: t.key, label: t.label }))} />}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -72,7 +72,7 @@ export default function Reports() {
               <div className="flex flex-wrap gap-3 text-xs">
                 {Object.entries(data.summary).map(([k, v]) => {
                   const c = data.columns.find((x) => x.key === k);
-                  return <span key={k} className="rounded-lg bg-white/5 px-2 py-1"><span className="text-muted">{c?.label || k}:</span> <b>{fmt(c?.type || 'money', v)}</b></span>;
+                  return <span key={k} className="rounded-lg bg-fg/5 px-2 py-1"><span className="text-muted">{c?.label || k}:</span> <b>{fmt(c?.type || 'money', v)}</b></span>;
                 })}
               </div>
             )}

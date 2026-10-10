@@ -1,5 +1,5 @@
-// Categorical colours for the six income types, in this fixed order. Validated with the dataviz
-// palette checker against the dark card surface #120f2e (worst adjacent CVD ΔE 9.4, normal-vision 19.3).
+// Categorical colours for the six income types, in this fixed order (same in both themes). Validated with the
+// dataviz palette checker against the dark card surface #120f2e (worst adjacent CVD ΔE 9.4, normal-vision 19.3).
 export const INCOME_TYPES = [
   { key: 'active', label: 'Active Income', short: 'Active', color: '#9085e9' },
   { key: 'passive', label: 'Passive Income', short: 'Passive', color: '#199e70' },
@@ -20,7 +20,18 @@ export const LEDGER_LABELS = {
   withdrawal_reversal: 'Withdrawal Reversal',
   adjustment_credit: 'Admin Credit',
   adjustment_debit: 'Admin Debit',
+  deposit: 'Fund Deposit',
+  transfer_out: 'Transfer Sent',
+  transfer_in: 'Transfer Received',
+  bundle_purchase: 'Bundle Purchase',
 };
+
+// Main: income lands here; withdrawable. Activation: deposits and transfers received; only buys bundles.
+export const WALLETS = [
+  { value: 'main', label: 'Main Wallet', short: 'Main' },
+  { value: 'activation', label: 'Activation Wallet', short: 'Activation' },
+];
+export const WALLET_LABELS = { main: 'Main Wallet', activation: 'Activation Wallet' };
 
 export const RUN_LABELS = { weekly: 'Weekly Income', monthly_bonus: 'Monthly Bonus', royalty: 'Royalty Income' };
 
@@ -30,7 +41,7 @@ const TONES = {
   amber: 'bg-warning/12 text-warning ring-warning/25',
   blue: 'bg-info/12 text-info ring-info/25',
   violet: 'bg-brand-500/15 text-brand-300 ring-brand-500/30',
-  gray: 'bg-white/6 text-muted ring-white/10',
+  gray: 'bg-fg/6 text-muted ring-fg/10',
 };
 
 const STATUS_TONE = {
@@ -42,11 +53,6 @@ const STATUS_TONE = {
 export const toneClass = (tone) => TONES[tone] || TONES.gray;
 export const statusTone = (status) => TONES[STATUS_TONE[status] || 'gray'];
 export const statusLabel = (s = '') => s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-
-export const TRENDING_SKILLS = [
-  'Instagram Mastery', 'Meta Ads', 'YouTube Mastery', 'Video Editing', 'Graphic Design',
-  'Sales Mastery', 'Lead Generation', 'Communication Skills', 'AI Tools Mastery', 'Personal Branding',
-];
 
 export const BADGE_COLORS = {
   bronze: ['#d97706', '#92400e'],

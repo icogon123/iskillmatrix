@@ -37,10 +37,10 @@ export default function ResetPassword() {
           {error && <Notice tone="red" title={error} />}
           <PasswordInput label="New password" autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
           <PasswordInput label="Confirm new password" autoComplete="new-password" value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} required />
-          <Button type="submit" size="lg" className="w-full" loading={isLoading}>Update password</Button>
+          <Button type="submit" variant="solid" size="lg" className="w-full" loading={isLoading}>Update password</Button>
         </form>
       )}
-      <p className="mt-6 text-center text-sm text-muted"><Link to="/login" className="font-semibold text-brand-300">Back to login</Link></p>
+      <p className="mt-6 text-center text-sm text-muted"><Link to="/login" className="font-semibold text-brand-300">Back to log in</Link></p>
     </AuthShell>
   );
 }

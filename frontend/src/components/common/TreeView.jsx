@@ -29,7 +29,7 @@ function TreeRow({ node, depth, load, onFocus, initialOpen = false, preloaded })
 
   return (
     <li>
-      <div className="group flex items-center gap-2 rounded-xl py-1.5 pr-2 hover:bg-white/[0.03]" style={{ paddingLeft: depth * 20 }}>
+      <div className="group flex items-center gap-2 rounded-xl py-1.5 pr-2 hover:bg-fg/[0.03]" style={{ paddingLeft: depth * 20 }}>
         <button type="button" onClick={toggle} disabled={!hasChildren}
           className={`grid size-6 shrink-0 place-items-center rounded-md ${hasChildren ? 'text-brand-300 hover:bg-brand-500/15' : 'text-transparent'}`}
           aria-label={open ? 'Collapse' : 'Expand'}>
@@ -41,7 +41,7 @@ function TreeRow({ node, depth, load, onFocus, initialOpen = false, preloaded })
             {node.fullName} <span className="font-normal text-muted">· {node.memberId}</span>
           </p>
           <p className="text-[11px] text-subtle">
-            {node.package?.name || 'No package'} · {node.directCount ?? 0} direct · {node.teamCount ?? 0} team
+            {node.package?.name || 'No bundle'} · {node.directCount ?? 0} direct · {node.teamCount ?? 0} team
           </p>
         </div>
         {node.badge && <span className="hidden sm:block"><BadgeMedal badgeKey={node.badge} size="sm" /></span>}

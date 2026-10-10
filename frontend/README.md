@@ -4,7 +4,7 @@ One React app containing three areas:
 
 | Area | URL | Who |
 |------|-----|-----|
-| Public website | `/`, `/about`, `/plan`, `/packages`, `/contact`, `/login`, `/register` | Everyone |
+| Public website | `/`, `/courses`, `/courses/:slug`, `/why-us`, `/vision-mission`, `/pricing`, `/about`, `/contact`, `/login`, `/register` | Everyone |
 | Member panel | `/app/*` | Logged-in members |
 | Admin panel | `/admin/*` (login at `/admin/login`) | Administrators |
 
@@ -96,9 +96,9 @@ frontend/
     │   ├── store.js           Redux store (api, auth, ui) + cache reset on logout
     │   └── api.js             RTK Query base API (cookies, 401 handling, cache tags) + errorMessage()
     ├── api/                   RTK Query endpoints (one file per area)
-    │   ├── publicApi.js       packages, site, sponsor lookup, login, register, me, passwords
-    │   ├── memberApi.js       dashboard, payments, KYC, team, income, wallet, withdrawals, notifications
-    │   └── adminApi.js        admin dashboard, approvals, members, processing, packages, settings, reports
+    │   ├── publicApi.js       packages (bundles), courses, site, sponsor lookup, login, register, me, passwords
+    │   ├── memberApi.js       dashboard, avatar, payments, KYC, team, income, wallets, transfers, deposits, withdrawals, notifications
+    │   └── adminApi.js        admin dashboard, approvals, members, processing, bundles, course catalog, settings, reports
     ├── features/              Redux slices (client state)
     │   ├── auth/authSlice.js  logged-in user and session status
     │   └── ui/uiSlice.js      mobile sidebar open/closed, hide-amounts toggle
@@ -107,8 +107,8 @@ frontend/
     │   ├── layout/            PublicLayout, MemberLayout, AdminLayout, RequireAuth (route guard)
     │   └── common/            App-specific pieces (Logo, BadgeMedal, IncomeBreakdown, TreeView, WalletArt, …)
     ├── pages/
-    │   ├── public/            Website + auth pages (Home, Plan, Packages, Login, Register, …)
-    │   ├── member/            Member panel pages (Dashboard, Activate, Kyc, Team, Income, Withdraw, …)
+    │   ├── public/            Website + auth pages (Home, Courses, CourseDetail, WhyUs, VisionMission, Pricing, Login, Register, …)
+    │   ├── member/            Member panel pages (Dashboard, Activate, P2PActivate, Wallet, Deposit, Transfer, Kyc, Team, Income, Withdraw, …)
     │   └── admin/             Admin panel pages (Dashboard, Registrations, Payments, Processing, Reports, …)
     └── lib/                   Helpers: formatting (₹, dates in IST), constants/labels/colours,
                                CSV export, useDebounce, useAction (mutation + toast)

@@ -22,7 +22,7 @@ main.jsx
 
 | Path prefix | Layout | Guard |
 |-------------|--------|-------|
-| `/`, `/about`, `/plan`, `/packages`, `/contact` | `PublicLayout` | none |
+| `/`, `/courses`, `/courses/:slug`, `/why-us`, `/vision-mission`, `/pricing`, `/about`, `/contact` | `PublicLayout` | none |
 | `/login`, `/admin/login`, `/register`, `/forgot-password`, `/reset-password` | `AuthShell` (inside each page) | none (logged-in users are redirected from login) |
 | `/app/*` | `MemberLayout` | `RequireAuth role="member"` |
 | `/admin/*` | `AdminLayout` | `RequireAuth role="admin"` |

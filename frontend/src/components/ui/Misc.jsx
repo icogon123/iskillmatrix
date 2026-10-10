@@ -30,11 +30,11 @@ export function Tabs({ tabs, value, onChange, className = '' }) {
           type="button"
           onClick={() => onChange(t.value)}
           className={`shrink-0 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
-            value === t.value ? 'bg-brand-500/20 text-brand-200 ring-1 ring-brand-500/40' : 'text-muted hover:bg-white/5 hover:text-fg'
+            value === t.value ? 'bg-brand-500/20 text-brand-200 ring-1 ring-brand-500/40' : 'text-muted hover:bg-fg/5 hover:text-fg'
           }`}
         >
           {t.label}
-          {t.count !== undefined && <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-px text-[10px]">{t.count}</span>}
+          {t.count !== undefined && <span className="ml-1.5 rounded-full bg-fg/10 px-1.5 py-px text-[10px]">{t.count}</span>}
         </button>
       ))}
     </div>
@@ -78,7 +78,7 @@ export function KeyValue({ items, className = '' }) {
 export function ProgressBar({ value = 0, className = '', tone = 'violet' }) {
   const tones = { violet: 'from-brand-400 to-brand-600', gold: 'from-gold-300 to-gold-500', green: 'from-emerald-300 to-success' };
   return (
-    <div className={`h-2 overflow-hidden rounded-full bg-white/8 ${className}`}>
+    <div className={`h-2 overflow-hidden rounded-full bg-fg/8 ${className}`}>
       <div className={`h-full rounded-full bg-gradient-to-r ${tones[tone]} transition-[width] duration-700`} style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
     </div>
   );

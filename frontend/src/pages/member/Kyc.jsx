@@ -1,16 +1,19 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { ShieldCheck, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useKycQuery, useSubmitKycMutation } from '../../api/memberApi';
 import { errorMessage } from '../../app/api';
 import { PageHeader, Card, CardHeader, Button, Input, FileField, Notice, PageLoader, ErrorState, KeyValue, StatusBadge } from '../../components/ui';
 import FileLink from '../../components/common/FileLink';
+import { selectUser } from '../../features/auth/authSlice';
 import { dateTime } from '../../lib/format';
 
 const FLOW = ['not_submitted', 'submitted', 'under_review', 'approved'];
 
 export default function Kyc() {
   const { data, isLoading, error, refetch } = useKycQuery();
+  const registeredAadhaar = useSelector(selectUser)?.aadhaar; // masked, e.g. XXXX XXXX 1234
   const [submit, { isLoading: saving }] = useSubmitKycMutation();
   const [form, setForm] = useState({ aadhaarNumber: '', panNumber: '', bankName: '', accountHolder: '', accountNumber: '', ifsc: '' });
   const [files, setFiles] = useState({ aadhaarDoc: null, panDoc: null, bankDoc: null });
@@ -81,7 +84,8 @@ export default function Kyc() {
         <form onSubmit={onSubmit} className="grid gap-4 lg:grid-cols-2">
           <Card className="card-pad space-y-4">
             <CardHeader title="Identity" />
-            <Input label="Aadhaar number" inputMode="numeric" value={form.aadhaarNumber} onChange={set('aadhaarNumber', (v) => v.replace(/\D/g, '').slice(0, 12))} error={errors.aadhaarNumber} required />
+            <Input label="Aadhaar number" inputMode="numeric" value={form.aadhaarNumber} onChange={set('aadhaarNumber', (v) => v.replace(/\D/g, '').slice(0, 12))} error={errors.aadhaarNumber}
+              hint={registeredAadhaar ? `Use the same Aadhaar you registered with (ending ${String(registeredAadhaar).slice(-4)}) — the admin checks that they match.` : undefined} required />
             <FileField label="Aadhaar card (front & back)" file={files.aadhaarDoc} existing={kyc?.aadhaarDoc} onChange={(f) => setFiles((x) => ({ ...x, aadhaarDoc: f }))} required={!kyc?.aadhaarDoc} />
             <Input label="PAN number" value={form.panNumber} onChange={set('panNumber', (v) => v.toUpperCase().slice(0, 10))} placeholder="ABCDE1234F" error={errors.panNumber} required />
             <FileField label="PAN card" file={files.panDoc} existing={kyc?.panDoc} onChange={(f) => setFiles((x) => ({ ...x, panDoc: f }))} required={!kyc?.panDoc} />

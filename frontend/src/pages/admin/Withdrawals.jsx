@@ -39,7 +39,7 @@ export default function Withdrawals() {
           rows={data?.items || []}
           columns={[
             { key: 'id', header: 'Withdrawal', render: (r) => <div><p className="font-semibold">{r.withdrawalId}</p><p className="text-xs text-muted">{dateTime(r.createdAt)}</p></div> },
-            { key: 'member', header: 'Member', render: (r) => <div><p className="font-semibold">{r.user?.fullName}</p><p className="text-xs text-muted">{r.user?.memberId}</p></div> },
+            { key: 'member', header: 'Member', render: (r) => <div><p className="font-semibold">{r.user?.fullName}</p><p className="text-xs text-muted">{r.user?.memberId}</p>{r.user?.walletSuspended && <StatusBadge status="suspended" label="Wallet suspended" className="mt-1" />}</div> },
             { key: 'amount', header: 'Amount', render: (r) => <div className="text-xs"><p className="text-sm font-semibold">{inr(r.amount)}</p><p className="text-muted">TDS {inr(r.tds)} · Admin {inr(r.adminCharge)}</p></div> },
             { key: 'net', header: 'Net payable', render: (r) => <span className="font-bold text-gold-400">{inr(r.netAmount)}</span> },
             { key: 'bank', header: 'Bank', render: (r) => <div className="text-xs"><p>{r.bank?.accountHolder}</p><p className="font-mono text-muted">{r.bank?.accountNumber}</p><p className="text-muted">{r.bank?.bankName} · {r.bank?.ifsc}</p></div> },
@@ -48,7 +48,7 @@ export default function Withdrawals() {
               key: 'actions', header: '', align: 'right',
               render: (r) => (
                 <div className="flex justify-end gap-1.5">
-                  {(NEXT[r.status] || []).map(([to, label, variant]) => (
+                  {(NEXT[r.status] || []).filter(([to]) => !r.user?.walletSuspended || to === 'rejected').map(([to, label, variant]) => (
                     <Button key={to} size="sm" variant={variant} onClick={() => setModal({ w: r, to })}>{label}</Button>
                   ))}
                 </div>

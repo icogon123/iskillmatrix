@@ -22,6 +22,8 @@ export default function RunDetail() {
   const { run, entries } = data;
   const payable = entries.filter((e) => e.status !== 'lapsed');
   const lapsed = entries.filter((e) => e.status === 'lapsed');
+  const pool = run.type === 'weekly' && run.pool?.percent !== undefined ? run.pool : null;
+  const by = (u) => u?.fullName || (run.trigger === 'auto' ? 'the system (automatic)' : '—');
 
   const exportCsv = () => downloadCsv(`${run.type}-${run.periodKey}`, [
     { key: 'memberId', label: 'Member ID' }, { key: 'name', label: 'Name' }, { key: 'basis', label: 'Basis' }, { key: 'rate', label: 'Rate %' },
@@ -31,7 +33,7 @@ export default function RunDetail() {
   return (
     <div className="space-y-5">
       <Link to="/admin/processing" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg"><ArrowLeft className="size-4" /> Income processing</Link>
-      <PageHeader title={`${RUN_LABELS[run.type]} · ${run.periodKey}`} subtitle={`Generated ${dateTime(run.createdAt)} by ${run.generatedBy?.fullName || '—'} (settings v${run.settingsVersion})`}
+      <PageHeader title={`${RUN_LABELS[run.type]} · ${run.periodKey}`} subtitle={`Generated ${dateTime(run.createdAt)} by ${by(run.generatedBy)} (settings v${run.settingsVersion})`}
         actions={
           <>
             <Button variant="outline" size="sm" onClick={exportCsv} disabled={!entries.length}>Export CSV</Button>
@@ -49,13 +51,21 @@ export default function RunDetail() {
         <StatCard label="Total amount" value={inr(run.totalAmount)} tone="gold" />
         <StatCard label="Lapsed (inactive members)" value={lapsed.length} hint={inr(lapsed.reduce((a, e) => a + e.netAmount, 0))} tone="red" />
       </div>
-      {run.status === 'approved' && <Notice tone="green" icon={CheckCircle2} title={`Approved ${dateTime(run.approvedAt)} by ${run.approvedBy?.fullName}`}>All payable entries were credited to member wallets.</Notice>}
+      {pool && (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard label="Company sales in the week" value={inr(pool.companyIncome)} hint={`${pool.salesCount} bundle${pool.salesCount === 1 ? '' : 's'} · ${pool.basis === 'net' ? 'after GST & system cost' : 'amount received'}`} tone="blue" />
+          <StatCard label={`Pool (${pool.percent}%)`} value={inr(pool.amount)} tone="gold" />
+          <StatCard label="Eligible members" value={pool.eligible} tone="green" />
+          <StatCard label="Equal share each" value={inr(pool.share)} hint={pool.eligible ? `Remainder ${inr(pool.amount - pool.share * pool.eligible)} stays with the company` : 'Pool stays with the company'} />
+        </div>
+      )}
+      {run.status === 'approved' && <Notice tone="green" icon={CheckCircle2} title={`Approved ${dateTime(run.approvedAt)} by ${by(run.approvedBy)}`}>All payable entries were credited to member wallets.</Notice>}
       {run.status === 'cancelled' && <Notice tone="red" icon={XCircle} title="This run was cancelled">You can generate this period again.</Notice>}
       <Card>
         <DataTable rows={entries}
           columns={[
             { key: 'member', header: 'Member', render: (r) => <div><p className="font-semibold">{r.user?.fullName}</p><p className="text-xs text-muted">{r.user?.memberId}</p></div> },
-            { key: 'pkg', header: 'Package', render: (r) => r.package?.name || '—' },
+            { key: 'pkg', header: 'Bundle', render: (r) => r.package?.name || '—' },
             { key: 'basis', header: 'Basis', align: 'right', render: (r) => inr(r.basisAmount) },
             { key: 'rate', header: 'Rate', align: 'right', render: (r) => (r.rate ? `${r.rate}%` : 'Slab') },
             { key: 'amount', header: 'Amount', align: 'right', render: (r) => <span className="font-bold">{inr(r.netAmount)}</span> },

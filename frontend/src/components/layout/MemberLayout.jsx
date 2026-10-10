@@ -2,31 +2,63 @@ import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Menu, Bell, Home, Users, IndianRupee, Wallet, MoreHorizontal, LayoutDashboard, PackageCheck, ShieldCheck, Network,
-  Banknote, Award, Share2, UserCog, LogOut, X, Eye, EyeOff,
+  Menu, Bell, Home, Users, IndianRupee, Wallet, MoreHorizontal, LayoutDashboard, BookCheck, ShieldCheck, Network, GraduationCap, Map as MapIcon,
+  Banknote, Award, Share2, UserCog, LogOut, X, Eye, EyeOff, UserPlus, HandCoins, ArrowLeftRight,
 } from 'lucide-react';
 import Logo from '../common/Logo';
 import Avatar from '../common/Avatar';
+import ThemeToggle from '../common/ThemeToggle';
 import { selectUser } from '../../features/auth/authSlice';
 import { toggleSidebar, toggleAmounts } from '../../features/ui/uiSlice';
 import { useLogoutMutation } from '../../api/publicApi';
 import { useNotificationsQuery } from '../../api/memberApi';
 import { firstName } from '../../lib/format';
+import { usePageTitle } from '../../lib/usePageTitle';
 
 export const MEMBER_NAV = [
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/app/activate', label: 'Activate Package', icon: PackageCheck },
-  { to: '/app/kyc', label: 'KYC', icon: ShieldCheck },
-  { to: '/app/team', label: 'My Team', icon: Users },
-  { to: '/app/genealogy', label: 'Genealogy', icon: Network },
-  { to: '/app/income', label: 'Income', icon: IndianRupee },
-  { to: '/app/wallet', label: 'Wallet', icon: Wallet },
-  { to: '/app/withdraw', label: 'Withdraw', icon: Banknote },
-  { to: '/app/achievements', label: 'Achievements', icon: Award },
-  { to: '/app/referral', label: 'Refer & Earn', icon: Share2 },
-  { to: '/app/notifications', label: 'Notifications', icon: Bell },
-  { to: '/app/profile', label: 'Profile & Security', icon: UserCog },
+  {
+    group: null,
+    items: [
+      { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { to: '/app/courses', label: 'My Courses', icon: GraduationCap },
+      { to: '/app/activate', label: 'Activate Bundle', icon: BookCheck },
+      { to: '/app/p2p', label: 'P2P Activation', icon: UserPlus },
+    ],
+  },
+  {
+    group: 'Wallet',
+    items: [
+      { to: '/app/wallet', label: 'Wallets & Ledger', icon: Wallet },
+      { to: '/app/deposit', label: 'Deposit Fund', icon: HandCoins },
+      { to: '/app/transfer', label: 'Transfer Fund', icon: ArrowLeftRight },
+      { to: '/app/withdraw', label: 'Withdraw', icon: Banknote },
+    ],
+  },
+  {
+    group: 'Earnings & team',
+    items: [
+      { to: '/app/income', label: 'Income', icon: IndianRupee },
+      { to: '/app/plan', label: 'Income Plan', icon: MapIcon },
+      { to: '/app/achievements', label: 'Achievements', icon: Award },
+      { to: '/app/team', label: 'My Team', icon: Users },
+      { to: '/app/genealogy', label: 'Genealogy', icon: Network },
+      { to: '/app/referral', label: 'Refer & Earn', icon: Share2 },
+    ],
+  },
+  {
+    group: 'Account',
+    items: [
+      { to: '/app/kyc', label: 'KYC', icon: ShieldCheck },
+      { to: '/app/notifications', label: 'Notifications', icon: Bell },
+      { to: '/app/profile', label: 'Profile & Security', icon: UserCog },
+    ],
+  },
 ];
+const NAV_ITEMS = MEMBER_NAV.flatMap((g) => g.items);
+
+/** Label of the menu item that matches the current URL (longest match wins), for the browser tab title. */
+const navLabel = (items, pathname) =>
+  items.filter((n) => pathname === n.to || pathname.startsWith(`${n.to}/`)).sort((a, b) => b.to.length - a.to.length)[0]?.label;
 
 const BOTTOM = [
   { to: '/app', label: 'Home', icon: Home, end: true },
@@ -44,24 +76,31 @@ function SideNav({ onNavigate }) {
       <div className="flex h-16 items-center px-5">
         <Logo to="/app" />
       </div>
-      <div className="mx-4 mb-3 flex items-center gap-3 rounded-2xl border border-line bg-white/[0.03] p-3">
-        <Avatar name={user?.fullName} />
+      <div className="mx-4 mb-3 flex items-center gap-3 rounded-2xl border border-line bg-fg/[0.03] p-3">
+        <Avatar name={user?.fullName} src={user?.avatar} />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{user?.fullName}</p>
-          <p className="text-xs text-muted">{user?.memberId} · {user?.package?.name || 'No package'}</p>
+          <p className="text-xs text-muted">{user?.memberId} · {user?.package?.name || 'No bundle'}</p>
         </div>
       </div>
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-4">
-        {MEMBER_NAV.map(({ to, label, icon: Icon, end }) => (
-          <NavLink key={to} to={to} end={end} onClick={onNavigate}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                isActive ? 'bg-gradient-to-r from-brand-500/25 to-brand-500/5 text-fg ring-1 ring-brand-500/30' : 'text-muted hover:bg-white/[0.04] hover:text-fg'
-              }`}>
-            <Icon className="size-[18px]" />
-            {label}
-            {to === '/app/activate' && !user?.isPackageActive && <span className="ml-auto size-2 rounded-full bg-gold-400" />}
-          </NavLink>
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+        {MEMBER_NAV.map((g) => (
+          <div key={g.group || 'main'}>
+            {g.group && <p className="px-3 pb-1.5 text-[10px] font-bold tracking-widest text-subtle uppercase">{g.group}</p>}
+            <div className="space-y-0.5">
+              {g.items.map(({ to, label, icon: Icon, end }) => (
+                <NavLink key={to} to={to} end={end} onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                      isActive ? 'bg-gradient-to-r from-brand-500/25 to-brand-500/5 text-fg ring-1 ring-brand-500/30' : 'text-muted hover:bg-fg/[0.04] hover:text-fg'
+                    }`}>
+                  <Icon className="size-[18px]" />
+                  {label}
+                  {to === '/app/activate' && !user?.isPackageActive && <span className="ml-auto size-2 rounded-full bg-gold-400" />}
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
       <div className="border-t border-line p-3">
@@ -81,6 +120,7 @@ export default function MemberLayout() {
   const open = useSelector((s) => s.ui.sidebarOpen);
   const hidden = useSelector((s) => s.ui.hideAmounts);
   const { pathname } = useLocation();
+  usePageTitle(navLabel(NAV_ITEMS, pathname) || 'My account');
   const { data: notif } = useNotificationsQuery({ limit: 1 }, { pollingInterval: 60000 });
 
   useEffect(() => {
@@ -90,7 +130,7 @@ export default function MemberLayout() {
 
   return (
     <div className="min-h-dvh bg-ink-950 lg:pl-72">
-      <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(60%_40%_at_70%_0%,rgba(124,58,237,0.16),transparent)]" />
+      <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(60%_40%_at_70%_0%,color-mix(in_oklab,var(--color-brand-600)_16%,transparent),transparent)]" />
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-line bg-ink-900/90 backdrop-blur-xl lg:block">
         <SideNav />
@@ -114,11 +154,12 @@ export default function MemberLayout() {
             <Menu className="size-6" />
           </button>
           <h2 className="flex-1 truncate text-lg font-bold">Hi, {firstName(user?.fullName)}</h2>
-          <button type="button" onClick={() => dispatch(toggleAmounts())} className="rounded-xl p-2 text-muted hover:bg-white/5 hover:text-fg"
+          <button type="button" onClick={() => dispatch(toggleAmounts())} className="rounded-xl p-2 text-muted hover:bg-fg/5 hover:text-fg"
             aria-label={hidden ? 'Show amounts' : 'Hide amounts'} title={hidden ? 'Show amounts' : 'Hide amounts'}>
             {hidden ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
           </button>
-          <Link to="/app/notifications" className="relative rounded-xl p-2 text-fg hover:bg-white/5" aria-label="Notifications">
+          <ThemeToggle />
+          <Link to="/app/notifications" className="relative rounded-xl p-2 text-fg hover:bg-fg/5" aria-label="Notifications">
             <Bell className="size-5" />
             {notif?.unread > 0 && (
               <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-gold-400 px-1 text-[10px] font-bold text-ink-950">

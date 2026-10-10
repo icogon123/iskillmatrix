@@ -31,11 +31,11 @@ export default function ForgotPassword() {
         <form onSubmit={submit} className="space-y-4">
           {error && <Notice tone="red" title={error} />}
           <Input label="Username / Member ID / Email" icon={User} value={identifier} onChange={(e) => setIdentifier(e.target.value)} required />
-          <Button type="submit" size="lg" className="w-full" loading={isLoading}>Send reset link</Button>
+          <Button type="submit" variant="solid" size="lg" className="w-full" loading={isLoading}>Send reset link</Button>
         </form>
       )}
       <p className="mt-6 text-center text-sm text-muted">
-        Remembered it? <Link to="/login" className="font-semibold text-brand-300">Back to login</Link>
+        Remembered it? <Link to="/login" className="font-semibold text-brand-300">Back to log in</Link>
       </p>
     </AuthShell>
   );

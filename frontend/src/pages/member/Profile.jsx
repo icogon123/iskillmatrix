@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { UserCog, KeyRound, Lock } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { UserCog, KeyRound, Lock, Camera, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useProfileQuery, useChangeTxnPasswordMutation } from '../../api/memberApi';
+import { useProfileQuery, useChangeTxnPasswordMutation, useUploadAvatarMutation, useRemoveAvatarMutation } from '../../api/memberApi';
 import { useChangePasswordMutation } from '../../api/publicApi';
 import { errorMessage } from '../../app/api';
 import { PageHeader, Card, CardHeader, KeyValue, Button, StatusBadge, PageLoader, ErrorState } from '../../components/ui';
@@ -28,6 +28,67 @@ function PasswordForm({ title, icon: Icon, fields, onSubmit, loading, note }) {
   );
 }
 
+const MAX_BYTES = 5 * 1024 * 1024;
+
+/** Profile picture with upload / remove. Shown on the dashboard rank card and in the menu. */
+function AvatarEditor({ user }) {
+  const input = useRef(null);
+  const [upload, { isLoading: uploading }] = useUploadAvatarMutation();
+  const [remove, { isLoading: removing }] = useRemoveAvatarMutation();
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return toast.error('Choose a JPG, PNG or WEBP image');
+    if (file.size > MAX_BYTES) return toast.error('The image must be 5 MB or smaller');
+    const fd = new FormData();
+    fd.append('avatar', file);
+    try {
+      await upload(fd).unwrap();
+      toast.success('Profile picture updated');
+    } catch (err) {
+      toast.error(errorMessage(err));
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-4">
+      <button type="button" onClick={() => input.current?.click()} disabled={uploading} title="Change profile picture"
+        className="group relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+        <Avatar name={user.fullName} src={user.avatar} size="xl" />
+        <span className="absolute inset-0 grid place-items-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+          <Camera className="size-6" />
+        </span>
+      </button>
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={onFile} />
+      <div className="min-w-0">
+        <p className="text-lg font-bold">{user.fullName}</p>
+        <p className="text-sm text-muted">{user.memberId} · @{user.username}</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" loading={uploading} onClick={() => input.current?.click()}>
+            <Camera className="size-3.5" /> {user.avatar ? 'Change photo' : 'Upload photo'}
+          </Button>
+          {user.avatar && (
+            <Button size="sm" variant="ghost" loading={removing} className="text-danger"
+              onClick={async () => {
+                try {
+                  await remove().unwrap();
+                  toast.success('Profile picture removed');
+                } catch (err) {
+                  toast.error(errorMessage(err));
+                }
+              }}>
+              <Trash2 className="size-3.5" /> Remove
+            </Button>
+          )}
+        </div>
+        <p className="mt-1.5 text-[11px] text-subtle">JPG, PNG or WEBP, up to 5 MB. Shown on your dashboard.</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const { data, isLoading, error, refetch } = useProfileQuery();
   const [changePassword, { isLoading: p1 }] = useChangePasswordMutation();
@@ -51,18 +112,14 @@ export default function Profile() {
     <div>
       <PageHeader icon={UserCog} title="Profile & Security" />
       <Card className="card-pad">
-        <div className="mb-5 flex items-center gap-4">
-          <Avatar name={u.fullName} size="lg" />
-          <div>
-            <p className="text-lg font-bold">{u.fullName}</p>
-            <p className="text-sm text-muted">{u.memberId} · @{u.username}</p>
-          </div>
-          <StatusBadge status={u.status} className="ml-auto" />
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <AvatarEditor user={u} />
+          <StatusBadge status={u.status} className="shrink-0" />
         </div>
         <KeyValue items={[
           ['Email', u.email], ['Mobile', u.mobile], ['Date of birth', date(u.dob)], ['Country', u.country], ['Aadhaar', u.aadhaar],
-          ['Sponsor', u.sponsor ? `${u.sponsor.fullName} (${u.sponsor.memberId})` : '—'], ['Package', u.package?.name || 'Not active'],
-          ['Package activated', date(u.packageActivatedAt)], ['KYC status', <StatusBadge status={u.kycStatus} />], ['Member since', date(u.createdAt)],
+          ['Sponsor', u.sponsor ? `${u.sponsor.fullName} (${u.sponsor.memberId})` : '—'], ['Bundle', u.package?.name || 'Not active'],
+          ['Bundle activated', date(u.packageActivatedAt)], ['KYC status', <StatusBadge status={u.kycStatus} />], ['Member since', date(u.createdAt)],
         ]} />
         <p className="mt-5 text-xs text-subtle">To correct your personal details, contact support.</p>
       </Card>

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { UserCheck, Phone, Mail, IdCard, AtSign, CheckCircle2, XCircle, PartyPopper, Hash } from 'lucide-react';
+import { UserCheck, Phone, Mail, IdCard, AtSign, CheckCircle2, XCircle, Hash } from 'lucide-react';
 import AuthShell from './AuthShell';
 import { Button, Input, Select, Notice, Spinner } from '../../components/ui';
 import PasswordInput from '../../components/common/PasswordInput';
-import { usePackagesQuery, useLazySponsorQuery, useLazyCheckUsernameQuery, useRegisterMutation } from '../../api/publicApi';
+import { usePackagesQuery, useCoursesQuery, useLazySponsorQuery, useLazyCheckUsernameQuery, useRegisterMutation } from '../../api/publicApi';
 import { errorMessage } from '../../app/api';
 import { useDebounce } from '../../lib/useDebounce';
 import { inr } from '../../lib/format';
@@ -14,7 +14,7 @@ const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 function validate(f) {
   const e = {};
-  if (!f.sponsorId.trim()) e.sponsorId = 'Sponsor ID / referral code is required';
+  if (!f.sponsorId.trim()) e.sponsorId = 'Referral code is required';
   if (f.fullName.trim().length < 2) e.fullName = 'Enter your full name';
   if (!/^\d{10}$/.test(f.mobile)) e.mobile = 'Enter a valid 10-digit mobile number';
   if (!/^\S+@\S+\.\S+$/.test(f.email)) e.email = 'Enter a valid email address';
@@ -27,15 +27,15 @@ function validate(f) {
   if (f.txnPassword.length < 6) e.txnPassword = 'Transaction password must be at least 6 characters';
   else if (f.txnPassword === f.password) e.txnPassword = 'Must be different from your login password';
   if (f.confirmTxnPassword !== f.txnPassword) e.confirmTxnPassword = 'Transaction passwords do not match';
-  if (!f.packageId) e.packageId = 'Select a package';
+  if (!f.packageId) e.packageId = 'Select a bundle';
   return e;
 }
 
 function Section({ title, children }) {
   return (
-    <fieldset className="card card-pad">
+    <fieldset className="rounded-2xl border border-line bg-ink-900 p-5 sm:p-6">
       <legend className="sr-only">{title}</legend>
-      <h3 className="mb-4 border-b border-line pb-3 text-sm font-bold tracking-wide text-brand-200 uppercase">{title}</h3>
+      <h3 className="mb-4 font-semibold text-fg">{title}</h3>
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
     </fieldset>
   );
@@ -45,6 +45,8 @@ export default function Register() {
   const [params] = useSearchParams();
   const { data: pkgData } = usePackagesQuery();
   const packages = pkgData?.packages || [];
+  const { data: courseData } = useCoursesQuery();
+  const catalog = useMemo(() => courseData?.courses || [], [courseData]);
   const [lookupSponsor, sponsorRes] = useLazySponsorQuery();
   const [checkUsername, usernameRes] = useLazyCheckUsernameQuery();
   const [register, { isLoading }] = useRegisterMutation();
@@ -66,9 +68,9 @@ export default function Register() {
   };
   const digits = (k, max) => (e) => set(k)({ target: { value: e.target.value.replace(/\D/g, '').slice(0, max) } });
 
-  // Preselect package from ?package=key
+  // Preselect the bundle from ?bundle=key (older ?package= / ?course= links still work)
   useEffect(() => {
-    const key = params.get('package');
+    const key = params.get('bundle') || params.get('package') || params.get('course');
     if (key && packages.length && !form.packageId) {
       const p = packages.find((x) => x.key === key);
       if (p) setForm((f) => ({ ...f, packageId: p._id }));
@@ -95,7 +97,7 @@ export default function Register() {
     e.preventDefault();
     setServerError('');
     const v = validate(form);
-    if (sponsorBad) v.sponsorId = 'Sponsor not found or inactive';
+    if (sponsorBad) v.sponsorId = 'Referral code not found or inactive';
     if (usernameTaken) v.username = 'This username is already taken';
     setErrors(v);
     if (Object.keys(v).length) {
@@ -117,21 +119,21 @@ export default function Register() {
   if (done) {
     return (
       <AuthShell title="Registration submitted" aside={false}>
-        <div className="card card-pad text-center">
-          <span className="mx-auto grid size-16 place-items-center rounded-full bg-success/15 text-success"><PartyPopper className="size-8" /></span>
+        <div className="rounded-2xl border border-line bg-ink-900 p-6 text-center">
+          <span className="mx-auto grid size-14 place-items-center rounded-full bg-success/15 text-success"><CheckCircle2 className="size-7" /></span>
           <p className="mt-4 text-muted">{done.message}</p>
           <div className="mt-6 grid grid-cols-2 gap-3 text-left">
-            <div className="rounded-xl bg-white/[0.04] p-3">
+            <div className="rounded-xl bg-fg/[0.04] p-3">
               <p className="text-xs text-muted">Member ID</p>
-              <p className="font-display text-lg font-black text-gold-400">{done.memberId}</p>
+              <p className="text-lg font-bold text-gold-400">{done.memberId}</p>
             </div>
-            <div className="rounded-xl bg-white/[0.04] p-3">
+            <div className="rounded-xl bg-fg/[0.04] p-3">
               <p className="text-xs text-muted">Username</p>
-              <p className="font-display text-lg font-black">{done.username}</p>
+              <p className="text-lg font-bold">{done.username}</p>
             </div>
           </div>
-          <p className="mt-5 text-xs text-subtle">Keep these safe. After approval, log in, complete your KYC and pay for your package using the QR code.</p>
-          <Button to="/login" className="mt-6 w-full">Go to login</Button>
+          <p className="mt-5 text-xs text-subtle">Keep these safe. After approval, log in, complete your KYC and pay for your bundle using the QR code.</p>
+          <Button to="/login" variant="solid" className="mt-6 w-full">Go to log in</Button>
         </div>
       </AuthShell>
     );
@@ -140,15 +142,15 @@ export default function Register() {
   const err = (k) => ({ error: errors[k], 'data-error': Boolean(errors[k]) });
 
   return (
-    <AuthShell title="Register a new membership" subtitle="All fields are required. Your account is activated after admin approval." wide aside={false}>
+    <AuthShell title="Create your account" subtitle="Enroll in a course bundle. All fields are required, and your account is activated after admin approval." wide aside={false}>
       <form onSubmit={submit} className="space-y-5" noValidate>
         {serverError && <Notice tone="red" title={serverError} />}
 
-        <Section title="Referral detail">
-          <Input label="Sponsor ID / Referral code" icon={Hash} placeholder="e.g. ISM100001" value={form.sponsorId} onChange={set('sponsorId')} {...err('sponsorId')}
+        <Section title="Referral">
+          <Input label="Referral code (Sponsor ID)" icon={Hash} placeholder="e.g. ISM100001" value={form.sponsorId} onChange={set('sponsorId')} {...err('sponsorId')}
             right={sponsorRes.isFetching ? <Spinner className="mr-2 size-4" /> : sponsorOk ? <CheckCircle2 className="mr-2 size-4 text-success" /> : sponsorBad ? <XCircle className="mr-2 size-4 text-danger" /> : null} />
           <Input label="Sponsor name" icon={UserCheck} value={sponsorOk ? sponsorRes.data.fullName : ''} placeholder={sponsorBad ? 'Sponsor not found' : 'Auto-filled from sponsor ID'} readOnly
-            hint={sponsorOk ? `You will join ${sponsorRes.data.fullName}'s team` : undefined} />
+            hint={sponsorOk ? `Referred by ${sponsorRes.data.fullName}` : undefined} />
         </Section>
 
         <Section title="Profile detail">
@@ -173,27 +175,29 @@ export default function Register() {
           <PasswordInput label="Confirm transaction password" autoComplete="new-password" value={form.confirmTxnPassword} onChange={set('confirmTxnPassword')} {...err('confirmTxnPassword')} />
         </Section>
 
-        <fieldset className="card card-pad" data-error={Boolean(errors.packageId)}>
-          <h3 className="mb-4 border-b border-line pb-3 text-sm font-bold tracking-wide text-brand-200 uppercase">Select package</h3>
+        <fieldset className="rounded-2xl border border-line bg-ink-900 p-5 sm:p-6" data-error={Boolean(errors.packageId)}>
+          <legend className="sr-only">Choose your bundle</legend>
+          <h3 className="mb-4 font-semibold text-fg">Choose your bundle</h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {packages.map((p) => {
               const active = form.packageId === p._id;
               return (
                 <label key={p._id}
-                  className={`cursor-pointer rounded-2xl border p-4 transition ${active ? 'border-gold-400/70 bg-gold-400/10 shadow-gold' : 'border-line hover:border-brand-500/50'}`}>
+                  className={`cursor-pointer rounded-2xl border p-4 transition ${active ? 'border-brand-400 bg-brand-500/10' : 'border-line hover:border-fg/25'}`}>
                   <input type="radio" name="package" className="sr-only" checked={active} onChange={() => set('packageId')({ target: { value: p._id } })} />
                   <div className="flex items-center justify-between">
                     <span className="font-bold">{p.name}</span>
-                    <span className={`size-4 rounded-full border-2 ${active ? 'border-gold-400 bg-gold-400' : 'border-subtle'}`} />
+                    <span className={`size-4 rounded-full border-2 ${active ? 'border-brand-400 bg-brand-400 ring-2 ring-inset ring-ink-900' : 'border-subtle'}`} />
                   </div>
-                  <p className="mt-2 font-display text-2xl font-black">{inr(p.price)}</p>
-                  <p className="mt-1 text-xs text-muted">Direct income {inr(p.activeIncome)} · {p.passiveLevels.length} level{p.passiveLevels.length === 1 ? '' : 's'}</p>
+                  <p className="mt-2 text-2xl font-bold">{inr(p.price)}</p>
+                  <p className="mt-1 text-xs font-semibold text-brand-200">{p.courses.length} course{p.courses.length === 1 ? '' : 's'} included</p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-muted">{catalog.filter((c) => p.courses.includes(c.slug)).map((c) => c.title).join(', ')}</p>
                 </label>
               );
             })}
           </div>
           {errors.packageId && <p className="mt-2 text-xs text-danger">{errors.packageId}</p>}
-          {selectedPkg && <p className="mt-3 text-xs text-subtle">You will pay {inr(selectedPkg.price)} by QR code after your registration is approved.</p>}
+          {selectedPkg && <p className="mt-3 text-xs text-subtle">You will pay {inr(selectedPkg.price)} (one-time, incl. GST) by QR code after your registration is approved. <Link to="/pricing" className="text-brand-300">Compare bundles</Link></p>}
         </fieldset>
 
         <label className="flex items-start gap-3 text-sm text-muted">
@@ -201,9 +205,9 @@ export default function Register() {
           I confirm that the details above are correct and belong to me.
         </label>
 
-        <Button type="submit" size="lg" className="w-full" loading={isLoading}>Submit registration</Button>
+        <Button type="submit" variant="solid" size="lg" className="w-full" loading={isLoading}>Create account</Button>
         <p className="text-center text-sm text-muted">
-          Already registered? <Link to="/login" className="font-semibold text-brand-300">Login</Link>
+          Already have an account? <Link to="/login" className="font-semibold text-brand-300">Log in</Link>
         </p>
       </form>
     </AuthShell>

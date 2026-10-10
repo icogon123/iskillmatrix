@@ -9,7 +9,7 @@ import { date, inr } from '../../lib/format';
 
 export default function Members() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ status: '', package: '', kyc: '' });
+  const [filters, setFilters] = useState({ status: '', package: '', kyc: '', wallet: '' });
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const q = useDebounce(search);
@@ -21,14 +21,15 @@ export default function Members() {
     <div>
       <PageHeader icon={Users} title="Members" subtitle="Search members and open a profile to manage status, wallet and network." />
       <Card>
-        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5">
           <Input icon={Search} placeholder="Name, member ID, mobile, email" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
           <Select value={filters.status} onChange={setF('status')} placeholder="All approved statuses"
             options={['active', 'inactive', 'suspended'].map((s) => ({ value: s, label: s[0].toUpperCase() + s.slice(1) }))} />
-          <Select value={filters.package} onChange={setF('package')} placeholder="All packages"
-            options={[{ value: 'none', label: 'No package yet' }, ...(pk?.packages || []).map((p) => ({ value: p._id, label: p.name }))]} />
+          <Select value={filters.package} onChange={setF('package')} placeholder="All bundles"
+            options={[{ value: 'none', label: 'No bundle yet' }, ...(pk?.packages || []).map((p) => ({ value: p._id, label: p.name }))]} />
           <Select value={filters.kyc} onChange={setF('kyc')} placeholder="Any KYC status"
             options={['not_submitted', 'submitted', 'under_review', 'approved', 'rejected'].map((s) => ({ value: s, label: s.replace('_', ' ') }))} />
+          <Select value={filters.wallet} onChange={setF('wallet')} placeholder="Any wallet" options={[{ value: 'suspended', label: 'Wallet suspended' }]} />
         </div>
         <DataTable
           loading={isFetching && !data}
@@ -45,11 +46,11 @@ export default function Members() {
               ),
             },
             { key: 'sponsor', header: 'Sponsor', render: (r) => r.sponsor?.memberId || '—' },
-            { key: 'package', header: 'Package', render: (r) => r.package?.name || <span className="text-subtle">—</span> },
+            { key: 'package', header: 'Bundle', render: (r) => r.package?.name || <span className="text-subtle">—</span> },
             { key: 'badge', header: 'Badge', render: (r) => <span className="text-xs capitalize">{r.badge?.replace('_', ' ') || '—'}</span> },
             { key: 'lifetime', header: 'Lifetime', align: 'right', render: (r) => inr(r.lifetimeEarnings) },
             { key: 'kyc', header: 'KYC', render: (r) => <StatusBadge status={r.kycStatus} /> },
-            { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+            { key: 'status', header: 'Status', render: (r) => <div className="flex flex-wrap gap-1"><StatusBadge status={r.status} />{r.walletSuspended && <StatusBadge status="suspended" label="Wallet suspended" />}</div> },
             { key: 'joined', header: 'Joined', render: (r) => <span className="text-xs">{date(r.createdAt)}</span> },
           ]}
         />

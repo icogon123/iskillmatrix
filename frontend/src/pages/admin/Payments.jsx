@@ -5,6 +5,7 @@ import { PageHeader, Card, Tabs, Input, DataTable, Pagination, Button, StatusBad
 import FileLink from '../../components/common/FileLink';
 import { useAction } from '../../lib/useAction';
 import { useDebounce } from '../../lib/useDebounce';
+import { WALLET_LABELS } from '../../lib/constants';
 import { inr, dateTime, date } from '../../lib/format';
 
 export default function Payments() {
@@ -21,7 +22,7 @@ export default function Payments() {
 
   return (
     <div>
-      <PageHeader icon={QrCode} title="Payment Verification" subtitle="Match the UTR and screenshot with your bank statement, then approve to activate the package and release income." />
+      <PageHeader icon={QrCode} title="Payment Verification" subtitle="Match the UTR and screenshot with your bank statement, then approve to activate the bundle and release income." />
       <Card>
         <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <Tabs value={status} onChange={(v) => { setStatus(v); setPage(1); }}
@@ -34,9 +35,14 @@ export default function Payments() {
           columns={[
             { key: 'id', header: 'Payment', render: (r) => <div><p className="font-semibold">{r.paymentId}</p><p className="text-xs text-muted">{dateTime(r.createdAt)}</p></div> },
             { key: 'member', header: 'Member', render: (r) => <div><p className="font-semibold">{r.user?.fullName}</p><p className="text-xs text-muted">{r.user?.memberId}</p></div> },
-            { key: 'pkg', header: 'Package', render: (r) => r.package?.name },
+            { key: 'pkg', header: 'Bundle', render: (r) => r.package?.name },
             { key: 'amount', header: 'Amount', render: (r) => <span className="font-semibold">{inr(r.amount)}</span> },
-            { key: 'utr', header: 'UTR / Paid on', render: (r) => <div className="text-xs"><p className="font-mono">{r.utr}</p><p className="text-muted">{date(r.paymentDate)}</p></div> },
+            {
+              key: 'utr', header: 'Paid with',
+              render: (r) => (r.method === 'wallet'
+                ? <div className="text-xs"><p className="font-semibold">{WALLET_LABELS[r.wallet] || 'Wallet'}</p><p className="text-muted">{r.paidBy && r.paidBy._id !== r.user?._id ? `by ${r.paidBy.fullName} (@${r.paidBy.username})` : 'by the member'}</p></div>
+                : <div className="text-xs"><p className="font-mono">UPI · {r.utr}</p><p className="text-muted">{date(r.paymentDate)}</p></div>),
+            },
             { key: 'proof', header: 'Proof', render: (r) => <FileLink name={r.proof} /> },
             { key: 'status', header: 'Status', render: (r) => <div><StatusBadge status={r.status} />{r.verifiedBy && <p className="mt-1 text-[10px] text-subtle">by {r.verifiedBy.fullName}</p>}</div> },
             status === 'pending'
@@ -56,8 +62,8 @@ export default function Payments() {
         <Pagination page={data?.page} pages={data?.pages} total={data?.total} onChange={setPage} />
       </Card>
 
-      <ConfirmModal open={modal?.type === 'approve'} onClose={() => setModal(null)} title="Approve payment & activate package" confirmLabel="Approve & activate" variant="success" loading={a1}
-        message={modal?.p && <>Confirm you received <b className="text-fg">{inr(modal.p.amount)}</b> with UTR <b className="font-mono text-fg">{modal.p.utr}</b> from {modal.p.user?.fullName}. The {modal.p.package?.name} package will be activated and income distributed to the upline immediately.</>}
+      <ConfirmModal open={modal?.type === 'approve'} onClose={() => setModal(null)} title="Approve payment & activate bundle" confirmLabel="Approve & activate" variant="success" loading={a1}
+        message={modal?.p && <>Confirm you received <b className="text-fg">{inr(modal.p.amount)}</b> with UTR <b className="font-mono text-fg">{modal.p.utr}</b> from {modal.p.user?.fullName}. The {modal.p.package?.name} bundle will be activated and income distributed to the upline immediately.</>}
         reasonLabel="Remarks (optional)"
         onConfirm={async ({ reason }) => (await approve({ id: modal.p._id, remarks: reason })) && setModal(null)} />
       <ConfirmModal open={modal?.type === 'reject'} onClose={() => setModal(null)} title="Reject payment" confirmLabel="Reject" variant="danger" loading={a2}

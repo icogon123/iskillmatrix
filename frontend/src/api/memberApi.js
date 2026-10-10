@@ -10,6 +10,8 @@ export const memberApi = api.injectEndpoints({
   endpoints: (b) => ({
     dashboard: b.query({ query: () => '/member/dashboard', providesTags: ['Dashboard'] }),
     profile: b.query({ query: () => '/member/profile', providesTags: ['Me'] }),
+    uploadAvatar: b.mutation({ query: (formData) => ({ url: '/member/avatar', method: 'POST', body: formData }), invalidatesTags: ['Me', 'Dashboard'] }),
+    removeAvatar: b.mutation({ query: () => ({ url: '/member/avatar', method: 'DELETE' }), invalidatesTags: ['Me', 'Dashboard'] }),
     changeTxnPassword: b.mutation({ query: (body) => ({ url: '/member/change-txn-password', method: 'POST', body }) }),
 
     paymentInfo: b.query({ query: () => '/member/payment-info', providesTags: ['Payments'] }),
@@ -28,6 +30,20 @@ export const memberApi = api.injectEndpoints({
     incomeSummary: b.query({ query: () => '/member/income', providesTags: ['Ledger'] }),
     ledger: b.query({ query: (p) => `/member/ledger${qs(p)}`, providesTags: ['Ledger'] }),
     wallet: b.query({ query: () => '/member/wallet', providesTags: ['Wallet'] }),
+    statement: b.query({ query: (p) => `/member/wallet/statement${qs(p)}`, providesTags: ['Wallet', 'Ledger'] }),
+    memberLookup: b.query({ query: (username) => `/member/members/lookup${qs({ username })}` }),
+    transfers: b.query({ query: (p) => `/member/transfers${qs(p)}`, providesTags: ['Transfers'] }),
+    createTransfer: b.mutation({
+      query: (body) => ({ url: '/member/transfers', method: 'POST', body }),
+      invalidatesTags: ['Transfers', 'Wallet', 'Ledger', 'Dashboard', 'Payments'],
+    }),
+    walletPurchase: b.mutation({
+      query: (body) => ({ url: '/member/wallet/purchase', method: 'POST', body }),
+      invalidatesTags: ['Payments', 'Wallet', 'Ledger', 'Dashboard', 'Me', 'Team', 'Notifications'],
+    }),
+    activations: b.query({ query: (p) => `/member/wallet/activations${qs(p)}`, providesTags: ['Payments'] }),
+    deposits: b.query({ query: (p) => `/member/deposits${qs(p)}`, providesTags: ['Deposits'] }),
+    createDeposit: b.mutation({ query: (formData) => ({ url: '/member/deposits', method: 'POST', body: formData }), invalidatesTags: ['Deposits'] }),
     withdrawals: b.query({ query: (p) => `/member/withdrawals${qs(p)}`, providesTags: ['Withdrawals'] }),
     createWithdrawal: b.mutation({
       query: (body) => ({ url: '/member/withdrawals', method: 'POST', body }),
@@ -48,6 +64,8 @@ export const memberApi = api.injectEndpoints({
 });
 
 export const {
+  useUploadAvatarMutation, useRemoveAvatarMutation, useStatementQuery, useLazyStatementQuery, useLazyMemberLookupQuery, useTransfersQuery,
+  useCreateTransferMutation, useWalletPurchaseMutation, useActivationsQuery, useDepositsQuery, useCreateDepositMutation,
   useDashboardQuery, useProfileQuery, useChangeTxnPasswordMutation, usePaymentInfoQuery, useSubmitPaymentMutation, useKycQuery,
   useSubmitKycMutation, useTeamQuery, useTeamMembersQuery, useTreeNodeQuery, useLazyTreeNodeQuery, useIncomeSummaryQuery, useLedgerQuery,
   useWalletQuery, useWithdrawalsQuery, useCreateWithdrawalMutation, useCancelWithdrawalMutation, useAchievementsQuery,

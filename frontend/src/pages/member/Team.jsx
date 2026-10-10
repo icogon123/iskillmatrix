@@ -52,9 +52,9 @@ export default function Team() {
             },
             { key: 'level', header: 'Level', render: (r) => `L${r.level}` },
             { key: 'sponsor', header: 'Sponsor', render: (r) => r.sponsor?.memberId },
-            { key: 'package', header: 'Package', render: (r) => r.package?.name || <span className="text-subtle">Not active</span> },
+            { key: 'package', header: 'Bundle', render: (r) => r.package?.name || <span className="text-subtle">Not active</span> },
             { key: 'joined', header: 'Joined', render: (r) => date(r.createdAt) },
-            { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.package ? r.status : 'inactive'} label={r.package ? undefined : 'No package'} /> },
+            { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.package ? r.status : 'inactive'} label={r.package ? undefined : 'No bundle'} /> },
           ]}
         />
         <Pagination page={list?.page} pages={list?.pages} total={list?.total} onChange={setPage} />
@@ -68,7 +68,7 @@ export default function Team() {
               { key: 'level', header: 'Level', render: (r) => `Level ${r.level}` },
               { key: 'total', header: 'Members' },
               { key: 'active', header: 'Active' },
-              { key: 'inactive', header: 'Without package', render: (r) => r.total - r.active },
+              { key: 'inactive', header: 'Without bundle', render: (r) => r.total - r.active },
             ]} />
         </Card>
       )}

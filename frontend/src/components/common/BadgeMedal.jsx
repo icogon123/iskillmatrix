@@ -12,7 +12,7 @@ export default function BadgeMedal({ badgeKey, size = 'md', locked = false }) {
       className={`grid shrink-0 place-items-center rounded-full ${sizes[size]} ${locked ? 'opacity-35 grayscale' : ''}`}
       style={{ background: `radial-gradient(circle at 30% 25%, ${a}, ${b})`, boxShadow: locked ? 'none' : `0 6px 22px -6px ${b}` }}
     >
-      <Icon className="text-ink-950/80" strokeWidth={2.4} />
+      <Icon className="text-char-950/80" strokeWidth={2.4} />
     </span>
   );
 }

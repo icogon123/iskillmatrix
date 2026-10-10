@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Menu, X, LayoutDashboard, UserPlus, Users, ShieldCheck, QrCode, Banknote, Cog, Network, BookOpen, FileBarChart, Package,
-  Settings, ScrollText, LogOut, KeyRound,
+  Menu, X, LayoutDashboard, UserPlus, Users, ShieldCheck, QrCode, Banknote, Cog, Network, BookOpen, FileBarChart, GraduationCap, Package,
+  Settings, ScrollText, LogOut, KeyRound, HandCoins,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Logo from '../common/Logo';
 import Avatar from '../common/Avatar';
+import ThemeToggle from '../common/ThemeToggle';
 import { selectUser } from '../../features/auth/authSlice';
 import { toggleSidebar } from '../../features/ui/uiSlice';
 import { useLogoutMutation, useChangePasswordMutation } from '../../api/publicApi';
@@ -15,6 +16,7 @@ import { errorMessage } from '../../app/api';
 import { Modal, Button } from '../ui';
 import PasswordInput from '../common/PasswordInput';
 import { useAdminDashboardQuery } from '../../api/adminApi';
+import { usePageTitle } from '../../lib/usePageTitle';
 
 const NAV = [
   { group: 'Overview', items: [{ to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true }] },
@@ -23,6 +25,7 @@ const NAV = [
     items: [
       { to: '/admin/registrations', label: 'Registrations', icon: UserPlus, count: 'pendingRegistrations' },
       { to: '/admin/payments', label: 'Payment Verification', icon: QrCode, count: 'pendingPayments' },
+      { to: '/admin/deposits', label: 'Fund Deposits', icon: HandCoins, count: 'pendingDeposits' },
       { to: '/admin/kyc', label: 'KYC Approvals', icon: ShieldCheck, count: 'pendingKyc' },
       { to: '/admin/withdrawals', label: 'Withdrawals', icon: Banknote, count: 'pendingWithdrawals' },
     ],
@@ -40,12 +43,17 @@ const NAV = [
   {
     group: 'Configuration',
     items: [
-      { to: '/admin/packages', label: 'Packages & Income', icon: Package },
+      { to: '/admin/courses', label: 'Course Catalog', icon: GraduationCap },
+      { to: '/admin/bundles', label: 'Bundles & Income', icon: Package },
       { to: '/admin/settings', label: 'System Settings', icon: Settings },
       { to: '/admin/audit', label: 'Audit Log', icon: ScrollText },
     ],
   },
 ];
+
+/** Label of the menu item that matches the current URL (longest match wins), for the browser tab title. */
+const navLabel = (items, pathname) =>
+  items.filter((n) => pathname === n.to || pathname.startsWith(`${n.to}/`)).sort((a, b) => b.to.length - a.to.length)[0]?.label;
 
 function ChangePasswordModal({ open, onClose }) {
   const empty = { currentPassword: '', newPassword: '', confirmPassword: '' };
@@ -100,7 +108,7 @@ function SideNav({ onNavigate }) {
                 <NavLink key={to} to={to} end={end} onClick={onNavigate}
                   className={({ isActive }) =>
                     `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                      isActive ? 'bg-gradient-to-r from-brand-500/25 to-brand-500/5 text-fg ring-1 ring-brand-500/30' : 'text-muted hover:bg-white/[0.04] hover:text-fg'
+                      isActive ? 'bg-gradient-to-r from-brand-500/25 to-brand-500/5 text-fg ring-1 ring-brand-500/30' : 'text-muted hover:bg-fg/[0.04] hover:text-fg'
                     }`}>
                   <Icon className="size-[18px]" />
                   <span className="flex-1">{label}</span>
@@ -119,8 +127,9 @@ function SideNav({ onNavigate }) {
           <p className="truncate text-sm font-semibold">{user?.fullName}</p>
           <p className="text-xs text-muted">@{user?.username}</p>
         </div>
+        <ThemeToggle className="rounded-lg p-2" iconClassName="size-4" />
         <button type="button" title="Change password" aria-label="Change password" onClick={() => setPwOpen(true)}
-          className="rounded-lg p-2 text-muted hover:bg-white/5 hover:text-fg">
+          className="rounded-lg p-2 text-muted hover:bg-fg/5 hover:text-fg">
           <KeyRound className="size-4" />
         </button>
         <button type="button" title="Logout" aria-label="Logout"
@@ -137,6 +146,7 @@ export default function AdminLayout() {
   const dispatch = useDispatch();
   const open = useSelector((s) => s.ui.sidebarOpen);
   const { pathname } = useLocation();
+  usePageTitle(`${navLabel(NAV.flatMap((g) => g.items), pathname) || 'Admin'} · Admin`);
 
   useEffect(() => {
     dispatch(toggleSidebar(false));

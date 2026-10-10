@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Banknote, ShieldAlert, X } from 'lucide-react';
+import { Banknote, ShieldAlert, X, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWalletQuery, useWithdrawalsQuery, useCreateWithdrawalMutation, useCancelWithdrawalMutation } from '../../api/memberApi';
 import { errorMessage } from '../../app/api';
@@ -31,6 +31,7 @@ export default function Withdraw() {
   const admin = round2((amt * rules.adminChargePercent) / 100);
   const net = round2(amt - tds - admin);
   const kycOk = !rules.requireKyc || w.kycStatus === 'approved';
+  const canWithdraw = kycOk && !w.suspended;
   const tooLow = amt > 0 && amt < rules.min;
   const tooHigh = amt > 0 && (amt > w.balance || (rules.max && amt > rules.max));
 
@@ -48,9 +49,14 @@ export default function Withdraw() {
 
   return (
     <div>
-      <PageHeader icon={Banknote} title="Withdraw" subtitle={`TDS ${rules.tdsPercent}% and admin charge ${rules.adminChargePercent}% are deducted from the requested amount.`} />
+      <PageHeader icon={Banknote} title="Withdraw" subtitle={`Withdrawals are paid from your Main Wallet. TDS ${rules.tdsPercent}% and admin charge ${rules.adminChargePercent}% are deducted from the requested amount.`} />
 
-      {!kycOk && (
+      {w.suspended && (
+        <Notice tone="red" icon={Lock} title="Your wallet is suspended" className="mb-5">
+          {w.suspended.reason ? `Reason: ${w.suspended.reason}. ` : ''}Withdrawals are on hold until the admin reactivates your wallet. Please contact support.
+        </Notice>
+      )}
+      {!kycOk && !w.suspended && (
         <Notice tone="gold" icon={ShieldAlert} title="KYC approval required" className="mb-5" action={<Button to="/app/kyc" size="sm" variant="outline">Go to KYC</Button>}>
           Your KYC status is “{w.kycStatus.replace('_', ' ')}”. Withdrawals are available once your KYC is approved.
         </Notice>
@@ -62,7 +68,7 @@ export default function Withdraw() {
           <form onSubmit={submit} className="mt-4 space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-gold-400/40 bg-gold-400/10 p-3">
-                <p className="text-xs text-muted">Balance</p>
+                <p className="text-xs text-muted">Main Wallet balance</p>
                 <p className="text-xl font-bold text-gold-400"><Money value={w.balance} /></p>
               </div>
               <div className="rounded-xl border border-line p-3 text-sm">
@@ -77,22 +83,23 @@ export default function Withdraw() {
             </div>
             <Input label="Request amount (₹)" type="number" inputMode="decimal" min={rules.min} step="1" value={amount} onChange={(e) => setAmount(e.target.value)}
               hint={`Min ${inr(rules.min)}${rules.max ? ` · Max ${inr(rules.max)}` : ''}`}
-              error={tooLow ? `Minimum withdrawal is ${inr(rules.min)}` : tooHigh ? 'Amount exceeds your balance or the maximum limit' : undefined} disabled={!kycOk} required />
-            <div className="space-y-2 rounded-xl bg-white/[0.04] p-4 text-sm">
+              error={tooLow ? `Minimum withdrawal is ${inr(rules.min)}` : tooHigh ? 'Amount exceeds your Main Wallet balance or the maximum limit' : undefined} disabled={!canWithdraw} required />
+            <div className="space-y-2 rounded-xl bg-fg/[0.04] p-4 text-sm">
               <div className="flex justify-between"><span className="text-muted">Request amount</span><span>{inr(amt)}</span></div>
               <div className="flex justify-between"><span className="text-muted">TDS charge ({rules.tdsPercent}%)</span><span>− {inr(tds)}</span></div>
               <div className="flex justify-between"><span className="text-muted">Admin charge ({rules.adminChargePercent}%)</span><span>− {inr(admin)}</span></div>
               <div className="flex justify-between border-t border-line pt-2 font-bold"><span>Net amount</span><span className="text-gold-400">{inr(Math.max(0, net))}</span></div>
             </div>
-            <PasswordInput label="Transaction password" autoComplete="off" value={txnPassword} onChange={(e) => setTxnPassword(e.target.value)} disabled={!kycOk} required />
-            <Button type="submit" size="lg" loading={saving} disabled={!kycOk || !amt || tooLow || tooHigh || !txnPassword} className="w-full">Submit withdrawal</Button>
+            <PasswordInput label="Transaction password" autoComplete="off" value={txnPassword} onChange={(e) => setTxnPassword(e.target.value)} disabled={!canWithdraw} required />
+            <Button type="submit" size="lg" loading={saving} disabled={!canWithdraw || !amt || tooLow || tooHigh || !txnPassword} className="w-full">Submit withdrawal</Button>
           </form>
         </Card>
         <Card className="card-pad self-start lg:col-span-2">
           <CardHeader title="How it works" />
           <ol className="mt-4 space-y-3 text-sm text-muted">
-            {['Enter the amount and your transaction password', 'The amount is held from your wallet immediately', 'Admin reviews and approves the request',
-              'Payment is sent to your bank account with a reference', 'Rejected or cancelled requests are returned to your wallet'].map((s, i) => (
+            {['Enter the amount and your transaction password', 'The amount is held from your Main Wallet immediately', 'Admin reviews and approves the request',
+              'Payment is sent to your bank account with a reference', 'Rejected or cancelled requests are returned to your Main Wallet',
+              'Activation Wallet money cannot be withdrawn — it is only for buying bundles'].map((s, i) => (
               <li key={s} className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-500/25 text-xs font-bold text-brand-200">{i + 1}</span>{s}</li>
             ))}
           </ol>
@@ -124,7 +131,7 @@ export default function Withdraw() {
       </Card>
 
       <ConfirmModal open={Boolean(cancelId)} onClose={() => setCancelId(null)} title="Cancel this withdrawal?" variant="danger" confirmLabel="Cancel withdrawal"
-        loading={cancelling} message="The held amount will be returned to your wallet."
+        loading={cancelling} message="The held amount will be returned to your Main Wallet."
         onConfirm={async () => {
           try {
             await cancel(cancelId).unwrap();

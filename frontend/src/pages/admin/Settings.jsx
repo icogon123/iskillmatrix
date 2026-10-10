@@ -8,7 +8,7 @@ import { dateTime } from '../../lib/format';
 
 const SECTIONS = [
   { value: 'site', label: 'Website' }, { value: 'payment', label: 'QR payment' }, { value: 'income', label: 'Income rules' },
-  { value: 'badges', label: 'Badges & royalty' }, { value: 'withdrawal', label: 'Withdrawal' },
+  { value: 'badges', label: 'Badges & royalty' }, { value: 'withdrawal', label: 'Wallets & withdrawal' },
 ];
 
 function SlabEditor({ rows, onChange, fields, addLabel }) {
@@ -34,7 +34,7 @@ function HistoryModal({ open, onClose }) {
     <Modal open={open} onClose={onClose} size="lg" title="Configuration history" subtitle="Snapshots saved before each change">
       <DataTable dense rows={data?.items || []} columns={[
         { key: 'when', header: 'Changed', render: (r) => <span className="text-xs">{dateTime(r.createdAt)}</span> },
-        { key: 'scope', header: 'Scope', render: (r) => `${r.scope}${r.refId && r.scope === 'package' ? ` · ${r.refId}` : ''}` },
+        { key: 'scope', header: 'Scope', render: (r) => (r.scope === 'package' ? `bundle${r.refId ? ` · ${r.refId}` : ''}` : r.scope) },
         { key: 'v', header: 'Previous version', render: (r) => (r.version ? `v${r.version}` : '—') },
         { key: 'by', header: 'By', render: (r) => r.changedBy?.fullName || '—' },
         { key: 'note', header: 'Note', render: (r) => <span className="text-xs text-muted">{r.note || '—'}</span> },
@@ -68,6 +68,7 @@ export default function Settings() {
   const n = (v) => Number(v);
   const submit = (keys) => {
     const body = Object.fromEntries(keys.map((k) => [k, s[k]]));
+    if (body.weekly) body.weekly = { ...body.weekly, percent: n(body.weekly.percent), qualifyingSales: n(body.weekly.qualifyingSales) };
     if (body.monthlyBonus) body.monthlyBonus = { ...body.monthlyBonus, slabs: body.monthlyBonus.slabs.map((x) => ({ threshold: n(x.threshold), bonus: n(x.bonus) })) };
     if (body.badges) body.badges = body.badges.map((b) => ({ key: b.key, name: b.name, threshold: n(b.threshold) }));
     if (body.royalty) body.royalty = { ...body.royalty, slabs: body.royalty.slabs.map((x) => ({ badgeKey: x.badgeKey, percent: n(x.percent) })) };
@@ -130,11 +131,20 @@ export default function Settings() {
       {tab === 'income' && (
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="card-pad space-y-4">
-            <CardHeader title="Weekly income" subtitle="Standard, Premium and Pro (set per package)" />
+            <CardHeader title="Weekly income pool" subtitle="Weekly % of the company’s sales, shared equally by every member who qualifies that week" />
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Weekly %" type="number" value={s.weekly.percent} onChange={set('weekly', 'percent')} />
-              <Input label="Qualifying sales per set" type="number" value={s.weekly.qualifyingSales} onChange={set('weekly', 'qualifyingSales')} />
+              <Input label="Pool % of weekly sales" type="number" value={s.weekly.percent} onChange={set('weekly', 'percent')} />
+              <Input label="Same-bundle direct sales to qualify" type="number" value={s.weekly.qualifyingSales} onChange={set('weekly', 'qualifyingSales')}
+                hint="Bundles marked “weekly income eligible”" />
             </div>
+            <Select label="Company sales counted as" value={s.weekly.poolBasis} onChange={set('weekly', 'poolBasis')}
+              options={[{ value: 'collection', label: 'Amount received for bundles' }, { value: 'net', label: 'After GST and system cost' }]} />
+            <Toggle checked={s.weekly.autoProcess} onChange={set('weekly', 'autoProcess')} label="Process the weekly pool automatically"
+              description="Calculated when the week closes, Monday 12:05 AM IST." />
+            {s.weekly.autoProcess && (
+              <Toggle checked={s.weekly.autoApprove} onChange={set('weekly', 'autoApprove')} label="Credit wallets without waiting for approval"
+                description="When off, the run waits in Income Processing for you to approve." />
+            )}
             <CardHeader title="Monthly bonus" subtitle="Slab on monthly Active income" />
             <Select label="Threshold rule" value={s.monthlyBonus.comparator} onChange={set('monthlyBonus', 'comparator')}
               options={[{ value: 'gt', label: 'Strictly greater than (>)' }, { value: 'gte', label: 'Greater than or equal (≥)' }]} />
@@ -145,7 +155,7 @@ export default function Settings() {
           <Card className="card-pad space-y-5">
             <CardHeader title="Processing & eligibility" />
             <Toggle checked={s.nonWorking.autoProcess} onChange={set('nonWorking', 'autoProcess')} label="Auto-credit non-working bonus at 12:00 AM" description="When off, credit them manually from Income Processing." />
-            <Toggle checked={s.income.requireActiveBeneficiary} onChange={set('income', 'requireActiveBeneficiary')} label="Only active members with a package receive income"
+            <Toggle checked={s.income.requireActiveBeneficiary} onChange={set('income', 'requireActiveBeneficiary')} label="Only active members with a bundle receive income"
               description="Income for inactive/suspended uplines is recorded as lapsed." />
             <Button loading={saving} onClick={() => submit(['nonWorking', 'income'])}>Save changes</Button>
           </Card>
@@ -185,8 +195,9 @@ export default function Settings() {
       )}
 
       {tab === 'withdrawal' && (
-        <Card className="card-pad max-w-2xl space-y-4">
-          <CardHeader title="Withdrawal rules" subtitle="Charges are deducted from the requested amount" />
+        <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="card-pad space-y-4">
+          <CardHeader title="Withdrawal rules" subtitle="Paid from the Main Wallet. Charges are deducted from the requested amount" />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="TDS %" type="number" value={s.withdrawal.tdsPercent} onChange={set('withdrawal', 'tdsPercent')} />
             <Input label="Admin charge %" type="number" value={s.withdrawal.adminChargePercent} onChange={set('withdrawal', 'adminChargePercent')} />
@@ -196,6 +207,17 @@ export default function Settings() {
           <Toggle checked={s.withdrawal.requireKyc} onChange={set('withdrawal', 'requireKyc')} label="Require approved KYC to withdraw" />
           <Save keys={['withdrawal']} />
         </Card>
+        <Card className="card-pad space-y-4 self-start">
+          <CardHeader title="Deposits & transfers"
+            subtitle="Deposits are credited to the Activation Wallet after you verify them. Transfers move Main Wallet money to the member's own or an upline/downline member's Activation Wallet." />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input label="Minimum deposit (₹)" type="number" value={s.wallet.depositMin} onChange={set('wallet', 'depositMin')} />
+            <Input label="Maximum deposit (₹)" type="number" value={s.wallet.depositMax} onChange={set('wallet', 'depositMax')} hint="0 = no maximum" />
+            <Input label="Minimum transfer (₹)" type="number" value={s.wallet.transferMin} onChange={set('wallet', 'transferMin')} />
+          </div>
+          <Save keys={['wallet']} />
+        </Card>
+        </div>
       )}
 
       <HistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} />

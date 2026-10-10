@@ -61,14 +61,15 @@ whose tag was invalidated. Example: approving a payment invalidates `AdminPaymen
 ledger and processing screen all update without manual refresh.
 
 Tags: `Me`, `Dashboard`, `Payments`, `Kyc`, `Team`, `Ledger`, `Wallet`, `Withdrawals`, `Notifications`,
-`Achievements`, `AdminDashboard`, `Registrations`, `Members`, `Member`, `AdminKyc`, `AdminPayments`,
-`AdminWithdrawals`, `Processing`, `Packages`, `Settings`, `AdminLedger`, `Audit`.
+`Achievements`, `Transfers`, `Deposits`, `AdminDashboard`, `Registrations`, `Members`, `Member`, `AdminKyc`,
+`AdminPayments`, `AdminDeposits`, `AdminWithdrawals`, `Processing`, `Packages`, `Courses`, `Settings`, `AdminLedger`, `Audit`.
 
 ### `src/api/publicApi.js`
 
 | Hook | Request | Notes |
 |------|---------|-------|
-| `usePackagesQuery` | GET `/public/packages` | tag `Packages` |
+| `usePackagesQuery` | GET `/public/packages` (bundles) | tag `Packages` |
+| `useCoursesQuery` | GET `/public/courses` | tags `Courses`, `Packages` |
 | `useSiteQuery` | GET `/public/site` | contact info + plan parameters |
 | `useLazySponsorQuery` | GET `/public/sponsor/:code` | live sponsor name on registration |
 | `useLazyCheckUsernameQuery` | GET `/auth/check-username` | live availability |
@@ -85,13 +86,20 @@ Tags: `Me`, `Dashboard`, `Payments`, `Kyc`, `Team`, `Ledger`, `Wallet`, `Withdra
 |------|---------|------------------------|
 | `useDashboardQuery` | GET `/member/dashboard` | `Dashboard` |
 | `useProfileQuery` | GET `/member/profile` | `Me` |
+| `useUploadAvatarMutation` / `useRemoveAvatarMutation` | POST / DELETE `/member/avatar` | ✗ `Me`, `Dashboard` |
 | `useChangeTxnPasswordMutation` | POST `/member/change-txn-password` | |
 | `usePaymentInfoQuery` | GET `/member/payment-info` | `Payments` |
+| `useWalletPurchaseMutation` | POST `/member/wallet/purchase` | ✗ `Payments`, `Wallet`, `Ledger`, `Dashboard`, `Me`, `Team`, `Notifications` |
+| `useActivationsQuery` | GET `/member/wallet/activations` | `Payments` |
 | `useSubmitPaymentMutation` | POST `/member/payments` (FormData) | ✗ `Payments`, `Dashboard` |
 | `useKycQuery` / `useSubmitKycMutation` | GET / POST `/member/kyc` | `Kyc` / ✗ `Kyc`, `Dashboard`, `Wallet` |
 | `useTeamQuery`, `useTeamMembersQuery`, `useTreeNodeQuery`, `useLazyTreeNodeQuery` | `/member/team…` | `Team` |
 | `useIncomeSummaryQuery`, `useLedgerQuery` | `/member/income`, `/member/ledger` | `Ledger` |
 | `useWalletQuery` | GET `/member/wallet` | `Wallet` |
+| `useStatementQuery`, `useLazyStatementQuery` | GET `/member/wallet/statement` | `Wallet`, `Ledger` |
+| `useLazyMemberLookupQuery` | GET `/member/members/lookup` | |
+| `useTransfersQuery` / `useCreateTransferMutation` | GET / POST `/member/transfers` | `Transfers` / ✗ `Transfers`, `Wallet`, `Ledger`, `Dashboard`, `Payments` |
+| `useDepositsQuery` / `useCreateDepositMutation` | GET / POST `/member/deposits` | `Deposits` / ✗ `Deposits` |
 | `useWithdrawalsQuery` | GET `/member/withdrawals` | `Withdrawals` |
 | `useCreateWithdrawalMutation` | POST `/member/withdrawals` | ✗ `Withdrawals`, `Wallet`, `Ledger`, `Dashboard`, `Notifications` |
 | `useCancelWithdrawalMutation` | POST `/member/withdrawals/:id/cancel` | ✗ `Withdrawals`, `Wallet`, `Ledger`, `Dashboard` |
@@ -110,9 +118,11 @@ The `qs(params)` helper (exported from `memberApi.js`) builds query strings and 
 | `useMemberStatusMutation`, `useMemberProfileMutation`, `useMemberResetPasswordMutation`, `useWalletAdjustMutation` | member actions | `Members`, `Member:<id>`, `AdminLedger`, `AdminDashboard` |
 | `useAdminKycQuery`, `useReviewKycMutation` | KYC | `AdminKyc`, `AdminDashboard`, `Member`, `Members` |
 | `useAdminPaymentsQuery`, `useApprovePaymentMutation`, `useRejectPaymentMutation` | payments | `AdminPayments`, `AdminDashboard`, `Members`, `Member`, `AdminLedger`, `Processing` |
+| `useAdminDepositsQuery`, `useApproveDepositMutation`, `useRejectDepositMutation` | fund deposits | `AdminDeposits`, `AdminDashboard`, `Member`, `AdminLedger` |
 | `useAdminWithdrawalsQuery`, `useUpdateWithdrawalMutation` | withdrawals | `AdminWithdrawals`, `AdminDashboard`, `AdminLedger`, `Member` |
 | `useProcessingQuery`, `useRunNonWorkingMutation`, `useGenerateRunMutation`, `useRunDetailQuery`, `useApproveRunMutation`, `useCancelRunMutation` | income processing | `Processing`, `AdminDashboard`, `AdminLedger` |
-| `useAdminPackagesQuery`, `useUpdatePackageMutation` | packages | `Packages` |
+| `useAdminPackagesQuery`, `useUpdatePackageMutation` | packages (bundles) | `Packages` (update also invalidates `Courses`) |
+| `useAdminCoursesQuery`, `useCreateCourseMutation`, `useUpdateCourseMutation` | course catalog | `Courses` |
 | `useSettingsQuery`, `useUpdateSettingsMutation`, `useUploadQrMutation`, `useSettingsHistoryQuery` | settings | `Settings` |
 | `useAdminLedgerQuery`, `useAuditLogsQuery` | ledger, audit | — |
 | `useNetworkQuery`, `useLazyNetworkQuery` | network tree | — |

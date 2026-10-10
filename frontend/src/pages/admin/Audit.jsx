@@ -5,7 +5,7 @@ import { PageHeader, Card, Input, Select, DataTable, Pagination } from '../../co
 import { useDebounce } from '../../lib/useDebounce';
 import { dateTime } from '../../lib/format';
 
-const GROUPS = ['registration', 'member', 'admin.login', 'kyc', 'payment', 'income', 'wallet', 'withdrawal', 'badge', 'package', 'settings', 'password'];
+const GROUPS = ['registration', 'member', 'admin.login', 'kyc', 'payment', 'income', 'wallet', 'withdrawal', 'badge', 'package', 'course', 'settings', 'password'];
 
 export default function Audit() {
   const [action, setAction] = useState('');
@@ -20,7 +20,7 @@ export default function Audit() {
       <Card>
         <div className="grid gap-3 p-4 sm:grid-cols-3">
           <Input icon={Search} placeholder="Actor, entity or action" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="sm:col-span-2" />
-          <Select value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }} placeholder="All actions" options={GROUPS.map((g) => ({ value: g, label: g }))} />
+          <Select value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }} placeholder="All actions" options={GROUPS.map((g) => ({ value: g, label: g === 'package' ? 'bundle' : g }))} />
         </div>
         <DataTable dense loading={isFetching && !data} rows={data?.items || []}
           columns={[

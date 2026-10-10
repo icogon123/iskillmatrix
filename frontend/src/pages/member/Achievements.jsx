@@ -20,14 +20,14 @@ export default function Achievements() {
         <div className="flex items-center gap-5">
           <BadgeMedal badgeKey={data.current?.key} size="lg" locked={!data.current} />
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-brand-100/85">Current badge</p>
-            <p className="gold-text font-display text-2xl font-black sm:text-3xl">{data.current?.name || 'Not yet achieved'}</p>
-            <p className="mt-1 text-sm text-brand-100/85">Lifetime earnings <Money value={data.lifetimeEarnings} className="font-bold text-white" /></p>
+            <p className="text-sm text-white/80">Current badge</p>
+            <p className="text-white font-display text-2xl font-black sm:text-3xl">{data.current?.name || 'Not Yet Achieved'}</p>
+            <p className="mt-1 text-sm text-white/80">Lifetime earnings <Money value={data.lifetimeEarnings} className="font-bold text-white" /></p>
           </div>
         </div>
         {data.next && (
           <div className="mt-6">
-            <div className="mb-1.5 flex justify-between text-xs text-brand-100/85">
+            <div className="mb-1.5 flex justify-between text-xs text-white/80">
               <span>Next: {data.next.name} ({inr(data.next.threshold)})</span>
               <span><Money value={data.requiredAmount} /> to go</span>
             </div>

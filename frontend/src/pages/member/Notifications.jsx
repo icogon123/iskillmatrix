@@ -24,7 +24,7 @@ export default function Notifications() {
               const Icon = ICONS[n.type] || Info;
               const body = (
                 <div className={`flex gap-3 px-4 py-3.5 ${n.read ? '' : 'bg-brand-500/[0.06]'}`}>
-                  <span className={`grid size-9 shrink-0 place-items-center rounded-xl ${n.read ? 'bg-white/5 text-muted' : 'bg-brand-500/20 text-brand-200'}`}><Icon className="size-4" /></span>
+                  <span className={`grid size-9 shrink-0 place-items-center rounded-xl ${n.read ? 'bg-fg/5 text-muted' : 'bg-brand-500/20 text-brand-200'}`}><Icon className="size-4" /></span>
                   <div className="min-w-0 flex-1">
                     <p className={`text-sm ${n.read ? 'text-muted' : 'font-semibold text-fg'}`}>{n.title}</p>
                     {n.message && <p className="mt-0.5 text-xs text-muted">{n.message}</p>}
@@ -34,7 +34,7 @@ export default function Notifications() {
               );
               return (
                 <li key={n._id} onClick={() => !n.read && markRead(n._id)}>
-                  {n.link ? <Link to={n.link} className="block hover:bg-white/[0.02]">{body}</Link> : body}
+                  {n.link ? <Link to={n.link} className="block hover:bg-fg/[0.02]">{body}</Link> : body}
                 </li>
               );
             })}

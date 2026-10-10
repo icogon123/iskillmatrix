@@ -38,6 +38,7 @@ export default function Login({ admin = false }) {
   return (
     <AuthShell
       title={admin ? 'Admin login' : 'Welcome back'}
+      pageTitle={admin ? 'Admin login' : 'Log in'}
       subtitle={admin ? 'Sign in to manage members, payments and payouts.' : 'Log in with your username or member ID.'}
     >
       <form onSubmit={submit} className="space-y-4">
@@ -55,12 +56,12 @@ export default function Login({ admin = false }) {
         <div className="flex justify-end">
           <Link to="/forgot-password" className="text-xs font-semibold text-brand-300 hover:text-brand-200">Forgot password?</Link>
         </div>
-        <Button type="submit" size="lg" className="w-full" loading={isLoading}>Login</Button>
+        <Button type="submit" variant="solid" size="lg" className="w-full" loading={isLoading}>Log in</Button>
       </form>
       {!admin && (
         <p className="mt-6 text-center text-sm text-muted">
-          Not registered?{' '}
-          <Link to="/register" className="font-semibold text-gold-400 hover:text-gold-300">Join Now</Link>
+          New to iSkillMatrix?{' '}
+          <Link to="/register" className="font-semibold text-gold-400 hover:text-gold-300">Create an account</Link>
         </p>
       )}
     </AuthShell>
