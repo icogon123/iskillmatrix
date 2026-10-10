@@ -1,8 +1,6 @@
 node_modules
 .DS_Store
 backend/.env
-backend/.data
-backend/uploads/private/*
-backend/uploads/public/*
+
 !backend/uploads/**/.gitkeep
 frontend/dist
