@@ -25,6 +25,12 @@ async function runWeekly(trigger, opts) {
   });
 }
 
+/** One pass of every scheduled job. Safe to call repeatedly; used by the serverless cron endpoint (Vercel). */
+export async function runDailyJobs(trigger = 'cron') {
+  await runNonWorking(trigger);
+  await runWeekly(trigger);
+}
+
 export function startScheduler() {
   // Non-working bonuses are credited every day at 12:00 AM IST.
   cron.schedule('0 0 * * *', () => runNonWorking('cron').catch((e) => console.error('[jobs] non-working failed', e)), {

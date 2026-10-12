@@ -11,6 +11,7 @@ import routes from './routes/index.js';
 import { UPLOAD_ROOT, CLIENT_DIST } from './config/paths.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
 import { robotsTxt, sitemapXml } from './controllers/publicController.js';
+import { runDailyJobs } from './jobs/scheduler.js';
 
 const app = express();
 
@@ -24,6 +25,18 @@ app.use(cookieParser());
 if (!env.isProd) app.use(morgan('dev'));
 
 app.use('/uploads/public', express.static(path.join(UPLOAD_ROOT, 'public'), { maxAge: '1d' }));
+// Serverless hosting (Vercel) has no always-on process, so Vercel Cron calls this once a day instead of node-cron.
+// Vercel sends `Authorization: Bearer $CRON_SECRET`; without CRON_SECRET the endpoint is disabled.
+app.get('/api/cron/daily', async (req, res, next) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || req.get('authorization') !== `Bearer ${secret}`) return res.status(401).json({ message: 'Unauthorized' });
+  try {
+    await runDailyJobs('vercel-cron');
+    res.json({ ok: true, time: new Date().toISOString() });
+  } catch (err) {
+    next(err);
+  }
+});
 app.use('/api', routes);
 app.use('/api', notFoundHandler);
 
