@@ -4,3 +4,4 @@ backend/.env
 
 !backend/uploads/**/.gitkeep
 frontend/dist
+backend/.env.md
