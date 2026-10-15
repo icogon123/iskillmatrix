@@ -131,7 +131,13 @@ export default function PublicLayout() {
           </div>
         </div>
         <div className="border-t border-white/20">
-          <p className="mx-auto max-w-6xl px-4 py-5 text-xs sm:px-6">© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. All rights reserved.</p>
+          <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <p>© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. All rights reserved.</p>
+            <p>
+              Developed by{' '}
+              <a href="https://testing.icogon.com/" target="_blank" rel="noopener noreferrer" className={`font-semibold ${footerLink}`}>Icogon Pvt. Ltd.</a>
+            </p>
+          </div>
         </div>
       </footer>
     </div>
