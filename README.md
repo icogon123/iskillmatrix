@@ -1,6 +1,6 @@
-# iSkillMatrix — Linear (Unilevel) MLM Platform
+# AroviaSkillTech — Linear (Unilevel) MLM Platform
 
-Public website, member panel and admin panel for iSkillMatrix, built from the
+Public website, member panel and admin panel for AroviaSkillTech, built from the
 *System Requirements Document — MLM / Direct Selling Management System*.
 
 | Layer     | Tech |
@@ -62,8 +62,8 @@ and transaction is real and stored in the database.
 | Who | Where | Username | Password |
 |-----|-------|----------|----------|
 | Administrator | `/admin/login` | `ADMIN_USERNAME` from `backend/.env` (`admin`) | `ADMIN_PASSWORD` from `backend/.env` |
-| Company root member `ISM100001` (first sponsor code) | `/login` | `iskillmatrix` or `ISM100001` | `ROOT_PASSWORD` from `backend/.env` |
-| Members | `/login` | their username or member ID | chosen at registration (after admin approval) |
+| Company root member `ISM100001` (first sponsor code) | `/login` | `aroviaskilltech` or `ISM100001` | `ROOT_PASSWORD` from `backend/.env` |
+| Members | `/login` | their username or member ID | chosen at registration (can log in right away) |
 
 `ADMIN_PASSWORD` / `ROOT_PASSWORD` are only used when those accounts are first created. After that,
 the admin changes their password with the key icon in the admin sidebar, and members from
@@ -118,7 +118,7 @@ transactions are never recalculated.
 | Rule | Implementation |
 |------|----------------|
 | Plan | Unilevel sponsor tree: unlimited direct referrals, levels follow the sponsor chain |
-| Registration | Referral link (`/register?ref=ISM…`) or code; admin approval required before login |
+| Registration | Referral link (`/register?ref=ISM…`) or code, or **Join Member** in the member panel; no admin approval, the member can log in at once. The ID is *activated* by buying a first bundle; only activated members can sponsor new members |
 | Payment | QR / UPI, member submits UTR + screenshot, admin verifies; one live payment per member; a UTR can't be reused; no package upgrades |
 | Package price split | Customer price includes GST 18% + system cost 12%; remainder = package cost (₹910 / 2,100 / 3,500 / 7,700 / 13,020) |
 | Active income | Direct sponsor: ₹800 / 1,500 / 2,000 / 4,500 / 7,000, credited when the payment is approved |
@@ -143,7 +143,7 @@ transactions are never recalculated.
 
 ---
 
-## 4. Deploying to iskillmatrix.com
+## 4. Deploying to aroviaskilltech.com
 
 1. **MongoDB** — create a database (e.g. MongoDB Atlas, or MongoDB on your server).
 2. **Build the frontend**
@@ -154,7 +154,7 @@ transactions are never recalculated.
    ```env
    NODE_ENV=production
    PORT=5050
-   CLIENT_URL=https://iskillmatrix.com
+   CLIENT_URL=https://aroviaskilltech.com
    MONGODB_URI=mongodb+srv://USER:PASS@cluster/iskillmatrix
    JWT_SECRET=<long random string>
    ADMIN_USERNAME=admin
@@ -163,9 +163,9 @@ transactions are never recalculated.
    ```
 4. **Start the API** (it also serves `frontend/dist`, so the whole site runs on one port):
    ```bash
-   cd backend && npm ci --omit=dev && npm start      # or: pm2 start src/server.js --name iskillmatrix
+   cd backend && npm ci --omit=dev && npm start      # or: pm2 start src/server.js --name aroviaskilltech
    ```
-5. **Reverse proxy + HTTPS** — point Nginx (or your host's proxy) for `iskillmatrix.com` to
+5. **Reverse proxy + HTTPS** — point Nginx (or your host's proxy) for `aroviaskilltech.com` to
    `http://127.0.0.1:5050` and enable SSL (e.g. Let's Encrypt). Set `client_max_body_size 6m;`
    for document uploads.
 6. **Back up** the database (uploaded files are stored in Cloudinary).

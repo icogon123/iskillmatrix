@@ -10,6 +10,17 @@ export const ABOUT_TEXT =
 // Shown with the founder photo (public/founder/founder.png) in the homepage "About us" section. Add the founder's name here.
 export const FOUNDER = { name: '', role: 'Founder, AroviaSkillTech' };
 
+// About page "Our team". Drop each photo into public/team/ under the file name in `photo`
+// (portrait, ~4:5 works best); until it's there, a placeholder silhouette is shown. `role` is optional.
+export const TEAM = [
+  { name: 'Shiv Pratap Singh', role: 'Co-founder', photo: '/team/shiv-pratap-singh.jpg', about: 'Keeps operations running smoothly for every learner.' },
+  { name: 'Suman Tiwari', photo: '/team/suman-tiwari.jpg', about: 'Leads the vision and direction of AroviaSkillTech.' },
+  { name: 'Khushbu Saini', photo: '/team/khushbu-saini.jpg', about: 'Shapes our courses so every lesson is practical and clear.' },
+  { name: 'Sourabh Thakur', photo: '/team/sourabh-thakur.jpg', about: 'Builds the partnerships and growth that move us forward.' },
+  { name: 'Kittu Fauzdar', photo: '/team/kittu-fauzdar.jpg', about: 'Helps learners find the right course and stay on track.' },
+  { name: 'Pranjali Chaurasiya', photo: '/team/pranjali-chaurasiya.jpg', about: 'Grows our community and the stories we share.' },
+];
+
 export const MISSION =
   'To make in-demand digital skills accessible to everyone, with clear, practical courses that help learners create, work and grow with confidence.';
 

@@ -3,7 +3,7 @@ import { ArrowRight, Check, Plus, UserPlus, BadgeCheck, QrCode, GraduationCap, W
 import { Button } from '../../components/ui';
 import CourseIcon, { categoryTone } from '../../components/common/CourseIcon';
 import { inr } from '../../lib/format';
-import { ABOUT_HEADLINE, ABOUT_TEXT, FOUNDER, MISSION, VISION, VALUES, WHY_POINTS, TESTIMONIALS } from './content';
+import { ABOUT_HEADLINE, ABOUT_TEXT, FOUNDER, TEAM, MISSION, VISION, VALUES, WHY_POINTS, TESTIMONIALS } from './content';
 
 /* ---------- Layout ---------- */
 
@@ -198,6 +198,44 @@ export function AboutSection() {
         <Button to="/about" variant="accent" className="mt-8">More about us <ArrowRight className="size-4" /></Button>
       </div>
       <FounderFigure className="lg:mr-0" />
+    </section>
+  );
+}
+
+/* ---------- Our team ---------- */
+
+const PLACEHOLDER_PHOTO = '/team/placeholder.svg';
+
+/** Photo, name, optional role and a one-line intro. Falls back to a placeholder until the photo is added. */
+function TeamCard({ name, role, photo, about }) {
+  return (
+    <li className="group">
+      <div className={`overflow-hidden rounded-3xl bg-ink-900 shadow-[0_14px_30px_-12px_rgb(38_39_44/0.35)]`}>
+        <img src={photo || PLACEHOLDER_PHOTO} alt={role ? `${name}, ${role}` : name} width={400} height={500} loading="lazy" decoding="async"
+          onError={(e) => { if (!e.currentTarget.src.endsWith(PLACEHOLDER_PHOTO)) e.currentTarget.src = PLACEHOLDER_PHOTO; }}
+          className="aspect-[4/5] w-full object-cover object-top transition duration-500 group-hover:scale-105" />
+      </div>
+      <div className="mt-4 text-center">
+        <h3 className="text-lg font-bold text-fg">{name}</h3>
+        {role && <p className="text-sm font-semibold text-gold-400">{role}</p>}
+        <p className="mt-1.5 text-sm text-muted">{about}</p>
+      </div>
+    </li>
+  );
+}
+
+/** The team in a 3-up grid (homepage and About page). */
+export function TeamSection() {
+  return (
+    <section className={`${container} pb-16 sm:pb-24`}>
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="text-sm font-semibold text-gold-400">Our team</p>
+        <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-3xl">The people behind AroviaSkillTech</h2>
+        <p className="mt-2 text-muted">The people working to make practical digital skills easy to learn.</p>
+      </div>
+      <ul className="mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        {TEAM.map((m) => <TeamCard key={m.name} {...m} />)}
+      </ul>
     </section>
   );
 }

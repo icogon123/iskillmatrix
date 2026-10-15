@@ -3,7 +3,7 @@ import HeroSlider from '../../components/common/HeroSlider';
 import { useCoursesQuery } from '../../api/publicApi';
 import { usePageTitle } from '../../lib/usePageTitle';
 import {
-  container, SectionHeader, TextLink, CourseCard, CourseGridSkeleton, AboutSection, WhyUsSection, VisionMissionSection, Steps, TestimonialsSection,
+  container, SectionHeader, TextLink, CourseCard, CourseGridSkeleton, AboutSection, TeamSection, WhyUsSection, VisionMissionSection, Steps, TestimonialsSection,
   FaqSection, CtaBand, LoadError,
 } from './sections';
 
@@ -17,6 +17,7 @@ export default function Home() {
       {/* Hero — full-bleed banner slider */}
       <HeroSlider />
       <AboutSection />
+      <TeamSection />
       <WhyUsSection />
 
       {/* Popular courses */}

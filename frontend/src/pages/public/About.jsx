@@ -7,7 +7,7 @@ import { categoryTone } from '../../components/common/CourseIcon';
 import { usePageTitle } from '../../lib/usePageTitle';
 import { COMPANY_LEGAL_NAME } from '../../lib/constants';
 import {
-  container, SectionHeader, TextLink, FounderFigure, VisionMissionSection, CtaBand, courseThumbnail, courseMeta,
+  container, SectionHeader, TextLink, FounderFigure, TeamSection, VisionMissionSection, CtaBand, courseThumbnail, courseMeta,
 } from './sections';
 import { ABOUT_HEADLINE, ABOUT_TEXT, VALUES } from './content';
 
@@ -226,6 +226,7 @@ export default function About() {
       <Hero />
       <CatalogStats />
       <Story />
+      <TeamSection />
       <HowWeTeach />
       <WhatWeTeach />
       <VisionMissionSection />
