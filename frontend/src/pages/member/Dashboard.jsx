@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
-  Users, Banknote, ShieldCheck, Share2, BookCheck, Clock, AlertTriangle, ChevronRight, CalendarCheck, HandCoins, ArrowLeftRight, UserPlus, Camera,
+  Users, Banknote, ShieldCheck, Share2, BookCheck, Clock, AlertTriangle, ChevronRight, CalendarCheck, HandCoins, ArrowLeftRight, UserPlus, UserRoundPlus, Camera, Lock,
 } from 'lucide-react';
 import { useDashboardQuery } from '../../api/memberApi';
 import { Card, CardHeader, PageLoader, ErrorState, Notice, Button, StatusBadge, ProgressBar, CopyButton } from '../../components/ui';
@@ -14,6 +14,7 @@ import ChartTooltip from '../../components/common/ChartTooltip';
 import { shortDay, date } from '../../lib/format';
 
 const ACTIONS = [
+  { to: '/app/join', label: 'Join Member', icon: UserRoundPlus },
   { to: '/app/deposit', label: 'Deposit', icon: HandCoins },
   { to: '/app/transfer', label: 'Transfer', icon: ArrowLeftRight },
   { to: '/app/p2p', label: 'P2P Activate', icon: UserPlus },
@@ -33,7 +34,7 @@ function Alerts({ d }) {
       out.push(<Notice key="pay" tone="gold" icon={BookCheck} title="Activate your bundle to start learning and earning"
         action={<Button to="/app/activate" variant="gold" size="sm">Activate now</Button>}>
         {d.latestPayment?.status === 'rejected' ? `Your last payment was rejected: ${d.latestPayment.adminRemarks}. ` : ''}
-        Pay for your {p.selectedPackage?.name || ''} bundle using the QR code and upload the payment proof.
+        Your ID is not activated yet. Buy your {p.selectedPackage?.name || ''} bundle to activate it; after that you can invite and join new members.
       </Notice>);
     }
   }
@@ -151,7 +152,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-5 gap-1 py-1 sm:gap-2">
+      <div className="grid grid-cols-3 gap-1 py-1 sm:grid-cols-6 sm:gap-2">
         {ACTIONS.map(({ to, label, icon: Icon }) => (
           <Link key={to} to={to} className="group flex flex-col items-center gap-2 rounded-2xl py-2 text-center text-[11px] font-medium text-muted hover:text-fg sm:text-xs">
             <span className="grid size-12 place-items-center rounded-full border border-brand-500/30 bg-gradient-to-b from-brand-500/25 to-brand-800/20 text-brand-200 shadow-glow transition group-hover:scale-105 sm:size-14">
@@ -252,17 +253,28 @@ export default function Dashboard() {
 
           <Card className="card-pad">
             <CardHeader title="Refer & Earn" subtitle="Share your link — new members join your team" action={<Share2 className="size-5 text-brand-300" />} />
-            <div className="mt-3 rounded-xl border border-line bg-ink-900 p-3">
-              <p className="text-[11px] text-subtle">Referral code</p>
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-display text-lg font-black text-gold-400">{d.referral.code}</p>
-                <CopyButton text={d.referral.code} />
+            {!d.profile.isPackageActive ? (
+              <div className="mt-3 rounded-xl border border-gold-400/30 bg-gold-400/8 p-3 text-sm">
+                <p className="flex items-center gap-2 font-semibold"><Lock className="size-4 text-gold-400" /> Locked until your ID is activated</p>
+                <p className="mt-1 text-xs text-muted">Buy a course bundle to unlock your referral code and invite new members.</p>
+                <Button to="/app/activate" variant="gold" size="sm" className="mt-3">Buy a bundle</Button>
               </div>
-            </div>
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-line bg-ink-900 p-3">
-              <p className="min-w-0 flex-1 truncate text-xs text-muted">{d.referral.link}</p>
-              <CopyButton text={d.referral.link} label="Link" />
-            </div>
+            ) : (
+              <>
+                <div className="mt-3 rounded-xl border border-line bg-ink-900 p-3">
+                  <p className="text-[11px] text-subtle">Referral code</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-display text-lg font-black text-gold-400">{d.referral.code}</p>
+                    <CopyButton text={d.referral.code} />
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center gap-2 rounded-xl border border-line bg-ink-900 p-3">
+                  <p className="min-w-0 flex-1 truncate text-xs text-muted">{d.referral.link}</p>
+                  <CopyButton text={d.referral.link} label="Link" />
+                </div>
+                <Button to="/app/join" variant="outline" size="sm" className="mt-3 w-full"><UserRoundPlus className="size-4" /> Join a new member</Button>
+              </>
+            )}
           </Card>
         </div>
       </div>

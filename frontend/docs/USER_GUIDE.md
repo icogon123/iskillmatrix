@@ -7,13 +7,15 @@ Plain-language steps for members and administrators. Amounts are the defaults; t
 ## Part A — Members
 
 ### 1. Join
-1. Open the referral link you received (`iskillmatrix.com/register?ref=ISM…`) or go to **Join Now** and
-   type the sponsor's member ID. The sponsor's name appears automatically.
+1. Open the referral link you received (`aroviaskilltech.com/register?ref=ISM…`) or go to **Join Now** and
+   type the sponsor's member ID. The sponsor's name appears automatically. A sponsor can also register you
+   from their own panel (**Join Member**). The sponsor must have bought a bundle (an activated ID).
 2. Fill in your profile: full name, mobile, email, date of birth (18+), country, Aadhaar number.
 3. Choose a **username**, a **login password** (8+ characters with a letter, a number and a symbol) and a
    separate **transaction password** (used only for withdrawals).
 4. Choose your course bundle and submit. Note your **member ID** (e.g. `ISM100031`).
-5. Wait for admin approval. You can log in only after approval; you will receive an email.
+5. Log in straight away. Your ID is **not activated** until you buy a bundle: until then you cannot invite
+   anyone (your referral code and **Join Member** stay locked).
 
 ### 2. Activate your bundle
 1. Log in → **Activate Bundle**.
@@ -91,11 +93,11 @@ Log in at **`/admin/login`** with the admin username and the password set in `ba
 site was first started. Change it right away with the **key icon** next to your name at the bottom of the
 sidebar. The sidebar also shows how many items wait in each queue.
 
-The company's own member account is **ISM100001** (username `iskillmatrix`). Give this code to your first
-members as their sponsor code. You can set its password from Members → iSkillMatrix → Reset password.
+The company's own member account is **ISM100001** (username `aroviaskilltech`). Give this code to your first
+members as their sponsor code. You can set its password from Members → AroviaSkillTech → Reset password.
 
 ### Daily routine
-1. **Registrations** — check each applicant (name, Aadhaar, sponsor) → **Approve** or **Reject** with a reason.
+1. **Registrations** — new members no longer need approval; this only lists accounts left pending from before.
 2. **Payment Verification** — match the UTR and screenshot with your bank statement → **Approve** (activates
    the bundle and pays the upline immediately) or **Reject** with a reason (member can pay again).
 3. **Fund Deposits** — match the UTR and screenshot with your bank statement → **Approve** (credits the member's

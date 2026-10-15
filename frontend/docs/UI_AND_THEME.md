@@ -95,7 +95,7 @@ App-specific components (`src/components/common`):
 
 | Component | Purpose |
 |-----------|---------|
-| `Logo`, `LogoMark` | iSkillMatrix wordmark and icon; `tone` auto \| onDark \| white, colours follow the theme via `--logo-*` |
+| `Logo`, `LogoMark` | AroviaSkillTech wordmark and icon; `tone` auto \| onDark \| white, colours follow the theme via `--logo-*` |
 | `Money` | ₹ amount that hides when the member toggles "hide amounts" |
 | `BadgeMedal` | Medal/crown for an achievement badge (locked state supported) |
 | `WalletArt` | Wallet illustration on the balance card |

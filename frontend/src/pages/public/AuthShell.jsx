@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Check, GraduationCap } from 'lucide-react';
 import Logo from '../../components/common/Logo';
 import { usePageTitle } from '../../lib/usePageTitle';
+import { COMPANY_LEGAL_NAME } from '../../lib/constants';
 
 const POINTS = ['Practical courses in AI, design, video and marketing', 'Short modules you can follow step by step', 'One-time fee, GST included'];
 
@@ -22,7 +23,7 @@ export default function AuthShell({ title, pageTitle, subtitle, children, wide =
               ))}
             </ul>
           </div>
-          <p className="relative text-xs text-white/50">© {new Date().getFullYear()} iSkillMatrix</p>
+          <p className="relative text-xs text-white/50">© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}</p>
         </div>
       )}
       <div className="relative flex flex-1 flex-col">

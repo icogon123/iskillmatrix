@@ -11,8 +11,7 @@ export function LogoMark({ className = 'size-9' }) {
         </linearGradient>
       </defs>
       <rect width="64" height="64" rx="16" style={{ fill: 'var(--logo-tile)', stroke: 'var(--logo-stroke)' }} />
-      <path d="M14 46V20h6v26zM26 46V20h6l8 13 8-13h0v26h-6V31l-8 12-8-12v15z" fill="url(#lm-g)" />
-      <circle cx="17" cy="12.5" r="4" style={{ fill: 'var(--logo-dot)' }} />
+      <path d="M28.5 14h7L52 50h-7.2l-3.6-8.4H22.8L19.2 50H12zM25.5 35.4h13L32 20.6z" fillRule="evenodd" fill="url(#lm-g)" />
     </svg>
   );
 }
@@ -25,15 +24,15 @@ const TONES = {
 };
 
 export default function Logo({ to = '/', compact = false, tone = 'auto', className = '' }) {
-  const [i, skill, matrix] = TONES[tone];
+  const [arovia, skill, tech] = TONES[tone];
   return (
-    <Link to={to} className={`flex items-center gap-2.5 ${className}`} aria-label="iSkillMatrix home">
+    <Link to={to} className={`flex items-center gap-2.5 ${className}`} aria-label="AroviaSkillTech home">
       <LogoMark />
       {!compact && (
         <span className="font-display text-lg font-extrabold tracking-tight">
-          <span className={i}>i</span>
+          <span className={arovia}>Arovia</span>
           <span className={skill}>Skill</span>
-          <span className={matrix}>Matrix</span>
+          <span className={tech}>Tech</span>
         </span>
       )}
     </Link>

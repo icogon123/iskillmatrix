@@ -60,7 +60,7 @@ export default function Login({ admin = false }) {
       </form>
       {!admin && (
         <p className="mt-6 text-center text-sm text-muted">
-          New to iSkillMatrix?{' '}
+          New to AroviaSkillTech?{' '}
           <Link to="/register" className="font-semibold text-gold-400 hover:text-gold-300">Create an account</Link>
         </p>
       )}

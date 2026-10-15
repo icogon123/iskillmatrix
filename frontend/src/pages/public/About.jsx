@@ -5,6 +5,7 @@ import { useCoursesQuery } from '../../api/publicApi';
 import { Button } from '../../components/ui';
 import { categoryTone } from '../../components/common/CourseIcon';
 import { usePageTitle } from '../../lib/usePageTitle';
+import { COMPANY_LEGAL_NAME } from '../../lib/constants';
 import {
   container, SectionHeader, TextLink, FounderFigure, VisionMissionSection, CtaBand, courseThumbnail, courseMeta,
 } from './sections';
@@ -50,7 +51,7 @@ function Hero() {
             <p className="text-sm font-semibold text-gold-400">About us</p>
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-fg sm:text-[2.6rem] sm:leading-[1.1]">{ABOUT_HEADLINE}</h1>
             <p className="mt-4 max-w-xl text-base text-muted sm:text-lg">
-              iSkillMatrix is an online learning platform for the skills people use every day to create content, run campaigns and
+              AroviaSkillTech, by {COMPANY_LEGAL_NAME}, is an online learning platform for the skills people use every day to create content, run campaigns and
               sell online — taught step by step, so you can put each lesson to work.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -219,7 +220,7 @@ function WhatWeTeach() {
 }
 
 export default function About() {
-  usePageTitle('About us', 'iSkillMatrix is an online learning platform for practical digital skills — AI tools, design, video, social media, marketing and sales.');
+  usePageTitle('About us', 'AroviaSkillTech is an online learning platform for practical digital skills — AI tools, design, video, social media, marketing and sales.');
   return (
     <>
       <Hero />

@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate, Link } from 'react-router-do
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Menu, Bell, Home, Users, IndianRupee, Wallet, MoreHorizontal, LayoutDashboard, BookCheck, ShieldCheck, Network, GraduationCap, Map as MapIcon,
-  Banknote, Award, Share2, UserCog, LogOut, X, Eye, EyeOff, UserPlus, HandCoins, ArrowLeftRight,
+  Banknote, Award, Share2, UserCog, LogOut, X, Eye, EyeOff, UserPlus, UserRoundPlus, HandCoins, ArrowLeftRight,
 } from 'lucide-react';
 import Logo from '../common/Logo';
 import Avatar from '../common/Avatar';
@@ -42,6 +42,7 @@ export const MEMBER_NAV = [
       { to: '/app/achievements', label: 'Achievements', icon: Award },
       { to: '/app/team', label: 'My Team', icon: Users },
       { to: '/app/genealogy', label: 'Genealogy', icon: Network },
+      { to: '/app/join', label: 'Join Member', icon: UserRoundPlus },
       { to: '/app/referral', label: 'Refer & Earn', icon: Share2 },
     ],
   },

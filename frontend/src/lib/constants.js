@@ -1,3 +1,6 @@
+// Registered company name — used in copyright lines and wherever the legal entity is named.
+export const COMPANY_LEGAL_NAME = 'AROVIA SKILL TECHNOLOGIES PRIVATE LIMITED';
+
 // Categorical colours for the six income types, in this fixed order (same in both themes). Validated with the
 // dataviz palette checker against the dark card surface #120f2e (worst adjacent CVD ΔE 9.4, normal-vision 19.3).
 export const INCOME_TYPES = [

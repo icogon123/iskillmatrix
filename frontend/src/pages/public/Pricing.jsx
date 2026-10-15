@@ -9,7 +9,7 @@ import { usePageTitle } from '../../lib/usePageTitle';
 import { container, PageIntro, SectionHeader, BundleCard, Steps, FaqSection, CtaBand, LoadError, courseMapOf } from './sections';
 
 export default function Pricing() {
-  usePageTitle('Pricing', 'Course bundles with a one-time fee, GST included. Compare what each iSkillMatrix bundle includes.');
+  usePageTitle('Pricing', 'Course bundles with a one-time fee, GST included. Compare what each AroviaSkillTech bundle includes.');
   const { data: pkgData, isLoading, isError, refetch } = usePackagesQuery();
   const { data: courseData } = useCoursesQuery();
   const bundles = pkgData?.packages || [];
@@ -32,7 +32,7 @@ export default function Pricing() {
           </div>
         )}
         <p className="mt-6 text-sm text-subtle">
-          You pay after your account is approved, by scanning our QR code with any UPI app. Your bundle activates once the payment is verified.
+          You pay after creating your account, by scanning our QR code with any UPI app. Your bundle activates once the payment is verified.
         </p>
       </section>
 

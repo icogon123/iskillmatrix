@@ -24,7 +24,7 @@
   --color-brand-800: #5b21b6;
   --color-brand-900: #3b1785;
 
-  /* Gold accents — from the iSkillMatrix webinar deck */
+  /* Gold accents — from the AroviaSkillTech webinar deck */
   --color-gold-200: #ffefb8;
   --color-gold-300: #ffe08a;
   --color-gold-400: #f5c542;
@@ -66,7 +66,6 @@
     --logo-stroke: rgb(139 92 246 / 0.35);
     --logo-from: #c4b5fd;
     --logo-to: #6d28d9;
-    --logo-dot: #f5c542;
     --art-1: #c4b5fd;
     --art-2: #8b5cf6;
     --art-3: #5b21b6;
@@ -135,7 +134,6 @@
     --logo-stroke: rgb(255 255 255 / 0.14);
     --logo-from: #ff9d00;
     --logo-to: #ff5e29;
-    --logo-dot: #ffffff;
     --art-1: #ffc2a1;
     --art-2: #ff5e29;
     --art-3: #c24100;

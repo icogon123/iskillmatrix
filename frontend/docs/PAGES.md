@@ -16,7 +16,7 @@ bundle alongside the new `?bundle=key`.
 | `/` | `public/Home.jsx` | Hero with course search and a featured course, topics, popular courses, Why us, Vision & mission, how enrollment works, FAQ, call to action. Course data comes from the live catalog |
 | `/courses?q=…&category=…` | `public/Courses.jsx` | Course catalog with search and category filter (kept in the URL), course cards, how it works |
 | `/courses/:slug` | `public/CourseDetail.jsx` | Course page: summary, about, what you'll learn, curriculum (modules + topics), bundles that include it (cheapest first) with Enroll buttons, sticky enroll card, related courses |
-| `/why-us` | `public/WhyUs.jsx` | Six reasons to learn with iSkillMatrix, "What you get" panel built from the live catalog (course, topic, module and bundle counts, starting price), enrollment steps |
+| `/why-us` | `public/WhyUs.jsx` | Six reasons to learn with AroviaSkillTech, "What you get" panel built from the live catalog (course, topic, module and bundle counts, starting price), enrollment steps |
 | `/vision-mission` | `public/VisionMission.jsx` | Mission and vision statements, the five values (Learn · Practise · Create · Share · Grow) |
 | `/pricing` | `public/Pricing.jsx` | Bundle cards with included courses → "Enroll Now" opens registration with the bundle pre-selected; course × bundle comparison table; how it works; FAQ |
 | `/about` | `public/About.jsx` | Who we are, what we teach (topics with course counts from the catalog), links to Why us and Vision & mission |
@@ -63,7 +63,8 @@ After login, members go to `/app` and admins to `/admin` (or to the `next` URL t
 | `/app/transfer` | `member/Transfer.jsx` | Transfer from the Main Wallet to my Activation Wallet or to an upline/downline member (username check), transaction password; transfer history (all / sent / received) |
 | `/app/withdraw` | `member/Withdraw.jsx` | KYC check, Main Wallet balance + bank, amount with live TDS/admin/net, transaction password, history with cancel |
 | `/app/achievements` | `member/Achievements.jsx` | Current badge, progress to next, full ladder with royalty % and achieved dates |
-| `/app/referral` | `member/Referral.jsx` | Referral code and link with copy, WhatsApp / Telegram / native share |
+| `/app/join` | `member/JoinMember.jsx` | Register a new member directly under yourself (same form as `/register`, sponsor fixed). Locked until your own bundle is active |
+| `/app/referral` | `member/Referral.jsx` | Referral code and link with copy, WhatsApp / Telegram / native share. Locked until your own bundle is active |
 | `/app/notifications` | `member/Notifications.jsx` | Notification list, mark one/all read |
 | `/app/profile` | `member/Profile.jsx` | Profile picture upload / remove, profile details (Aadhaar masked), change login password, change transaction password |
 
@@ -78,7 +79,7 @@ The member sidebar is grouped: main items, **Wallet** (Wallets & Ledger, Deposit
 | URL | File | Content |
 |-----|------|---------|
 | `/admin` | `admin/Dashboard.jsx` | Approval queues, member/finance KPIs (collection, GST, system tax income, income distributed, wallet liability, withdrawals with TDS/admin charge), daily collection and registration charts, bundle statistics, income by type, latest pending registrations and payments |
-| `/admin/registrations` | `admin/Registrations.jsx` | Pending / rejected applicants, approve, reject with reason |
+| `/admin/registrations` | `admin/Registrations.jsx` | Accounts left pending from the old approval flow (new registrations are active at once): approve, reject with reason |
 | `/admin/payments` | `admin/Payments.jsx` | Pending / approved / rejected / all payments, "Paid with" (UPI + UTR, or wallet + who paid), proof link, approve & activate (with remarks), reject with reason |
 | `/admin/deposits` | `admin/Deposits.jsx` | Fund deposits: status tabs, search, totals, proof link; approve (credits the Activation Wallet) / reject with reason |
 | `/admin/kyc` | `admin/Kyc.jsx` | KYC queue with an Aadhaar check column (matches / mismatch with registration); review modal with both Aadhaar numbers side by side, mismatch warning, full details and document previews; mark under review / approve / reject |

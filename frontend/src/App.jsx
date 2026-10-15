@@ -40,6 +40,7 @@ const P2PActivate = page(() => import('./pages/member/P2PActivate'));
 const Withdraw = page(() => import('./pages/member/Withdraw'));
 const Achievements = page(() => import('./pages/member/Achievements'));
 const Referral = page(() => import('./pages/member/Referral'));
+const JoinMember = page(() => import('./pages/member/JoinMember'));
 const Notifications = page(() => import('./pages/member/Notifications'));
 const Profile = page(() => import('./pages/member/Profile'));
 
@@ -106,6 +107,7 @@ export default function App() {
               <Route path="withdraw" element={<Withdraw />} />
               <Route path="achievements" element={<Achievements />} />
               <Route path="referral" element={<Referral />} />
+              <Route path="join" element={<JoinMember />} />
               <Route path="notifications" element={<Notifications />} />
               <Route path="profile" element={<Profile />} />
             </Route>

@@ -5,10 +5,10 @@ import { Target, Layers, Users, Receipt, BadgeIndianRupee, MessageCircleQuestion
 export const ABOUT_HEADLINE = 'We teach practical digital skills, one course at a time.';
 
 export const ABOUT_TEXT =
-  'iSkillMatrix helps people learn the digital skills used every day to create content, run campaigns and sell online — from AI tools and graphic design to video editing, social media and sales.';
+  'AroviaSkillTech helps people learn the digital skills used every day to create content, run campaigns and sell online — from AI tools and graphic design to video editing, social media and sales.';
 
 // Shown with the founder photo (public/founder/founder.png) in the homepage "About us" section. Add the founder's name here.
-export const FOUNDER = { name: '', role: 'Founder, iSkillMatrix' };
+export const FOUNDER = { name: '', role: 'Founder, AroviaSkillTech' };
 
 export const MISSION =
   'To make in-demand digital skills accessible to everyone, with clear, practical courses that help learners create, work and grow with confidence.';

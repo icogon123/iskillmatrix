@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Menu, X, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 import Logo from '../common/Logo';
+import { COMPANY_LEGAL_NAME } from '../../lib/constants';
 import { Button, PageLoader } from '../ui';
 import { useSiteQuery, useCoursesQuery } from '../../api/publicApi';
 import { selectUser } from '../../features/auth/authSlice';
@@ -130,7 +131,7 @@ export default function PublicLayout() {
           </div>
         </div>
         <div className="border-t border-white/20">
-          <p className="mx-auto max-w-6xl px-4 py-5 text-xs sm:px-6">© {new Date().getFullYear()} {site?.name || 'iSkillMatrix'}. All rights reserved.</p>
+          <p className="mx-auto max-w-6xl px-4 py-5 text-xs sm:px-6">© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. All rights reserved.</p>
         </div>
       </footer>
     </div>

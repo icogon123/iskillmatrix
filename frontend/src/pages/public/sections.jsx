@@ -345,11 +345,11 @@ export function TestimonialsSection() {
 /* ---------- FAQ ---------- */
 
 export const FAQS = [
-  ['How do I enroll in a course?', 'Courses come in bundles. Choose the bundle that has the courses you want, create your account with a referral code, and pay by QR once your account is approved.'],
+  ['How do I enroll in a course?', 'Courses come in bundles. Choose the bundle that has the courses you want, create your account with a referral code, log in straight away and pay by QR.'],
   ['Can I get just one course?', 'Every course is part of one or more bundles. Open a course to see which bundles include it — the most affordable one is listed first.'],
   ['Is it a one-time fee?', 'Yes. Bundle prices are a one-time fee with GST included. Bundles can’t be upgraded later, so pick the one that covers everything you want to learn.'],
-  ['How do I pay?', 'After approval, log in and pay by scanning our QR code or using the UPI ID. Enter the UTR / reference number and upload a screenshot. Your bundle activates as soon as we verify the payment.'],
-  ['Do I need a referral code?', 'Yes, sign-up asks for the referral code (member ID) of the person who introduced you to iSkillMatrix. Don’t have one? Contact us and we’ll help.'],
+  ['How do I pay?', 'Log in and pay by scanning our QR code or using the UPI ID. Enter the UTR / reference number and upload a screenshot. Your bundle activates as soon as we verify the payment.'],
+  ['Do I need a referral code?', 'Yes, sign-up asks for the referral code (member ID) of the person who introduced you to AroviaSkillTech. Don’t have one? Contact us and we’ll help.'],
 ];
 
 export function FaqSection({ className = '' }) {

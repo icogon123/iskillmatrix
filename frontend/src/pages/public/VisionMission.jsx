@@ -7,7 +7,7 @@ export default function VisionMission() {
   return (
     <>
       <PageIntro eyebrow="Vision & Mission" title="Where we’re going, and how we’ll get there."
-        description="iSkillMatrix exists to make practical digital skills something anyone can learn and use." />
+        description="AroviaSkillTech exists to make practical digital skills something anyone can learn and use." />
 
       <section className={`${container} py-16 sm:py-20`}>
         <MissionVisionCards large />

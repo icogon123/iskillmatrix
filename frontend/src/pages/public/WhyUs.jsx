@@ -42,11 +42,11 @@ function WhatYouGet() {
 }
 
 export default function WhyUs() {
-  usePageTitle('Why us', 'Why learners choose iSkillMatrix: practical courses, structured modules, mentorship and a one-time fee with GST included.');
+  usePageTitle('Why us', 'Why learners choose AroviaSkillTech: practical courses, structured modules, mentorship and a one-time fee with GST included.');
   return (
     <>
-      <PageIntro eyebrow="Why us" title="Why learners choose iSkillMatrix"
-        description="We built iSkillMatrix for people who want to learn a skill and put it to work straight away." />
+      <PageIntro eyebrow="Why us" title="Why learners choose AroviaSkillTech"
+        description="We built AroviaSkillTech for people who want to learn a skill and put it to work straight away." />
 
       <section className={`${container} py-16 sm:py-20`}>
         <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">

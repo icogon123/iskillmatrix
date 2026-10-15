@@ -45,6 +45,7 @@ export const memberApi = api.injectEndpoints({
     deposits: b.query({ query: (p) => `/member/deposits${qs(p)}`, providesTags: ['Deposits'] }),
     createDeposit: b.mutation({ query: (formData) => ({ url: '/member/deposits', method: 'POST', body: formData }), invalidatesTags: ['Deposits'] }),
     withdrawals: b.query({ query: (p) => `/member/withdrawals${qs(p)}`, providesTags: ['Withdrawals'] }),
+    sendWithdrawalOtp: b.mutation({ query: (body) => ({ url: '/member/withdrawals/send-otp', method: 'POST', body }) }),
     createWithdrawal: b.mutation({
       query: (body) => ({ url: '/member/withdrawals', method: 'POST', body }),
       invalidatesTags: ['Withdrawals', 'Wallet', 'Ledger', 'Dashboard', 'Notifications'],
@@ -68,6 +69,6 @@ export const {
   useCreateTransferMutation, useWalletPurchaseMutation, useActivationsQuery, useDepositsQuery, useCreateDepositMutation,
   useDashboardQuery, useProfileQuery, useChangeTxnPasswordMutation, usePaymentInfoQuery, useSubmitPaymentMutation, useKycQuery,
   useSubmitKycMutation, useTeamQuery, useTeamMembersQuery, useTreeNodeQuery, useLazyTreeNodeQuery, useIncomeSummaryQuery, useLedgerQuery,
-  useWalletQuery, useWithdrawalsQuery, useCreateWithdrawalMutation, useCancelWithdrawalMutation, useAchievementsQuery,
+  useWalletQuery, useWithdrawalsQuery, useSendWithdrawalOtpMutation, useCreateWithdrawalMutation, useCancelWithdrawalMutation, useAchievementsQuery,
   useNotificationsQuery, useMarkReadMutation,
 } = memberApi;

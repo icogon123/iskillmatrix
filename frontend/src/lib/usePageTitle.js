@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const SITE = 'iSkillMatrix';
+const SITE = 'AroviaSkillTech';
 const DEFAULT_DESCRIPTION = 'Practical online courses in AI tools, graphic design, video editing, social media, marketing and more.';
 
 function setDescription(text) {

@@ -6,7 +6,7 @@ import { usePageTitle } from '../../lib/usePageTitle';
 import { container, PageIntro } from './sections';
 
 export default function Contact() {
-  usePageTitle('Contact us', 'Questions about iSkillMatrix courses, bundles, payments or your account? Get in touch.');
+  usePageTitle('Contact us', 'Questions about AroviaSkillTech courses, bundles, payments or your account? Get in touch.');
   const { data } = useSiteQuery();
   const site = data?.site || {};
   const [form, setForm] = useState({ name: '', subject: '', message: '' });

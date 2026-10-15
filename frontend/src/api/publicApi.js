@@ -39,7 +39,8 @@ export const publicApi = api.injectEndpoints({
         dispatch(loggedOut());
       },
     }),
-    register: b.mutation({ query: (body) => ({ url: '/auth/register', method: 'POST', body }) }),
+    sendRegisterOtp: b.mutation({ query: (body) => ({ url: '/auth/register/send-otp', method: 'POST', body }) }),
+    register: b.mutation({ query: (body) => ({ url: '/auth/register', method: 'POST', body }), invalidatesTags: ['Team', 'Dashboard', 'Notifications'] }),
     forgotPassword: b.mutation({ query: (body) => ({ url: '/auth/forgot-password', method: 'POST', body }) }),
     resetPassword: b.mutation({ query: (body) => ({ url: '/auth/reset-password', method: 'POST', body }) }),
     changePassword: b.mutation({ query: (body) => ({ url: '/auth/change-password', method: 'POST', body }) }),
@@ -48,5 +49,5 @@ export const publicApi = api.injectEndpoints({
 
 export const {
   usePackagesQuery, useCoursesQuery, useSiteQuery, useLazySponsorQuery, useLazyCheckUsernameQuery, useMeQuery, useLoginMutation,
-  useLogoutMutation, useRegisterMutation, useForgotPasswordMutation, useResetPasswordMutation, useChangePasswordMutation,
+  useLogoutMutation, useSendRegisterOtpMutation, useRegisterMutation, useForgotPasswordMutation, useResetPasswordMutation, useChangePasswordMutation,
 } = publicApi;
