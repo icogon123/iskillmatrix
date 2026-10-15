@@ -210,15 +210,15 @@ const PLACEHOLDER_PHOTO = '/team/placeholder.svg';
 function TeamCard({ name, role, photo, about }) {
   return (
     <li className="group">
-      <div className={`overflow-hidden rounded-3xl bg-ink-900 shadow-[0_14px_30px_-12px_rgb(38_39_44/0.35)]`}>
+      <div className="overflow-hidden rounded-2xl bg-ink-900 shadow-[0_14px_30px_-12px_rgb(38_39_44/0.35)]">
         <img src={photo || PLACEHOLDER_PHOTO} alt={role ? `${name}, ${role}` : name} width={400} height={500} loading="lazy" decoding="async"
           onError={(e) => { if (!e.currentTarget.src.endsWith(PLACEHOLDER_PHOTO)) e.currentTarget.src = PLACEHOLDER_PHOTO; }}
           className="aspect-[4/5] w-full object-cover object-top transition duration-500 group-hover:scale-105" />
       </div>
-      <div className="mt-4 text-center">
-        <h3 className="text-lg font-bold text-fg">{name}</h3>
+      <div className="mt-3 text-center">
+        <h3 className="font-bold text-fg">{name}</h3>
         {role && <p className="text-sm font-semibold text-gold-400">{role}</p>}
-        <p className="mt-1.5 text-sm text-muted">{about}</p>
+        <p className="mt-1 text-sm text-muted">{about}</p>
       </div>
     </li>
   );
@@ -233,7 +233,7 @@ export function TeamSection() {
         <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-3xl">The people behind AroviaSkillTech</h2>
         <p className="mt-2 text-muted">The people working to make practical digital skills easy to learn.</p>
       </div>
-      <ul className="mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="mx-auto mt-10 grid max-w-sm gap-x-6 gap-y-10 sm:max-w-2xl sm:grid-cols-2 lg:max-w-4xl lg:grid-cols-3">
         {TEAM.map((m) => <TeamCard key={m.name} {...m} />)}
       </ul>
     </section>

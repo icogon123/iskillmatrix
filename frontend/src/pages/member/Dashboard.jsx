@@ -61,32 +61,6 @@ export default function Dashboard() {
       <Alerts d={d} />
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Balance */}
-        <div className="hero-gradient relative overflow-hidden rounded-3xl p-5 shadow-glow sm:p-6 lg:col-span-2">
-          <div className="pointer-events-none absolute -top-16 -right-10 size-56 rounded-full bg-white/10 blur-2xl" />
-          <WalletArt className="absolute right-3 bottom-3 hidden w-28 sm:right-6 sm:block sm:w-36" />
-          <div className="relative sm:pr-40">
-            <p className="text-sm font-medium text-white/80">Total Income</p>
-            <p className="mt-1 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"><Money value={d.income.total} /></p>
-            <div className="mt-5 grid max-w-md grid-cols-2 gap-2">
-              <div className="rounded-2xl bg-white/10 px-3 py-2.5">
-                <p className="text-xs font-medium text-white/75">Main Wallet</p>
-                <p className="mt-0.5 text-lg font-bold text-white sm:text-xl"><Money value={d.wallet.balance} /></p>
-                <p className="text-[10px] text-white/60">Withdraw · transfer · buy</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 px-3 py-2.5">
-                <p className="text-xs font-medium text-white/75">Activation Wallet</p>
-                <p className="mt-0.5 text-lg font-bold text-white sm:text-xl"><Money value={d.wallet.activationBalance} /></p>
-                <p className="text-[10px] text-white/60">For buying bundles</p>
-              </div>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button to="/app/withdraw" size="sm" variant="gold">Withdraw</Button>
-              <Button to="/app/wallet" size="sm" variant="onBrand" className="bg-white/10">Wallet ledger</Button>
-            </div>
-          </div>
-        </div>
-
         {/* Rank */}
         <Card className="card-pad flex flex-col">
           <div className="flex items-center gap-3">
@@ -115,40 +89,67 @@ export default function Dashboard() {
             {a.next && <p className="mt-2 text-xs text-subtle"><Money value={a.requiredAmount} /> more lifetime earnings needed</p>}
           </div>
         </Card>
+
+        {/* Earnings */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:col-span-2">
+          <Card className="card-pad">
+            <p className="text-xs font-semibold text-gold-400">Today's Earning</p>
+            <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.earnings.today} /></p>
+          </Card>
+          <Card className="card-pad">
+            <p className="text-xs font-semibold text-muted">Last 7 Days</p>
+            <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.earnings.last7Total} /></p>
+          </Card>
+          <Card className="card-pad">
+            <p className="text-xs font-semibold text-muted">This Month</p>
+            <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.earnings.month} /></p>
+          </Card>
+          <Link to="/app/income" className="card card-pad transition hover:border-brand-500/40">
+            <p className="text-xs font-semibold text-muted">Weekly Income</p>
+            <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.weeklyIncome.total} /></p>
+            <p className="mt-0.5 text-[11px] text-subtle">
+              {d.weeklyIncome.pending > 0
+                ? <>+<Money value={d.weeklyIncome.pending} /> awaiting credit</>
+                : d.weeklyIncome.last
+                  ? <>Last <Money value={d.weeklyIncome.last.amount} /> · week of {shortDay(d.weeklyIncome.last.week)}</>
+                  : 'Credited every Monday'}
+            </p>
+          </Link>
+          <Card className="card-pad">
+            <p className="text-xs font-semibold text-muted">Pending Withdrawal</p>
+            <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.wallet.pendingWithdrawal} /></p>
+          </Card>
+          <Card className="card-pad">
+            <p className="text-xs font-semibold text-muted">Total Withdrawn</p>
+            <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.wallet.totalWithdrawn} /></p>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Card className="card-pad">
-          <p className="text-xs font-semibold text-gold-400">Today's Earning</p>
-          <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.earnings.today} /></p>
-        </Card>
-        <Card className="card-pad">
-          <p className="text-xs font-semibold text-muted">Last 7 Days</p>
-          <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.earnings.last7Total} /></p>
-        </Card>
-        <Card className="card-pad">
-          <p className="text-xs font-semibold text-muted">This Month</p>
-          <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.earnings.month} /></p>
-        </Card>
-        <Link to="/app/income" className="card card-pad transition hover:border-brand-500/40">
-          <p className="text-xs font-semibold text-muted">Weekly Income</p>
-          <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.weeklyIncome.total} /></p>
-          <p className="mt-0.5 text-[11px] text-subtle">
-            {d.weeklyIncome.pending > 0
-              ? <>+<Money value={d.weeklyIncome.pending} /> awaiting credit</>
-              : d.weeklyIncome.last
-                ? <>Last <Money value={d.weeklyIncome.last.amount} /> · week of {shortDay(d.weeklyIncome.last.week)}</>
-                : 'Credited every Monday'}
-          </p>
-        </Link>
-        <Card className="card-pad">
-          <p className="text-xs font-semibold text-muted">Pending Withdrawal</p>
-          <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.wallet.pendingWithdrawal} /></p>
-        </Card>
-        <Card className="card-pad">
-          <p className="text-xs font-semibold text-muted">Total Withdrawn</p>
-          <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.wallet.totalWithdrawn} /></p>
-        </Card>
+      {/* Balance */}
+      <div className="hero-gradient relative overflow-hidden rounded-3xl p-5 shadow-glow sm:p-6">
+        <div className="pointer-events-none absolute -top-16 -right-10 size-56 rounded-full bg-white/10 blur-2xl" />
+        <WalletArt className="absolute right-3 bottom-3 hidden w-28 sm:right-6 sm:block sm:w-36" />
+        <div className="relative sm:pr-40">
+          <p className="text-sm font-medium text-white/80">Total Income</p>
+          <p className="mt-1 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"><Money value={d.income.total} /></p>
+          <div className="mt-5 grid max-w-md grid-cols-2 gap-2">
+            <div className="rounded-2xl bg-white/10 px-3 py-2.5">
+              <p className="text-xs font-medium text-white/75">Main Wallet</p>
+              <p className="mt-0.5 text-lg font-bold text-white sm:text-xl"><Money value={d.wallet.balance} /></p>
+              <p className="text-[10px] text-white/60">Withdraw · transfer · buy</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 px-3 py-2.5">
+              <p className="text-xs font-medium text-white/75">Activation Wallet</p>
+              <p className="mt-0.5 text-lg font-bold text-white sm:text-xl"><Money value={d.wallet.activationBalance} /></p>
+              <p className="text-[10px] text-white/60">For buying bundles</p>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Button to="/app/withdraw" size="sm" variant="gold">Withdraw</Button>
+            <Button to="/app/wallet" size="sm" variant="onBrand" className="bg-white/10">Wallet ledger</Button>
+          </div>
+        </div>
       </div>
 
       {/* Quick actions */}
