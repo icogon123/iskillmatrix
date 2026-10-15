@@ -14,7 +14,7 @@ import { getSettings } from '../services/settingsService.js';
 import { incomeByCategory, incomeBetween, getBalances, walletStatement, CATEGORY_LABELS } from '../services/ledgerService.js';
 import { badgeProgress } from '../services/badgeService.js';
 import { teamStats, levelSummary, levelMembers, treeNode, isInDownline } from '../services/teamService.js';
-import { walletSummary, requestWithdrawal, cancelWithdrawal, quote } from '../services/withdrawalService.js';
+import { walletSummary, requestWithdrawal, cancelWithdrawal, quote, sendWithdrawalOtp } from '../services/withdrawalService.js';
 import { submitPayment as submitPaymentSvc, priceBreakdown } from '../services/paymentService.js';
 import { lookupMember, transferFunds, purchaseBundle } from '../services/walletService.js';
 import { submitDeposit as submitDepositSvc } from '../services/depositService.js';
@@ -314,6 +314,10 @@ export async function listWithdrawals(req, res) {
     Withdrawal.countDocuments(q),
   ]);
   res.json(paged(items.map((w) => ({ ...w, bank: { ...w.bank, accountNumber: maskTail(w.bank?.accountNumber) } })), total, paging));
+}
+
+export async function withdrawalOtp(req, res) {
+  res.json(await sendWithdrawalOtp(req.user, req.body.amount));
 }
 
 export async function createWithdrawal(req, res) {

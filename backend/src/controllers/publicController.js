@@ -1,7 +1,7 @@
 import Package from '../models/Package.js';
 import Course from '../models/Course.js';
 import { getSettings, badgeLadder } from '../services/settingsService.js';
-import { findSponsor } from './authController.js';
+import { findSponsor, SPONSOR_NOT_ACTIVATED } from './authController.js';
 import { round2 } from '../utils/money.js';
 import env from '../config/env.js';
 
@@ -53,6 +53,7 @@ export async function listCourses(_req, res) {
 export async function sponsorLookup(req, res) {
   const sponsor = await findSponsor(req.params.code);
   if (!sponsor || sponsor.status !== 'active') return res.status(404).json({ message: 'Sponsor not found' });
+  if (!sponsor.package) return res.status(404).json({ message: SPONSOR_NOT_ACTIVATED });
   res.json({ memberId: sponsor.memberId, fullName: sponsor.fullName });
 }
 

@@ -7,10 +7,11 @@ import AppError from '../utils/AppError.js';
 import { nextCode } from '../utils/ids.js';
 import { pct, round2 } from '../utils/money.js';
 import { createEntry, getBalance, getBalances } from './ledgerService.js';
-import { withWalletLock, authorizeWalletDebit } from './walletService.js';
+import { withWalletLock, authorizeWalletDebit, suspendedMessage } from './walletService.js';
 import { getSettings } from './settingsService.js';
 import { notify } from './notificationService.js';
 import { audit } from './auditService.js';
+import { sendOtp, verifyOtp } from './otpService.js';
 
 export function quote(amount, settings) {
   const { tdsPercent, adminChargePercent } = settings.withdrawal;
@@ -67,25 +68,64 @@ export async function setWalletSuspension(admin, userId, { suspended, reason }, 
   return user;
 }
 
-/** Requests a withdrawal from the Main Wallet. The requested amount is debited immediately (held). */
-export async function requestWithdrawal(user, { amount, txnPassword }, ip) {
-  const settings = await getSettings();
-  const cfg = settings.withdrawal;
+function checkAmount(amount, cfg) {
   amount = round2(amount);
   if (!(amount > 0)) throw new AppError('Enter a valid amount');
   if (amount < cfg.min) throw new AppError(`Minimum withdrawal is ₹${cfg.min.toLocaleString('en-IN')}`);
   if (cfg.max && amount > cfg.max) throw new AppError(`Maximum withdrawal is ₹${cfg.max.toLocaleString('en-IN')}`);
+  return amount;
+}
 
-  await authorizeWalletDebit(user._id, txnPassword);
-
-  const kyc = await Kyc.findOne({ user: user._id }).lean();
+async function withdrawalKyc(userId, cfg) {
+  const kyc = await Kyc.findOne({ user: userId }).lean();
   if (cfg.requireKyc && kyc?.status !== 'approved') throw new AppError('Your KYC must be approved before you can withdraw');
   if (!kyc) throw new AppError('Add your bank details through KYC first');
+  return kyc;
+}
+
+const otpMeta = (amount) => ({ amount });
+
+/** Emails the OTP that confirms a withdrawal of `amount`. Runs the same checks first so no code is sent for a request that would fail. */
+export async function sendWithdrawalOtp(user, rawAmount) {
+  const settings = await getSettings();
+  const cfg = settings.withdrawal;
+  const amount = checkAmount(rawAmount, cfg);
+  if (user.walletSuspended) throw new AppError(suspendedMessage(user), 403);
+  await withdrawalKyc(user._id, cfg);
+  const balance = await getBalance(user._id, 'main');
+  if (amount > balance) throw new AppError(`Insufficient Main Wallet balance. Available: ₹${balance.toLocaleString('en-IN')}`);
+  if (!user.email) throw new AppError('Add an email address to your profile to receive the withdrawal OTP');
+
+  return sendOtp({
+    purpose: 'withdrawal',
+    subject: String(user._id),
+    email: user.email,
+    name: user.fullName,
+    action: `confirm your withdrawal of ₹${amount.toLocaleString('en-IN')} from your Main Wallet`,
+    meta: otpMeta(amount),
+  });
+}
+
+/** Requests a withdrawal from the Main Wallet. The requested amount is debited immediately (held). */
+export async function requestWithdrawal(user, { amount, txnPassword, otp }, ip) {
+  const settings = await getSettings();
+  const cfg = settings.withdrawal;
+  amount = checkAmount(amount, cfg);
+
+  await authorizeWalletDebit(user._id, txnPassword);
+  const kyc = await withdrawalKyc(user._id, cfg);
 
   return withWalletLock(user._id, async () => {
     const now = new Date();
     const balance = await getBalance(user._id, 'main');
     if (amount > balance) throw new AppError(`Insufficient Main Wallet balance. Available: ₹${balance.toLocaleString('en-IN')}`);
+    await verifyOtp({
+      purpose: 'withdrawal',
+      subject: String(user._id),
+      code: otp,
+      meta: otpMeta(amount),
+      metaMismatch: 'This OTP was sent for a different amount. Please request a new OTP.',
+    });
 
     const q = quote(amount, settings);
     const withdrawal = await Withdrawal.create({

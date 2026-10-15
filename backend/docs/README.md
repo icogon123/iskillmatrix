@@ -7,7 +7,7 @@
 | [DATABASE.md](DATABASE.md) | know what each MongoDB collection stores |
 | [INCOME_ENGINE.md](INCOME_ENGINE.md) | understand or change how commissions, bonuses, badges and withdrawals are calculated |
 | [CONFIGURATION.md](CONFIGURATION.md) | set environment variables or admin settings |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | put the site live on iskillmatrix.com |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | put the site live on aroviaskilltech.com |
 
 Installation and running are covered in the backend [README](../README.md).
 The frontend has its own docs in [`frontend/docs`](../../frontend/docs/README.md).

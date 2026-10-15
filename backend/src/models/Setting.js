@@ -7,16 +7,16 @@ const settingSchema = new mongoose.Schema(
     key: { type: String, default: 'global', unique: true },
     version: { type: Number, default: 1 },
     site: {
-      name: { type: String, default: 'iSkillMatrix' },
+      name: { type: String, default: 'AroviaSkillTech' },
       tagline: { type: String, default: 'Learn Skills. Build Your Future.' },
-      email: { type: String, default: 'support@iskillmatrix.com' },
+      email: { type: String, default: 'aroviaskilltechnologies@gmail.com' },
       phone: { type: String, default: '' },
       whatsapp: { type: String, default: '' },
       address: { type: String, default: '' },
     },
     payment: {
       upiId: { type: String, default: '' },
-      payeeName: { type: String, default: 'iSkillMatrix' },
+      payeeName: { type: String, default: 'AROVIA SKILL TECHNOLOGIES PRIVATE LIMITED' },
       qrImage: { type: String, default: '' },
       instructions: {
         type: String,

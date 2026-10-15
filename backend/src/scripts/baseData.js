@@ -3,7 +3,8 @@ import env from '../config/env.js';
 import Package from '../models/Package.js';
 import Course from '../models/Course.js';
 import User from '../models/User.js';
-import { getSettings } from '../services/settingsService.js';
+import Setting from '../models/Setting.js';
+import { getSettings, invalidateSettings } from '../services/settingsService.js';
 import { nextMemberId } from '../utils/ids.js';
 import { passwordRule } from '../controllers/validators.js';
 import { DEFAULT_COURSES, DEFAULT_BUNDLE_COURSES } from './courseData.js';
@@ -33,7 +34,7 @@ export const DEFAULT_PACKAGES = [
     benefits: ['Everything in Standard', 'Meta Ads', 'Lead Generation', '7 levels passive income', 'Weekly income eligible'],
   },
   {
-    key: 'pro', name: 'Pro', price: 18600, activeIncome: 7000, passiveLevels: [1000, 125, 250, 500, 75, 25, 13, 10, 13, 13, 13, 13], nonWorkingBonus: 1000, weeklyEligible: true, sortOrder: 5,
+    key: 'pro', name: 'Pro', price: 18600, activeIncome: 7000, passiveLevels: [1000, 125, 250, 500, 75, 25, 13, 13, 13, 13, 13, 13], nonWorkingBonus: 1000, weeklyEligible: true, sortOrder: 5,
     description: 'The complete skill matrix, including AI tools.',
     benefits: ['All 10 trending skills', 'Sales Mastery', 'AI Tools Mastery', '12 levels passive income', 'Weekly income eligible'],
   },
@@ -54,6 +55,11 @@ export async function ensureBaseData({ log = true } = {}) {
     // Packages created before the course catalog existed get their default course list once.
     await Package.updateOne({ key: p.key, courses: { $exists: false } }, { $set: { courses: p.courses } });
   }
+  // Pro level 8 was seeded as ₹10 by mistake (levels 7–12 are ₹13). Fix it only while the list is still the untouched seed value.
+  await Package.updateOne(
+    { key: 'pro', passiveLevels: [1000, 125, 250, 500, 75, 25, 13, 10, 13, 13, 13, 13] },
+    { $set: { 'passiveLevels.7': 13 } },
+  );
 
   if (!(await User.exists({ role: 'admin' }))) {
     if (!isStrong(env.admin.password)) {
@@ -76,14 +82,14 @@ export async function ensureBaseData({ log = true } = {}) {
   if (!(await User.exists({ isRoot: true }))) {
     const pro = await Package.findOne({ key: 'pro' });
     // The root member is the company's own account at the top of the tree. Without ROOT_PASSWORD it gets
-    // an unguessable password; the admin can set one later from Members → iSkillMatrix → Reset password.
+    // an unguessable password; the admin can set one later from Members → AroviaSkillTech → Reset password.
     const rootPassword = isStrong(env.rootPassword) ? env.rootPassword : `${crypto.randomBytes(24).toString('base64url')}#9A`;
     const root = await User.create({
       role: 'member',
       isRoot: true,
       memberId: await nextMemberId(),
-      username: 'iskillmatrix',
-      fullName: 'iSkillMatrix',
+      username: 'aroviaskilltech',
+      fullName: 'AroviaSkillTech',
       email: env.admin.email || undefined,
       password: await User.hash(rootPassword),
       txnPassword: await User.hash(crypto.randomBytes(24).toString('base64url')),
@@ -96,9 +102,31 @@ export async function ensureBaseData({ log = true } = {}) {
     });
     if (log) {
       console.log(
-        `[setup] company root member created → ${root.memberId} (username "iskillmatrix"). ` +
+        `[setup] company root member created → ${root.memberId} (username "aroviaskilltech"). ` +
           'Share this member ID as the sponsor code for your first members.',
       );
     }
+  }
+
+  await renameOldBrand();
+}
+
+// The platform was called iSkillMatrix before. Values that still hold the old defaults are moved to the new name once;
+// anything the admin has already changed is left alone.
+async function renameOldBrand() {
+  const renames = [
+    ['site.name', 'iSkillMatrix', 'AroviaSkillTech'],
+    ['site.email', 'support@iskillmatrix.com', 'aroviaskilltechnologies@gmail.com'],
+    ['payment.payeeName', 'iSkillMatrix', 'AROVIA SKILL TECHNOLOGIES PRIVATE LIMITED'],
+  ];
+  let changed = 0;
+  for (const [path, from, to] of renames) {
+    changed += (await Setting.updateOne({ key: 'global', [path]: from }, { $set: { [path]: to } })).modifiedCount;
+  }
+  if (changed) invalidateSettings();
+
+  await User.updateOne({ isRoot: true, fullName: 'iSkillMatrix' }, { $set: { fullName: 'AroviaSkillTech' } });
+  if (!(await User.exists({ username: 'aroviaskilltech' }))) {
+    await User.updateOne({ isRoot: true, username: 'iskillmatrix' }, { $set: { username: 'aroviaskilltech' } });
   }
 }

@@ -1,6 +1,6 @@
-# iSkillMatrix — Backend (API)
+# AroviaSkillTech — Backend (API)
 
-REST API for the iSkillMatrix linear (unilevel) MLM platform: registration and approval,
+REST API for the AroviaSkillTech linear (unilevel) MLM platform: registration,
 QR package payments, KYC, the referral network, the income engine (active, passive, weekly,
 monthly bonus, non-working, royalty), wallet ledger, withdrawals, reports and audit log.
 
@@ -104,13 +104,13 @@ runs from one port. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 | Account | Login page | Username | Password |
 |---------|-----------|----------|----------|
 | Administrator | `/admin/login` | `ADMIN_USERNAME` (`admin`) | `ADMIN_PASSWORD` from `.env` |
-| Company root member `ISM100001` | `/login` | `iskillmatrix` or `ISM100001` | `ROOT_PASSWORD` from `.env` |
+| Company root member `ISM100001` | `/login` | `aroviaskilltech` or `ISM100001` | `ROOT_PASSWORD` from `.env` |
 
 These two accounts are created once, on the first start. Changing `.env` afterwards does not change
 them: the admin changes their password from the key icon in the admin sidebar, and the admin can reset
 any member's password (including the root member) from **Members → member → Reset password**.
 
-Every other account is a real member who registers through the website and is approved by the admin.
+Every other account is a real member who registers through the website (no admin approval; the ID activates with the first bundle).
 
 ---
 

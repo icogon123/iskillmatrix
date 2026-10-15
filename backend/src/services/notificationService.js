@@ -12,7 +12,7 @@ export async function notify(userId, { title, message, type = 'info', link, emai
     if (email) {
       const user = await User.findById(userId).select('email fullName').lean();
       if (user?.email) {
-        await sendMail({ to: user.email, subject: `iSkillMatrix: ${title}`, text: `Hi ${user.fullName},\n\n${message}\n\nTeam iSkillMatrix` });
+        await sendMail({ to: user.email, subject: `AroviaSkillTech: ${title}`, text: `Hi ${user.fullName},\n\n${message}\n\nTeam AroviaSkillTech` });
       }
     }
   } catch (err) {

@@ -11,8 +11,9 @@ Member Income = Active + Passive + Weekly + Monthly Bonus + Non-Working + Royalt
 ## 1. Member lifecycle
 
 ```
-Register (referral link/code) ─► pending ─► Admin approves ─► active (can log in)
-                                         └► Admin rejects  ─► rejected (reason stored, cannot log in)
+Register (referral link/code, or Join Member from a sponsor's panel) ─► active (can log in at once)
+   sponsor must have an activated ID (a bought bundle), else the registration is refused
+   (accounts left `pending` from the old approval flow are still approved/rejected under Admin → Registrations)
 
 Active member ─► KYC (Aadhaar + PAN + bank) ─► submitted ─► under review ─► approved / rejected
               ─► Select package ─► pay by QR ─► submit UTR + screenshot ─► Admin verifies
@@ -33,7 +34,7 @@ Customer price includes GST and system cost. The remainder is the **package cost
 | Basic | 3,000 | 540 | 360 | **2,100** | 1,500 | 200 · 100 | — | — |
 | Standard | 5,000 | 900 | 600 | **3,500** | 2,000 | 300 · 50 · 100 · 150 · 25 | 200 | ✓ |
 | Premium | 11,000 | 1,980 | 1,320 | **7,700** | 4,500 | 600 · 75 · 150 · 300 · 37.5 · 18 · 10 | 500 | ✓ |
-| Pro | 18,600 | 3,348 | 2,232 | **13,020** | 7,000 | 1000 · 125 · 250 · 500 · 75 · 25 · 13 · 10 · 13 · 13 · 13 · 13 | 1,000 | ✓ |
+| Pro | 18,600 | 3,348 | 2,232 | **13,020** | 7,000 | 1000 · 125 · 250 · 500 · 75 · 25 · 13 · 13 · 13 · 13 · 13 · 13 | 1,000 | ✓ |
 
 The split is stored on each payment, and the admin dashboard shows total GST and "system tax income".
 When an admin edits a package so that payouts exceed the package cost, the API returns a warning.

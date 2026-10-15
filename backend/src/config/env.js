@@ -8,7 +8,7 @@ function cloudinaryConfig() {
     cloudName: str('CLOUDINARY_CLOUD_NAME'),
     apiKey: str('CLOUDINARY_API_KEY'),
     apiSecret: str('CLOUDINARY_API_SECRET'),
-    folder: str('CLOUDINARY_FOLDER', 'iskillmatrix').replace(/^\/+|\/+$/g, ''),
+    folder: str('CLOUDINARY_FOLDER', 'aroviaskilltech').replace(/^\/+|\/+$/g, ''),
   };
   const url = str('CLOUDINARY_URL');
   if (url && !(cfg.cloudName && cfg.apiKey && cfg.apiSecret)) {
@@ -38,7 +38,7 @@ const env = {
     port: Number(process.env.SMTP_PORT) || 587,
     user: str('SMTP_USER'),
     pass: str('SMTP_PASS'),
-    from: str('MAIL_FROM', 'iSkillMatrix <no-reply@iskillmatrix.com>'),
+    from: str('MAIL_FROM', 'AroviaSkillTech <aroviaskilltechnologies@gmail.com>'),
   },
 };
 

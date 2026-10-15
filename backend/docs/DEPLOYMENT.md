@@ -1,10 +1,10 @@
-# Deployment (iskillmatrix.com)
+# Deployment (aroviaskilltech.com)
 
 The simplest setup is **one Linux server (VPS)** running one Node.js process that serves both the
 API (`/api`) and the built React site, behind Nginx with HTTPS, plus MongoDB.
 
 ```
-Browser ──HTTPS──► Nginx (iskillmatrix.com, SSL) ──► Node.js :5050 ──► Cloudinary (uploaded files)
+Browser ──HTTPS──► Nginx (aroviaskilltech.com, SSL) ──► Node.js :5050 ──► Cloudinary (uploaded files)
                                                      ├── /api/*            Express API
                                                      └── /*                frontend/dist (React)
                                                   ──► MongoDB (Atlas or local)
@@ -16,20 +16,20 @@ Browser ──HTTPS──► Nginx (iskillmatrix.com, SSL) ──► Node.js :50
 - Node.js 20 LTS or newer, npm
 - Nginx, Certbot (Let's Encrypt)
 - MongoDB Atlas cluster (or MongoDB 6+ on the server). In Atlas → **Network Access**, allow the server's public IP
-- DNS: `A` records for `iskillmatrix.com` and `www.iskillmatrix.com` pointing to the server
+- DNS: `A` records for `aroviaskilltech.com` and `www.aroviaskilltech.com` pointing to the server
 
 ## 2. Get the code on the server
 
 ```bash
 sudo mkdir -p /var/www && cd /var/www
 # copy the project folder here (git clone, scp or rsync)
-cd /var/www/iskillmatrix
+cd /var/www/aroviaskilltech
 ```
 
 ## 3. Build the frontend
 
 ```bash
-cd /var/www/iskillmatrix/frontend
+cd /var/www/aroviaskilltech/frontend
 npm ci
 npm run build          # → frontend/dist
 ```
@@ -46,24 +46,24 @@ npm run test:engine                  # income engine
 ## 4. Configure and start the backend
 
 ```bash
-cd /var/www/iskillmatrix/backend
+cd /var/www/aroviaskilltech/backend
 npm ci --omit=dev
 cp .env.example .env
 nano .env              # see CONFIGURATION.md → example production .env
 ```
 
-Required: `NODE_ENV=production`, `CLIENT_URL=https://iskillmatrix.com`, a real `MONGODB_URI`,
+Required: `NODE_ENV=production`, `CLIENT_URL=https://aroviaskilltech.com`, a real `MONGODB_URI`,
 a random `JWT_SECRET`, a strong `ADMIN_PASSWORD`.
 
 Run with **PM2** so it restarts on crash and on reboot:
 
 ```bash
 sudo npm install -g pm2
-cd /var/www/iskillmatrix/backend
-NODE_ENV=production pm2 start src/server.js --name iskillmatrix
+cd /var/www/aroviaskilltech/backend
+NODE_ENV=production pm2 start src/server.js --name aroviaskilltech
 pm2 save
 pm2 startup            # run the command it prints
-pm2 logs iskillmatrix  # view logs
+pm2 logs aroviaskilltech  # view logs
 ```
 
 On first start the API creates the settings, course catalog, bundles (packages), admin and root member (`ISM100001`).
@@ -79,12 +79,12 @@ Run a **single** PM2 instance (not cluster mode): the 12:00 AM scheduler should 
 
 ## 5. Nginx + HTTPS
 
-`/etc/nginx/sites-available/iskillmatrix`:
+`/etc/nginx/sites-available/aroviaskilltech`:
 
 ```nginx
 server {
     listen 80;
-    server_name iskillmatrix.com www.iskillmatrix.com;
+    server_name aroviaskilltech.com www.aroviaskilltech.com;
 
     client_max_body_size 6m;            # KYC documents and payment screenshots (API limit is 5 MB)
 
@@ -100,9 +100,9 @@ server {
 ```
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/iskillmatrix /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/aroviaskilltech /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d iskillmatrix.com -d www.iskillmatrix.com
+sudo certbot --nginx -d aroviaskilltech.com -d www.aroviaskilltech.com
 ```
 
 The app sets `trust proxy`, so rate limiting and audit IPs use the real client IP from Nginx.
@@ -118,11 +118,11 @@ Without such a proxy, use the single-server setup above (recommended).
 ## 7. Updating the site
 
 ```bash
-cd /var/www/iskillmatrix
+cd /var/www/aroviaskilltech
 # pull/copy new code
 cd frontend && npm ci && npm run build
 cd ../backend && npm ci --omit=dev
-pm2 restart iskillmatrix
+pm2 restart aroviaskilltech
 ```
 
 ## 8. Backups
@@ -140,7 +140,7 @@ MongoDB Atlas also offers automatic backups. Store copies off the server.
 
 ## 9. Go-live checklist
 
-- [ ] `NODE_ENV=production`, `CLIENT_URL=https://iskillmatrix.com`
+- [ ] `NODE_ENV=production`, `CLIENT_URL=https://aroviaskilltech.com`
 - [ ] Strong `JWT_SECRET` and `ADMIN_PASSWORD`
 - [ ] `MONGODB_URI` points to the production Atlas cluster; the server's IP is allowed in Atlas → Network Access
 - [ ] HTTPS working; `http://` redirects to `https://`
@@ -151,7 +151,7 @@ MongoDB Atlas also offers automatic backups. Store copies off the server.
 - [ ] Admin → System Settings → payment instructions say "bundle" (older databases still say "package amount")
 - [ ] `https://<your-domain>/sitemap.xml` lists your courses; submit it in Google Search Console
 - [ ] Income rules confirmed with the client (royalty basis, monthly slab rule, weekly %)
-- [ ] Test registration with the root member code `ISM100001` → approve → pay → approve payment
+- [ ] Test registration with the root member code `ISM100001` → log in → pay → approve payment
 - [ ] Cloudinary keys set in `.env`; `npm run test:storage` passes on the server
 - [ ] Daily backups scheduled
 - [ ] `pm2 startup` configured so the site comes back after a reboot

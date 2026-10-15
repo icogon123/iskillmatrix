@@ -197,8 +197,8 @@ export async function rejectRegistration(req, res) {
   if (!user) throw new AppError('Registration not found or already processed', 409);
   await sendMail({
     to: user.email,
-    subject: 'iSkillMatrix: Registration update',
-    text: `Hi ${user.fullName},\n\nYour registration (${user.memberId}) was not approved.\nReason: ${reason}\n\nTeam iSkillMatrix`,
+    subject: 'AroviaSkillTech: Registration update',
+    text: `Hi ${user.fullName},\n\nYour registration (${user.memberId}) was not approved.\nReason: ${reason}\n\nTeam AroviaSkillTech`,
   });
   await reqAudit(req, 'registration.rejected', { entityType: 'User', entityId: user.memberId, details: { reason } });
   res.json({ message: `${user.fullName} rejected`, user });

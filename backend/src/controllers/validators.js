@@ -29,6 +29,7 @@ export const registerSchema = z
     txnPassword: txnPasswordRule,
     confirmTxnPassword: z.string(),
     packageId: z.string().min(1, 'Select a course bundle'),
+    otp: z.string().trim().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, { message: 'Passwords do not match', path: ['confirmPassword'] })
   .refine((d) => d.txnPassword === d.confirmTxnPassword, { message: 'Transaction passwords do not match', path: ['confirmTxnPassword'] })
@@ -66,6 +67,14 @@ export const kycSchema = z.object({
 export const withdrawalSchema = z.object({
   amount: z.coerce.number().positive('Enter a valid amount'),
   txnPassword: z.string().min(1, 'Enter your transaction password'),
+  otp: z.string().trim().optional(),
+});
+
+export const withdrawalOtpSchema = z.object({ amount: z.coerce.number().positive('Enter a valid amount') });
+
+export const registerOtpSchema = z.object({
+  email: z.string().trim().toLowerCase().email('Enter a valid email address'),
+  fullName: z.string().trim().max(80).optional(),
 });
 
 const usernameRef = z.string().trim().toLowerCase().max(40).optional();

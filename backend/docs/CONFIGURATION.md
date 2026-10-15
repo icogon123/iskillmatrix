@@ -13,7 +13,7 @@ Copy `.env.example` to `.env`.
 |----------|---------|-------------|
 | `NODE_ENV` | `development` | `production` enables secure cookies, generic error messages and serving `frontend/dist` |
 | `PORT` | `5050` | API port |
-| `CLIENT_URL` | `http://localhost:5173` | Public URL of the website. Used for CORS, referral links (`/register?ref=…`) and password-reset links. Production: `https://iskillmatrix.com` |
+| `CLIENT_URL` | `http://localhost:5173` | Public URL of the website. Used for CORS, referral links (`/register?ref=…`) and password-reset links. Production: `https://aroviaskilltech.com` |
 | `MONGODB_URI` | — | **Required.** MongoDB Atlas connection string (`mongodb+srv://user:password@cluster….mongodb.net/?retryWrites=true&w=majority`). The server will not start without it |
 | `MONGODB_DB_NAME` | `iskillmatrix` | Database name inside the cluster |
 | `JWT_SECRET` | — | **Required**, at least 32 characters. Signs session tokens. Changing it logs everyone out |
@@ -25,12 +25,12 @@ Copy `.env.example` to `.env`.
 | `CLOUDINARY_CLOUD_NAME` | — | **Required for uploads.** Cloudinary → Dashboard → *Cloud name* |
 | `CLOUDINARY_API_KEY` | — | **Required for uploads.** Cloudinary → Settings → API Keys |
 | `CLOUDINARY_API_SECRET` | — | **Required for uploads.** Secret — never share it. Without these three, payment proofs, KYC documents and the QR code can't be uploaded (the server logs a warning) |
-| `CLOUDINARY_FOLDER` | `iskillmatrix` | Folder in your Cloudinary Media Library for this site's files |
+| `CLOUDINARY_FOLDER` | `aroviaskilltech` | Folder in your Cloudinary Media Library for this site's files |
 | `CLOUDINARY_URL` | — | Alternative to the three values above: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME` |
 | `SMTP_HOST` | empty | SMTP server. Empty = emails are not delivered (in development they are printed to the console) and the server logs a warning |
 | `SMTP_PORT` | `587` | `465` uses SSL, others use STARTTLS |
-| `SMTP_USER`, `SMTP_PASS` | empty | SMTP credentials |
-| `MAIL_FROM` | `iSkillMatrix <no-reply@iskillmatrix.com>` | Sender shown in emails |
+| `SMTP_USER`, `SMTP_PASS` | empty | SMTP credentials. **Required in production**: registration and withdrawals need an email OTP. For Gmail, `SMTP_PASS` must be a 16-character [App Password](https://myaccount.google.com/apppasswords) (needs 2-Step Verification), not the account password |
+| `MAIL_FROM` | `AroviaSkillTech <aroviaskilltechnologies@gmail.com>` | Sender shown in emails |
 
 `ADMIN_*` and `ROOT_PASSWORD` are used only when those accounts are **first created**. Editing
 `.env` later does not change existing accounts:
@@ -50,24 +50,24 @@ Example production `.env`:
 ```env
 NODE_ENV=production
 PORT=5050
-CLIENT_URL=https://iskillmatrix.com
+CLIENT_URL=https://aroviaskilltech.com
 MONGODB_URI="mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority"
 MONGODB_DB_NAME=iskillmatrix
 JWT_SECRET=paste-output-of-openssl-rand-hex-32
 JWT_EXPIRES_IN=1d
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=a-strong-unique-password
-ADMIN_EMAIL=admin@iskillmatrix.com
+ADMIN_EMAIL=aroviaskilltechnologies@gmail.com
 ROOT_PASSWORD=another-strong-unique-password
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=123456789012345
 CLOUDINARY_API_SECRET=your-api-secret
-CLOUDINARY_FOLDER=iskillmatrix
+CLOUDINARY_FOLDER=aroviaskilltech
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=support@iskillmatrix.com
+SMTP_USER=aroviaskilltechnologies@gmail.com
 SMTP_PASS=app-password
-MAIL_FROM="iSkillMatrix <support@iskillmatrix.com>"
+MAIL_FROM="AroviaSkillTech <aroviaskilltechnologies@gmail.com>"
 ```
 
 ## 2. Admin settings
@@ -78,14 +78,14 @@ settings `version`; the previous version is kept (History button). Existing ledg
 ### Website (`site`)
 | Setting | Default | Used on |
 |---------|---------|---------|
-| Site name, tagline | iSkillMatrix · Learn Skills. Build Your Future. | Footer, page text |
-| Support email, phone, WhatsApp, address | `support@iskillmatrix.com`, empty | Footer and Contact page |
+| Site name, tagline | AroviaSkillTech · Learn Skills. Build Your Future. | Footer, page text |
+| Support email, phone, WhatsApp, address | `aroviaskilltechnologies@gmail.com`, empty | Footer and Contact page |
 
 ### QR payment (`payment`, `tax`)
 | Setting | Default | Notes |
 |---------|---------|-------|
 | QR code image | none | Upload PNG/JPG. Members see a placeholder until it is uploaded |
-| UPI ID, payee name | empty, iSkillMatrix | Shown next to the QR with a copy button |
+| UPI ID, payee name | empty, AROVIA SKILL TECHNOLOGIES PRIVATE LIMITED | Shown next to the QR with a copy button |
 | Instructions | "Scan the QR code, pay the exact package amount…" | Shown on the activation page |
 | GST % | 18 | Price split and reports |
 | System cost % | 12 | Price split and reports |

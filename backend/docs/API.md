@@ -61,7 +61,7 @@ Base URL: `/api` (development: `http://localhost:5050/api`; through the Vite dev
 }
 ```
 
-**GET /public/sponsor/ISM100001** → `{ "memberId": "ISM100001", "fullName": "iSkillMatrix" }` · 404 if not found or not active.
+**GET /public/sponsor/ISM100001** → `{ "memberId": "ISM100001", "fullName": "AroviaSkillTech" }` · 404 if not found or not active, or if the sponsor has not bought a bundle yet (ID not activated; the message says so).
 
 **GET /public/site** → `{ site: { name, tagline, email, phone, whatsapp, address }, plan: { weekly, monthlyBonus, badges, royalty, withdrawal: { tdsPercent, adminChargePercent, min } } }`
 
@@ -71,7 +71,8 @@ Base URL: `/api` (development: `http://localhost:5050/api`; through the Vite dev
 
 | Method | Path | Access | Description |
 |--------|------|--------|-------------|
-| POST | `/auth/register` | Public (rate-limited) | Submit a registration (status `pending`) |
+| POST | `/auth/register/send-otp` | Public (rate-limited) | Email a 6-digit code that verifies the new member's address |
+| POST | `/auth/register` | Public (rate-limited) | Create an account (status `active`, can log in at once). Sponsor must be active **and** own a bundle, else 400 |
 | GET | `/auth/check-username?username=` | Public | `{ username, valid, available }` |
 | POST | `/auth/login` | Public (rate-limited) | Log in, sets cookie |
 | POST | `/auth/logout` | Public | Clears cookie |
@@ -83,7 +84,7 @@ Base URL: `/api` (development: `http://localhost:5050/api`; through the Vite dev
 **POST /auth/register**
 ```jsonc
 {
-  "sponsorId": "ISM100002",          // member ID or username of an active member
+  "sponsorId": "ISM100002",          // member ID or username of an active member who has bought a bundle
   "fullName": "Test Member",
   "mobile": "9876543210",            // 10 digits
   "email": "test@example.com",
@@ -95,10 +96,19 @@ Base URL: `/api` (development: `http://localhost:5050/api`; through the Vite dev
   "confirmPassword": "Riches#123",
   "txnPassword": "Txn@1234",         // 6+, different from password
   "confirmTxnPassword": "Txn@1234",
-  "packageId": "<package _id>"
+  "packageId": "<package _id>",
+  "otp": "123456"                    // from /auth/register/send-otp, sent to this email
 }
 ```
 → `201 { message, memberId: "ISM100031", username }`. The sponsor gets a notification; the applicant gets an email.
+
+**POST /auth/register/send-otp** `{ "email": "test@example.com", "fullName": "Test Member" }`
+→ `200 { message, sentTo: "te**@example.com", expiresInMinutes: 10, resendIn: 60 }`.
+
+Email OTPs (registration and withdrawal): 6 digits, valid 10 minutes, single use, 5 wrong tries then a new code
+is needed, one new code per 60 seconds (`429` with `details.retryAfter`), at most 20 OTP requests per IP per 15 minutes.
+A registration code is tied to the email; a withdrawal code is tied to the amount. If the email cannot be sent the
+request fails with `502`. In development without SMTP the response also carries `devCode`.
 
 **POST /auth/login** `{ "identifier": "<username or member ID>", "password": "…" }`
 → `200 { user }` + cookie. Refused with 403 and a reason for pending, rejected, inactive or suspended accounts.
@@ -144,7 +154,7 @@ The email contains `CLIENT_URL/reset-password?token=…` (valid 30 minutes).
   "wallet": { "balance": 22050, "activationBalance": 3000, "pendingWithdrawal": 2500, "totalWithdrawn": 5000, "totalWithdrawnNet": 4650 },
   "earnings": { "today": 5150, "month": 14150, "last7Days": [{ "date": "2026-09-28", "total": 7375 }], "last7Total": 29550 },
   "team": { "direct": 10, "total": 25, "active": 22, "directActive": 9, "inactive": 3 },
-  "referral": { "code": "ISM100002", "link": "https://iskillmatrix.com/register?ref=ISM100002" },
+  "referral": { "code": "ISM100002", "link": "https://aroviaskilltech.com/register?ref=ISM100002" },
   "achievement": { "current": { "key": "silver", "name": "Silver Executive", "threshold": 10000 },
                    "next": { "key": "gold", "…": "…" }, "lifetimeEarnings": 27050, "requiredAmount": 2950, "progress": 85.3, "ladder": [] },
   "kyc": { "status": "approved", "rejectionReason": null },
@@ -200,11 +210,12 @@ account 9–18 digits, IFSC `SBIN0001234`.
 | GET | `/member/wallet/statement?wallet=main\|activation&from=&to=&page=&limit=` | Completed entries of one wallet, newest first, each with `balanceBefore` / `balanceAfter`. `all=1` returns up to 5,000 rows (CSV export) |
 | GET | `/member/withdrawals?page=` | My withdrawals (account number masked) |
 | GET | `/member/withdrawals/quote?amount=10000` | `{ amount, tdsPercent, tds, adminChargePercent, adminCharge, netAmount }` |
-| POST | `/member/withdrawals` | `{ "amount": 10000, "txnPassword": "…" }` → `201 { withdrawal }` |
+| POST | `/member/withdrawals/send-otp` | `{ "amount": 10000 }` → emails a code for exactly this amount. Runs the limit, KYC, suspension and balance checks first |
+| POST | `/member/withdrawals` | `{ "amount": 10000, "txnPassword": "…", "otp": "123456" }` → `201 { withdrawal }` |
 | POST | `/member/withdrawals/:id/cancel` | Cancel a **pending** request; amount returned to the Main Wallet |
 
 Withdrawal checks: min/max limits, approved KYC (if required), correct transaction password,
-amount ≤ **Main Wallet** balance, no concurrent request. The Activation Wallet can never be withdrawn.
+amount ≤ **Main Wallet** balance, email OTP for this amount, no concurrent request. The Activation Wallet can never be withdrawn.
 
 ### Transfers and deposits
 
@@ -245,7 +256,7 @@ joinings and collection), `recentRegistrations`, `recentPayments`.
 
 | Method | Path | Body | Description |
 |--------|------|------|-------------|
-| GET | `/admin/registrations?status=pending\|rejected&search=&page=` | | Applicants with sponsor and selected package |
+| GET | `/admin/registrations?status=pending\|rejected&search=&page=` | | Applicants with sponsor and selected package (new registrations no longer need approval; this only lists accounts left `pending` from the old flow) |
 | POST | `/admin/registrations/:id/approve` | | `pending → active`; member notified and emailed |
 | POST | `/admin/registrations/:id/reject` | `{ reason }` | `pending → rejected`; reason stored and emailed |
 

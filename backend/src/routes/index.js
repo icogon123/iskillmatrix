@@ -6,7 +6,7 @@ import { validate } from '../middleware/validate.js';
 import { privateUpload, publicImageUpload } from '../middleware/upload.js';
 import {
   registerSchema, loginSchema, changePasswordSchema, changeTxnPasswordSchema, kycSchema, withdrawalSchema, passwordRule,
-  transferSchema, walletPurchaseSchema,
+  transferSchema, walletPurchaseSchema, withdrawalOtpSchema, registerOtpSchema,
 } from '../controllers/validators.js';
 import { z } from 'zod';
 import * as auth from '../controllers/authController.js';
@@ -20,6 +20,8 @@ import { privateFile } from '../controllers/filesController.js';
 
 const router = Router();
 
+// Each OTP is an email we pay for; the per-address 60s cooldown lives in otpService.
+const otpLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false, message: { message: 'Too many OTP requests. Please try again later.' } });
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 50, standardHeaders: 'draft-8', legacyHeaders: false, message: { message: 'Too many attempts. Please try again later.' } });
 
 // For uptime monitors and load balancers: 503 while the database is unreachable.
@@ -35,6 +37,7 @@ router.get('/public/sponsor/:code', pub.sponsorLookup);
 router.get('/public/site', pub.siteInfo);
 
 /* Auth */
+router.post('/auth/register/send-otp', otpLimiter, validate(registerOtpSchema), auth.sendRegisterOtp);
 router.post('/auth/register', authLimiter, validate(registerSchema), auth.register);
 router.get('/auth/check-username', auth.checkUsername);
 router.post('/auth/login', authLimiter, validate(loginSchema), auth.login);
@@ -79,6 +82,7 @@ m.get('/deposits', member.depositInfo);
 m.post('/deposits', privateUpload.single('proof'), member.createDeposit);
 m.get('/withdrawals', member.listWithdrawals);
 m.get('/withdrawals/quote', member.withdrawalQuote);
+m.post('/withdrawals/send-otp', otpLimiter, validate(withdrawalOtpSchema), member.withdrawalOtp);
 m.post('/withdrawals', validate(withdrawalSchema), member.createWithdrawal);
 m.post('/withdrawals/:id/cancel', member.cancelMyWithdrawal);
 m.get('/achievements', member.achievements);

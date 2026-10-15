@@ -8,10 +8,20 @@ import { issueToken, clearToken } from '../middleware/auth.js';
 import { reqAudit, audit } from '../services/auditService.js';
 import { notify } from '../services/notificationService.js';
 import { sendMail } from '../services/mailService.js';
+import { sendOtp, verifyOtp } from '../services/otpService.js';
 import { escapeRegex } from '../utils/pagination.js';
 import { maskAadhaar } from '../utils/mask.js';
 
-const SPONSOR_FIELDS = 'memberId fullName status ancestors depth role';
+const SPONSOR_FIELDS = 'memberId fullName status ancestors depth role package';
+
+export const SPONSOR_NOT_ACTIVATED = 'This referral ID is not activated yet. The sponsor must buy a course bundle before inviting new members.';
+
+/** Why `sponsor` cannot take new members, or null when it can. A member's ID is activated by buying their first bundle. */
+export function sponsorProblem(sponsor) {
+  if (!sponsor || sponsor.status !== 'active') return 'Invalid or inactive sponsor ID / referral code';
+  if (!sponsor.package) return SPONSOR_NOT_ACTIVATED;
+  return null;
+}
 
 export async function findSponsor(code) {
   const c = String(code || '').trim();
@@ -22,13 +32,21 @@ export async function findSponsor(code) {
   }).select(SPONSOR_FIELDS);
 }
 
+/** Step 1 of registration: email a code that proves the address belongs to the new member. */
+export async function sendRegisterOtp(req, res) {
+  const { email, fullName } = req.body;
+  res.json(await sendOtp({ purpose: 'register', subject: email, email, name: fullName, action: 'verify your email and create your AroviaSkillTech account' }));
+}
+
 export async function register(req, res) {
   const d = req.body;
   const sponsor = await findSponsor(d.sponsorId);
-  if (!sponsor || sponsor.status !== 'active') throw new AppError('Invalid or inactive sponsor ID / referral code');
+  const problem = sponsorProblem(sponsor);
+  if (problem) throw new AppError(problem);
   const pkg = await Package.findOne({ _id: d.packageId, status: 'active' }).lean();
   if (!pkg) throw new AppError('Select a valid course bundle');
   if (await User.exists({ username: d.username })) throw new AppError('This username is already taken', 409);
+  await verifyOtp({ purpose: 'register', subject: d.email, code: d.otp });
 
   const user = await User.create({
     memberId: await nextMemberId(),
@@ -45,24 +63,32 @@ export async function register(req, res) {
     ancestors: [sponsor._id, ...sponsor.ancestors],
     depth: sponsor.depth + 1,
     selectedPackage: pkg._id,
-    status: 'pending',
+    // No admin approval: the member can log in straight away. Their ID is activated (and they can invite others) once they buy a bundle.
+    status: 'active',
+    approvedAt: new Date(),
   });
 
   await notify(sponsor._id, {
-    title: 'New referral registered',
-    message: `${user.fullName} (${user.memberId}) joined with your referral and is awaiting admin approval.`,
+    title: 'New member joined your team',
+    message: `${user.fullName} (${user.memberId}) joined with your referral. Their ID activates once they buy a course bundle.`,
     type: 'team',
     link: '/app/team',
   });
+  await notify(user._id, {
+    title: 'Welcome to AroviaSkillTech',
+    message: 'Buy a course bundle to activate your ID. Once it is active you can invite and join new members.',
+    type: 'account',
+    link: '/app/activate',
+  });
   await sendMail({
     to: user.email,
-    subject: 'iSkillMatrix: Registration submitted',
-    text: `Hi ${user.fullName},\n\nYour registration is submitted.\nMember ID: ${user.memberId}\nUsername: ${user.username}\n\nYou can log in once an administrator approves your account.\n\nTeam iSkillMatrix`,
+    subject: 'AroviaSkillTech: Welcome',
+    text: `Hi ${user.fullName},\n\nYour account is created.\nMember ID: ${user.memberId}\nUsername: ${user.username}\n\nYou can log in now. Buy a course bundle to activate your ID; after that you can invite new members.\n\nTeam AroviaSkillTech`,
   });
   await audit(user, 'registration.submitted', { entityType: 'User', entityId: user.memberId, details: { sponsor: sponsor.memberId, package: pkg.key }, ip: req.ip });
 
   res.status(201).json({
-    message: 'Registration submitted. You can log in after admin approval.',
+    message: 'Account created. You can log in now. Buy a course bundle to activate your ID.',
     memberId: user.memberId,
     username: user.username,
   });
@@ -138,7 +164,7 @@ export async function forgotPassword(req, res) {
   const link = `${env.clientUrl}/reset-password?token=${token}`;
   await sendMail({
     to: user.email,
-    subject: 'iSkillMatrix: Reset your password',
+    subject: 'AroviaSkillTech: Reset your password',
     text: `Hi ${user.fullName},\n\nUse this link to reset your password (valid for 30 minutes):\n${link}\n\nIf you did not request this, ignore this email.`,
   });
   await audit(user, 'password.reset_requested', { entityType: 'User', entityId: user.memberId || user.username, ip: req.ip });

@@ -104,6 +104,16 @@ const regBody = (sponsorId, packageId, over = {}) => {
 };
 
 const anon = new Client('anon');
+
+// Registration and withdrawals need an email OTP. Mail is off here, so send-otp hands the code back as `devCode`.
+const registerWithOtp = async (body) => {
+  const o = await anon.post('/auth/register/send-otp', { email: body.email, fullName: body.fullName }); ok(o);
+  return anon.post('/auth/register', { ...body, otp: o.body.devCode });
+};
+const withdraw = async (client, amount, txnPassword) => {
+  const o = await client.post('/member/withdrawals/send-otp', { amount }); ok(o);
+  return client.post('/member/withdrawals', { amount, txnPassword, otp: o.body.devCode });
+};
 const admin = new Client('admin');
 const root = await User.findOne({ isRoot: true });
 const pkgs = Object.fromEntries((await Package.find().lean()).map((p) => [p.key, p]));
@@ -132,8 +142,8 @@ await check('GET /public/site exposes plan, no secrets', async () => {
 });
 await check('sponsor lookup: by member ID, by username, unknown → 404', async () => {
   let r = await anon.get(`/public/sponsor/${root.memberId}`); ok(r);
-  assert.equal(r.body.fullName, 'iSkillMatrix');
-  r = await anon.get('/public/sponsor/iskillmatrix'); ok(r);
+  assert.equal(r.body.fullName, 'AroviaSkillTech');
+  r = await anon.get('/public/sponsor/aroviaskilltech'); ok(r);
   r = await anon.get('/public/sponsor/NOPE999'); ok(r, 404);
 });
 await check('unknown API route → JSON 404', async () => { const r = await anon.get('/nope'); ok(r, 404); assert.ok(r.body.message); });
@@ -172,15 +182,32 @@ await check('admin login (cookie set), /auth/me, no password leak', async () => 
   assert.ok(!('password' in r.body.user));
   const me = await admin.get('/auth/me'); ok(me); assert.equal(me.body.user.username, 'admin');
 });
-await check('register A and D under root', async () => {
-  const ra = await anon.post('/auth/register', regBody(root.memberId, standardId, { username: 'alice_a' })); ok(ra, 201);
-  a = ra.body;
-  const rd = await anon.post('/auth/register', regBody(root.memberId, String(pkgs.pro._id), { username: 'dave_d' })); ok(rd, 201);
-  d = rd.body;
+await check('register OTP: required, wrong code counts down, resend cooldown, single use', async () => {
+  const body = regBody(root.memberId, standardId, { username: 'otp_user' });
+  let r = await anon.post('/auth/register', body); ok(r, 400); assert.match(r.body.message, /OTP/);
+  ok(await anon.post('/auth/register/send-otp', { email: 'not-an-email' }), 422);
+  const o = await anon.post('/auth/register/send-otp', { email: body.email }); ok(o);
+  assert.match(o.body.devCode, /^\d{6}$/); assert.match(o.body.sentTo, /^m\d\*+@test\.dev$/);
+  ok(await anon.post('/auth/register/send-otp', { email: body.email }), 429);
+  const wrong = o.body.devCode === '000000' ? '111111' : '000000';
+  r = await anon.post('/auth/register', { ...body, otp: wrong }); ok(r, 400); assert.match(r.body.message, /4 attempts left/);
+  r = await anon.post('/auth/register', { ...body, email: 'other@test.dev', otp: o.body.devCode }); ok(r, 400); // code is tied to the address
+  r = await anon.post('/auth/register', { ...body, otp: o.body.devCode }); ok(r, 201);
+  await User.deleteOne({ username: 'otp_user' });
+  r = await anon.post('/auth/register', { ...body, otp: o.body.devCode }); ok(r, 400); // already used
 });
-await check('a pending sponsor cannot sponsor new members yet', async () => {
-  ok(await anon.post('/auth/register', regBody(a.memberId, standardId, { username: 'early_bird' })), 400);
-  ok(await anon.get(`/public/sponsor/${a.memberId}`), 404);
+await check('register A and D under root: active at once, no admin approval', async () => {
+  const ra = await registerWithOtp(regBody(root.memberId, standardId, { username: 'alice_a' })); ok(ra, 201);
+  a = ra.body;
+  const rd = await registerWithOtp(regBody(root.memberId, String(pkgs.pro._id), { username: 'dave_d' })); ok(rd, 201);
+  d = rd.body;
+  const u = await User.findOne({ memberId: a.memberId }).lean();
+  assert.equal(u.status, 'active'); assert.equal(u.package ?? null, null);
+});
+await check('a member whose ID is not activated (no bundle) cannot sponsor new members', async () => {
+  const r = await anon.post('/auth/register', regBody(a.memberId, standardId, { username: 'early_bird' })); ok(r, 400);
+  assert.match(r.body.message, /not activated/);
+  const s = await anon.get(`/public/sponsor/${a.memberId}`); ok(s, 404); assert.match(s.body.message, /not activated/);
 });
 await check('duplicate username → 409; check-username reflects it', async () => {
   ok(await anon.post('/auth/register', regBody(root.memberId, standardId, { username: 'alice_a' })), 409);
@@ -188,9 +215,13 @@ await check('duplicate username → 409; check-username reflects it', async () =
   r = await anon.get('/auth/check-username?username=free_name'); ok(r); assert.equal(r.body.available, true);
   r = await anon.get('/auth/check-username?username=x'); ok(r); assert.equal(r.body.valid, false);
 });
-await check('pending member cannot log in (403)', async () => {
-  const r = await A.post('/auth/login', { identifier: 'alice_a', password: pwd });
-  ok(r, 403); assert.match(r.body.message, /pending/i);
+await check('new members log in straight away (username or member ID, any case)', async () => {
+  for (const [cl, u] of [[A, 'alice_a'], [D, 'dave_d']]) {
+    const r = await cl.post('/auth/login', { identifier: u, password: pwd }); ok(r);
+    assert.equal(r.body.user.status, 'active');
+    assert.equal(r.body.user.isPackageActive, false);
+  }
+  const r = await new Client('x').post('/auth/login', { identifier: a.memberId.toLowerCase(), password: pwd }); ok(r);
 });
 await check('login: wrong password 401, empty body 422, injection object 422, bad JSON 400', async () => {
   ok(await anon.post('/auth/login', { identifier: 'admin', password: 'wrong' }), 401);
@@ -202,38 +233,34 @@ await check('admin cannot use member area', async () => {
   ok(await admin.get('/member/dashboard'), 403);
 });
 
-console.log('\nAdmin: registrations');
-await check('list pending registrations (search escapes regex)', async () => {
+console.log('\nAdmin: registrations (accounts left pending by the old approval flow)');
+const legacy = async (username) => (await User.create({
+  memberId: `ISMOLD${username.length}${username.at(-1)}`, username, fullName: `Legacy ${username}`, password: await User.hash(pwd),
+  sponsor: root._id, ancestors: [root._id], depth: 1, status: 'pending',
+})).toObject();
+let oldOne; let oldTwo;
+await check('new registrations never queue; legacy pending ones are listed (search escapes regex)', async () => {
+  oldOne = await legacy('old_one'); oldTwo = await legacy('old_two');
   let r = await admin.get('/admin/registrations'); ok(r);
   assert.equal(r.body.total, 2);
-  r = await admin.get('/admin/registrations?search=alice'); ok(r); assert.equal(r.body.total, 1);
+  r = await admin.get('/admin/registrations?search=old_one'); ok(r); assert.equal(r.body.total, 1);
   r = await admin.get('/admin/registrations?search=.*'); ok(r); assert.equal(r.body.total, 0);
+  ok(await admin.post(`/admin/registrations/${await idOf(d.memberId)}/approve`, {}), 409);
 });
-await check('reject needs a reason; reject D once', async () => {
-  const did = await idOf(d.memberId);
-  ok(await admin.post(`/admin/registrations/${did}/reject`, {}), 400);
-  ok(await admin.post(`/admin/registrations/${did}/reject`, { reason: 'Documents unclear' }));
-  ok(await admin.post(`/admin/registrations/${did}/reject`, { reason: 'again' }), 409);
+await check('pending legacy member cannot log in; reject needs a reason; approve once', async () => {
+  const r = await new Client('o1').post('/auth/login', { identifier: 'old_one', password: pwd });
+  ok(r, 403); assert.match(r.body.message, /pending/i);
+  ok(await admin.post(`/admin/registrations/${oldTwo._id}/reject`, {}), 400);
+  ok(await admin.post(`/admin/registrations/${oldTwo._id}/reject`, { reason: 'Documents unclear' }));
+  ok(await admin.post(`/admin/registrations/${oldTwo._id}/reject`, { reason: 'again' }), 409);
   ok(await admin.post('/admin/registrations/not-an-id/approve', {}), 400);
-});
-await check('approve A; then B under A, C under B register and are approved', async () => {
-  ok(await admin.post(`/admin/registrations/${await idOf(a.memberId)}/approve`, {}));
-  ok(await admin.post(`/admin/registrations/${await idOf(a.memberId)}/approve`, {}), 409);
-  const rb = await anon.post('/auth/register', regBody(a.memberId, String(pkgs.basic._id), { username: 'bob_b' })); ok(rb, 201); b = rb.body;
-  ok(await admin.post(`/admin/registrations/${await idOf(b.memberId)}/approve`, {}));
-  const rc = await anon.post('/auth/register', regBody(b.memberId, standardId, { username: 'carol_c' })); ok(rc, 201); c = rc.body;
-  ok(await admin.post(`/admin/registrations/${await idOf(c.memberId)}/approve`, {}));
+  ok(await admin.post(`/admin/registrations/${oldOne._id}/approve`, {}));
+  ok(await admin.post(`/admin/registrations/${oldOne._id}/approve`, {}), 409);
+  ok(await new Client('o1b').post('/auth/login', { identifier: 'old_one', password: pwd }));
 });
 await check('rejected member sees the reason on login', async () => {
-  const r = await D.post('/auth/login', { identifier: 'dave_d', password: pwd });
+  const r = await new Client('o2').post('/auth/login', { identifier: 'old_two', password: pwd });
   ok(r, 403); assert.match(r.body.message, /Documents unclear/);
-});
-await check('approved members can log in (username or member ID, any case)', async () => {
-  for (const [cl, u] of [[A, 'alice_a'], [B, 'bob_b'], [C, 'carol_c']]) {
-    const r = await cl.post('/auth/login', { identifier: u, password: pwd }); ok(r);
-    assert.equal(r.body.user.status, 'active');
-  }
-  const r = await new Client('x').post('/auth/login', { identifier: a.memberId.toLowerCase(), password: pwd }); ok(r);
 });
 
 /* ---------- Member: reads before activation ---------- */
@@ -253,7 +280,7 @@ await check('profile, payment-info, kyc, team, income, ledger, wallet, achieveme
     const r = await A.get(p); ok(r); assert.ok(r.body, p);
   }
 });
-await check('notifications: sponsor was told about new referral; mark all/one read', async () => {
+await check('notifications: welcome note for the new member; mark all/one read', async () => {
   let r = await A.get('/member/notifications'); ok(r);
   assert.ok(r.body.unread >= 1);
   ok(await A.post(`/member/notifications/${r.body.items[0]._id}/read`, {}));
@@ -263,12 +290,6 @@ await check('notifications: sponsor was told about new referral; mark all/one re
 });
 await check('wallet statement filters: bad dates do not crash', async () => {
   ok(await A.get('/member/wallet/statement?from=garbage&to=2026-99-99'));
-});
-await check('tree: another branch is forbidden, bad id 400', async () => {
-  const cid = await idOf(c.memberId);
-  ok(await A.get(`/member/team/tree?node=${cid}`)); // C is in A's downline
-  ok(await C.get(`/member/team/tree?node=${await idOf(a.memberId)}`), 403);
-  ok(await A.get('/member/team/tree?node=xyz'), 400);
 });
 
 /* ---------- Bundle payment ---------- */
@@ -286,13 +307,13 @@ await check('submit payment OK; second live payment and reused UTR blocked', asy
   ok(r, 201); payA = r.body.payment;
   assert.equal(payA.status, 'pending'); assert.equal(payA.utr, 'UTR-A-0001');
   ok(await A.call('POST', '/member/payments', { form: fileForm({ packageId: standardId, utr: 'UTR-A-0002' }, { proof: PNG }) }), 409);
-  ok(await B.call('POST', '/member/payments', { form: fileForm({ packageId: String(pkgs.basic._id), utr: 'UTR-A-0001' }, { proof: PNG }) }), 409);
+  ok(await D.call('POST', '/member/payments', { form: fileForm({ packageId: String(pkgs.basic._id), utr: 'UTR-A-0001' }, { proof: PNG }) }), 409);
 });
 await check('payment proof: owner and admin can open, other member cannot', async () => {
   const f = payA.proof;
   let r = await A.get(`/files/${f}`); ok(r); assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
   ok(await admin.get(`/files/${f}`));
-  ok(await B.get(`/files/${f}`), 403);
+  ok(await D.get(`/files/${f}`), 403);
   ok(await A.get('/files/../../etc/passwd'), 404);
 });
 await check('admin payments list/search; reject without reason → 400', async () => {
@@ -313,6 +334,12 @@ await check('approve payment → A active, sponsor (root) paid active income, re
   const info = await A.get('/member/payment-info'); assert.equal(info.body.canSubmit, false);
   ok(await A.call('POST', '/member/payments', { form: fileForm({ packageId: standardId, utr: 'UTR-A-0004' }, { proof: PNG }) }), 400);
 });
+await check('A’s ID is now activated: B joins under A and logs in', async () => {
+  const s = await anon.get(`/public/sponsor/${a.memberId}`); ok(s);
+  const rb = await registerWithOtp(regBody(a.memberId, String(pkgs.basic._id), { username: 'bob_b' })); ok(rb, 201); b = rb.body;
+  ok(await B.post('/auth/login', { identifier: 'bob_b', password: pwd }));
+  ok(await anon.post('/auth/register', regBody(b.memberId, standardId, { username: 'carol_c' })), 400); // B has no bundle yet
+});
 let payB;
 await check('B pays Basic; approve → A earns ₹1,500 active income', async () => {
   const r = await B.call('POST', '/member/payments', { form: fileForm({ packageId: String(pkgs.basic._id), utr: 'UTR-B-0001' }, { proof: PNG }) });
@@ -321,6 +348,10 @@ await check('B pays Basic; approve → A earns ₹1,500 active income', async ()
   const dash = await A.get('/member/dashboard'); ok(dash);
   assert.equal(dash.body.income.active, 1500);
   assert.equal(dash.body.wallet.balance, 1500);
+});
+await check('B activated → C joins under B and logs in', async () => {
+  const rc = await registerWithOtp(regBody(b.memberId, standardId, { username: 'carol_c' })); ok(rc, 201); c = rc.body;
+  ok(await C.post('/auth/login', { identifier: 'carol_c', password: pwd }));
 });
 await check('C pays Standard → B ₹2,000 active, A ₹300 passive (L1 = sponsor’s sponsor)', async () => {
   const r = await C.call('POST', '/member/payments', { form: fileForm({ packageId: standardId, utr: 'UTR-C-0001' }, { proof: PNG }) });
@@ -335,6 +366,13 @@ await check('income summary, ledger by category, team levels match', async () =>
   const led = await A.get('/member/ledger?category=active'); ok(led); assert.equal(led.body.total, 1);
   const team = await A.get('/member/team'); ok(team); assert.ok(team.body.levels.length >= 2);
   const l2 = await A.get('/member/team/members?level=2'); ok(l2); assert.equal(l2.body.total, 1);
+});
+
+await check('tree: another branch is forbidden, bad id 400', async () => {
+  const cid = await idOf(c.memberId);
+  ok(await A.get(`/member/team/tree?node=${cid}`)); // C is in A's downline
+  ok(await C.get(`/member/team/tree?node=${await idOf(a.memberId)}`), 403);
+  ok(await A.get('/member/team/tree?node=xyz'), 400);
 });
 
 /* ---------- KYC ---------- */
@@ -407,7 +445,7 @@ await check('transfer: self, to downline/upline; refused for other branch / wron
   ok(await A.post('/member/transfers', { target: 'self', amount: 100, txnPassword: tpwd }), 201);
   ok(await A.post('/member/transfers', { target: 'member', username: 'bob_b', amount: 100, txnPassword: tpwd }), 201);
   ok(await A.post('/member/transfers', { target: 'member', amount: 100, txnPassword: tpwd }), 422);
-  ok(await A.post('/member/transfers', { target: 'member', username: 'iskillmatrix', amount: 100, txnPassword: tpwd }), 400);
+  ok(await A.post('/member/transfers', { target: 'member', username: 'aroviaskilltech', amount: 100, txnPassword: tpwd }), 400);
   ok(await A.post('/member/transfers', { target: 'self', amount: 99999999, txnPassword: tpwd }), 400);
   ok(await A.post('/member/transfers', { target: 'self', amount: -5, txnPassword: tpwd }), 422);
   const l = await A.get('/member/transfers'); ok(l); assert.equal(l.body.total, 2);
@@ -416,8 +454,7 @@ await check('transfer: self, to downline/upline; refused for other branch / wron
 });
 await check('activation wallet buys bundle for another member (P2P); no double activation', async () => {
   const D2 = new Client('D2');
-  const reg = await anon.post('/auth/register', regBody(b.memberId, standardId, { username: 'erin_e' })); ok(reg, 201);
-  ok(await admin.post(`/admin/registrations/${await idOf(reg.body.memberId)}/approve`, {}));
+  const reg = await registerWithOtp(regBody(b.memberId, standardId, { username: 'erin_e' })); ok(reg, 201);
   const r = await B.post('/member/wallet/purchase', { packageId: String(pkgs.basic._id), wallet: 'activation', username: 'erin_e', txnPassword: tpwd });
   ok(r, 201);
   ok(await B.post('/member/wallet/purchase', { packageId: String(pkgs.basic._id), wallet: 'activation', username: 'erin_e', txnPassword: tpwd }), 409);
@@ -443,15 +480,27 @@ await check('withdrawal rules: KYC required, txn password, min amount', async ()
   const q = await A.get('/member/withdrawals/quote?amount=10000'); ok(q);
   assert.equal(q.body.netAmount, 9300);
 });
+await check('withdrawal OTP: needed, checked before sending, tied to the amount', async () => {
+  ok(await A.post('/member/withdrawals', { amount: 1000, txnPassword: tpwd }), 400); // no OTP
+  ok(await B.post('/member/withdrawals/send-otp', { amount: 1000 }), 400); // no KYC → no code is sent
+  ok(await A.post('/member/withdrawals/send-otp', { amount: 10 }), 400); // below minimum
+  ok(await A.post('/member/withdrawals/send-otp', { amount: 99999999 }), 400); // more than the balance
+  ok(await anon.post('/member/withdrawals/send-otp', { amount: 1000 }), 401);
+  const o = await A.post('/member/withdrawals/send-otp', { amount: 1000 }); ok(o);
+  const r = await A.post('/member/withdrawals', { amount: 1100, txnPassword: tpwd, otp: o.body.devCode }); ok(r, 400);
+  assert.match(r.body.message, /different amount/);
+  const Otp = (await import('../models/Otp.js')).default;
+  await Otp.deleteMany({}); // let the next check request a fresh code without waiting out the cooldown
+});
 await check('withdraw ₹1,000 → balance held; cancel refunds; re-request', async () => {
   const before = (await A.get('/member/wallet')).body.balance;
-  let r = await A.post('/member/withdrawals', { amount: 1000, txnPassword: tpwd }); ok(r, 201); wd = r.body.withdrawal;
+  let r = await withdraw(A, 1000, tpwd); ok(r, 201); wd = r.body.withdrawal;
   assert.equal(wd.netAmount, 930);
   assert.equal((await A.get('/member/wallet')).body.balance, before - 1000);
   ok(await A.post(`/member/withdrawals/${wd._id}/cancel`, {}));
   assert.equal((await A.get('/member/wallet')).body.balance, before);
   ok(await A.post(`/member/withdrawals/${wd._id}/cancel`, {}), 409);
-  r = await A.post('/member/withdrawals', { amount: 1000, txnPassword: tpwd }); ok(r, 201); wd = r.body.withdrawal;
+  r = await withdraw(A, 1000, tpwd); ok(r, 201); wd = r.body.withdrawal;
 });
 await check('admin: approve → processing → paid needs reference; reject refunds', async () => {
   const l = await admin.get('/admin/withdrawals'); ok(l); assert.equal(l.body.total, 1);
@@ -461,7 +510,7 @@ await check('admin: approve → processing → paid needs reference; reject refu
   ok(await admin.post(`/admin/withdrawals/${wd._id}/status`, { status: 'processing' }));
   ok(await admin.post(`/admin/withdrawals/${wd._id}/status`, { status: 'paid', paymentReference: 'UTR998877' }));
   ok(await admin.post(`/admin/withdrawals/${wd._id}/status`, { status: 'rejected', remarks: 'late' }), 409);
-  const r2 = await A.post('/member/withdrawals', { amount: 600, txnPassword: tpwd }); ok(r2, 201);
+  const r2 = await withdraw(A, 600, tpwd); ok(r2, 201);
   const bal = (await A.get('/member/wallet')).body.balance;
   ok(await admin.post(`/admin/withdrawals/${r2.body.withdrawal._id}/status`, { status: 'rejected' }), 400);
   ok(await admin.post(`/admin/withdrawals/${r2.body.withdrawal._id}/status`, { status: 'rejected', remarks: 'bank details' }));
@@ -578,7 +627,7 @@ await check('courses: create/update/duplicate slug/invalid slug', async () => {
 await check('settings: get, save new version, validation, history, QR upload', async () => {
   const g = await admin.get('/admin/settings'); ok(g);
   const s = g.body.settings;
-  const patch = { site: s.site, payment: { upiId: 'test@upi', payeeName: 'iSkillMatrix', instructions: 'Pay and upload' }, note: 'api check' };
+  const patch = { site: s.site, payment: { upiId: 'test@upi', payeeName: 'AroviaSkillTech', instructions: 'Pay and upload' }, note: 'api check' };
   const r = await admin.put('/admin/settings', patch); ok(r);
   assert.equal(r.body.settings.version, s.version + 1);
   ok(await admin.put('/admin/settings', { tax: { gstPercent: 150, systemCostPercent: 12 } }), 422);

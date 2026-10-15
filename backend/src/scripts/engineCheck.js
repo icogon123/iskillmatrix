@@ -12,6 +12,7 @@ import Ledger from '../models/Ledger.js';
 import Kyc from '../models/Kyc.js';
 import IncomeRun from '../models/IncomeRun.js';
 import Deposit from '../models/Deposit.js';
+import Otp from '../models/Otp.js';
 import { ensureBaseData } from './baseData.js';
 import env from '../config/env.js';
 import { nextMemberId } from '../utils/ids.js';
@@ -20,12 +21,25 @@ import { distributePackageIncome, processNonWorking } from '../services/incomeEn
 import { getBalance, getBalances, createEntry, walletStatement } from '../services/ledgerService.js';
 import { transferFunds, purchaseBundle } from '../services/walletService.js';
 import { approveDeposit, rejectDeposit, utrInUse } from '../services/depositService.js';
-import { requestWithdrawal, adminUpdateWithdrawal, cancelWithdrawal, setWalletSuspension } from '../services/withdrawalService.js';
+import { requestWithdrawal as requestWithdrawalRaw, sendWithdrawalOtp, adminUpdateWithdrawal, cancelWithdrawal, setWalletSuspension } from '../services/withdrawalService.js';
 import { generateWeekly, generateMonthlyBonus, generateRoyalty, approveRun, cancelRun, weeklyPool, autoProcessWeekly } from '../services/runService.js';
 import { addDays, startOfWeekIST, dayKeyIST, startOfMonthIST, addMonthsIST, monthKeyIST } from '../utils/dates.js';
 
 // Throwaway database and test-only admin password: this check never touches the real MONGODB_URI.
 env.admin.password = 'EngineCheck#2026';
+env.smtp.host = ''; // never email the test members through the real SMTP account
+
+// Withdrawals need the email OTP. With mail off, sendWithdrawalOtp hands the code back as `devCode`.
+// When the request is expected to fail before the OTP step (KYC, password, balance, suspension) no code is requested.
+async function requestWithdrawal(user, body, ip) {
+  let otp;
+  await Otp.deleteMany({}); // skip the 60s resend cooldown between checks
+  try {
+    otp = (await sendWithdrawalOtp(user, body.amount)).devCode;
+  } catch { /* the request itself reports the reason */ }
+  return requestWithdrawalRaw(user, { ...body, otp }, ip);
+}
+
 const mem = await MongoMemoryServer.create();
 await mongoose.connect(mem.getUri('engine-check'));
 await ensureBaseData({ log: false });
@@ -194,7 +208,9 @@ await check('Withdrawal ₹1,000: TDS ₹20 + admin ₹50 → net ₹930; balanc
 await check('Concurrent withdrawals cannot overdraw the wallet', async () => {
   const bal = await getBalance(A6._id);
   const amt = Math.floor(bal * 0.6);
-  const results = await Promise.allSettled([1, 2, 3].map(() => requestWithdrawal(A6, { amount: amt, txnPassword: 'Txn@1234' })));
+  await Otp.deleteMany({});
+  const { devCode: otp } = await sendWithdrawalOtp(A6, amt); // one code shared by all three: it can only be used once too
+  const results = await Promise.allSettled([1, 2, 3].map(() => requestWithdrawalRaw(A6, { amount: amt, txnPassword: 'Txn@1234', otp })));
   assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1);
   assert.ok((await getBalance(A6._id)) >= 0);
 });

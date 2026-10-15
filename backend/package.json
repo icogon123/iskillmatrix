@@ -1,8 +1,8 @@
 {
-  "name": "iskillmatrix-backend",
+  "name": "aroviaskilltech-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "iSkillMatrix linear (unilevel) MLM management API",
+  "description": "AroviaSkillTech linear (unilevel) MLM management API",
   "type": "module",
   "main": "src/server.js",
   "engines": {
