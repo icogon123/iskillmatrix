@@ -14,7 +14,7 @@ export default function Network() {
     <div>
       <PageHeader icon={NetworkIcon} title="Network Tree" subtitle="Unilevel sponsor tree. Start from the company root or any member ID." />
       <form className="mb-4 flex gap-2" onSubmit={(e) => { e.preventDefault(); setQuery(memberId.trim() ? { memberId: memberId.trim() } : {}); }}>
-        <Input icon={Search} placeholder="Member ID, e.g. ISM100001" value={memberId} onChange={(e) => setMemberId(e.target.value)} className="max-w-xs flex-1" />
+        <Input icon={Search} placeholder="Member ID, e.g. ASM100001" value={memberId} onChange={(e) => setMemberId(e.target.value)} className="max-w-xs flex-1" />
         <Button type="submit" loading={isFetching}>Show</Button>
         {query.memberId && <Button variant="ghost" onClick={() => { setMemberId(''); setQuery({}); }}>Root</Button>}
       </form>

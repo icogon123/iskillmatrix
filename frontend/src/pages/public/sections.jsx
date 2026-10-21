@@ -210,7 +210,7 @@ const PLACEHOLDER_PHOTO = '/team/placeholder.svg';
 function TeamCard({ name, role, photo, about }) {
   return (
     <li className="group">
-      <div className="overflow-hidden rounded-2xl bg-ink-900 shadow-[0_14px_30px_-12px_rgb(38_39_44/0.35)]">
+      <div className="mx-auto max-w-52 overflow-hidden rounded-2xl bg-ink-900 shadow-[0_14px_30px_-12px_rgb(38_39_44/0.35)] sm:max-w-none">
         <img src={photo || PLACEHOLDER_PHOTO} alt={role ? `${name}, ${role}` : name} width={400} height={500} loading="lazy" decoding="async"
           onError={(e) => { if (!e.currentTarget.src.endsWith(PLACEHOLDER_PHOTO)) e.currentTarget.src = PLACEHOLDER_PHOTO; }}
           className="aspect-[4/5] w-full object-cover object-top transition duration-500 group-hover:scale-105" />

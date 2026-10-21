@@ -13,7 +13,7 @@ Copy `.env.example` to `.env`.
 |----------|---------|-------------|
 | `NODE_ENV` | `development` | `production` enables secure cookies, generic error messages and serving `frontend/dist` |
 | `PORT` | `5050` | API port |
-| `CLIENT_URL` | `http://localhost:5173` | Public URL of the website. Used for CORS, referral links (`/register?ref=…`) and password-reset links. Production: `https://aroviaskilltech.com` |
+| `CLIENT_URL` | `http://localhost:5173` | Public URL of the website. Used for CORS, referral links (`/register?ref=…`) and password-reset links. Production: `https://aroviaskilltechnologies.com` |
 | `MONGODB_URI` | — | **Required.** MongoDB Atlas connection string (`mongodb+srv://user:password@cluster….mongodb.net/?retryWrites=true&w=majority`). The server will not start without it |
 | `MONGODB_DB_NAME` | `iskillmatrix` | Database name inside the cluster |
 | `JWT_SECRET` | — | **Required**, at least 32 characters. Signs session tokens. Changing it logs everyone out |
@@ -21,7 +21,7 @@ Copy `.env.example` to `.env`.
 | `ADMIN_USERNAME` | `admin` | Username of the first administrator |
 | `ADMIN_PASSWORD` | — | **Required on first start** (when no admin exists yet). 8+ characters with a letter, a number and a symbol. There is no default password |
 | `ADMIN_EMAIL` | empty | Email of the first admin and the root member (used for password-reset emails) |
-| `ROOT_PASSWORD` | — | Optional login password for the company root member `ISM100001`. If empty, the root member gets an unguessable password; the admin can set one later with **Reset password** |
+| `ROOT_PASSWORD` | — | Optional login password for the company root member `ASM100001`. If empty, the root member gets an unguessable password; the admin can set one later with **Reset password** |
 | `CLOUDINARY_CLOUD_NAME` | — | **Required for uploads.** Cloudinary → Dashboard → *Cloud name* |
 | `CLOUDINARY_API_KEY` | — | **Required for uploads.** Cloudinary → Settings → API Keys |
 | `CLOUDINARY_API_SECRET` | — | **Required for uploads.** Secret — never share it. Without these three, payment proofs, KYC documents and the QR code can't be uploaded (the server logs a warning) |
@@ -50,7 +50,7 @@ Example production `.env`:
 ```env
 NODE_ENV=production
 PORT=5050
-CLIENT_URL=https://aroviaskilltech.com
+CLIENT_URL=https://aroviaskilltechnologies.com
 MONGODB_URI="mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority"
 MONGODB_DB_NAME=iskillmatrix
 JWT_SECRET=paste-output-of-openssl-rand-hex-32

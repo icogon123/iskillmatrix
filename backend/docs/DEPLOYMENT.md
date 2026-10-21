@@ -1,10 +1,10 @@
-# Deployment (aroviaskilltech.com)
+# Deployment (aroviaskilltechnologies.com)
 
 The simplest setup is **one Linux server (VPS)** running one Node.js process that serves both the
 API (`/api`) and the built React site, behind Nginx with HTTPS, plus MongoDB.
 
 ```
-Browser ──HTTPS──► Nginx (aroviaskilltech.com, SSL) ──► Node.js :5050 ──► Cloudinary (uploaded files)
+Browser ──HTTPS──► Nginx (aroviaskilltechnologies.com, SSL) ──► Node.js :5050 ──► Cloudinary (uploaded files)
                                                      ├── /api/*            Express API
                                                      └── /*                frontend/dist (React)
                                                   ──► MongoDB (Atlas or local)
@@ -16,7 +16,7 @@ Browser ──HTTPS──► Nginx (aroviaskilltech.com, SSL) ──► Node.js 
 - Node.js 20 LTS or newer, npm
 - Nginx, Certbot (Let's Encrypt)
 - MongoDB Atlas cluster (or MongoDB 6+ on the server). In Atlas → **Network Access**, allow the server's public IP
-- DNS: `A` records for `aroviaskilltech.com` and `www.aroviaskilltech.com` pointing to the server
+- DNS: `A` records for `aroviaskilltechnologies.com` and `www.aroviaskilltechnologies.com` pointing to the server
 
 ## 2. Get the code on the server
 
@@ -52,7 +52,7 @@ cp .env.example .env
 nano .env              # see CONFIGURATION.md → example production .env
 ```
 
-Required: `NODE_ENV=production`, `CLIENT_URL=https://aroviaskilltech.com`, a real `MONGODB_URI`,
+Required: `NODE_ENV=production`, `CLIENT_URL=https://aroviaskilltechnologies.com`, a real `MONGODB_URI`,
 a random `JWT_SECRET`, a strong `ADMIN_PASSWORD`.
 
 Run with **PM2** so it restarts on crash and on reboot:
@@ -66,7 +66,7 @@ pm2 startup            # run the command it prints
 pm2 logs aroviaskilltech  # view logs
 ```
 
-On first start the API creates the settings, course catalog, bundles (packages), admin and root member (`ISM100001`).
+On first start the API creates the settings, course catalog, bundles (packages), admin and root member (`ASM100001`).
 Check: `curl http://127.0.0.1:5050/api/health` → `{"ok":true,"db":"connected",…}`. It answers **503** while the
 database is unreachable, so it can be used by an uptime monitor.
 
@@ -84,7 +84,7 @@ Run a **single** PM2 instance (not cluster mode): the 12:00 AM scheduler should 
 ```nginx
 server {
     listen 80;
-    server_name aroviaskilltech.com www.aroviaskilltech.com;
+    server_name aroviaskilltechnologies.com www.aroviaskilltechnologies.com;
 
     client_max_body_size 6m;            # KYC documents and payment screenshots (API limit is 5 MB)
 
@@ -102,7 +102,7 @@ server {
 ```bash
 sudo ln -s /etc/nginx/sites-available/aroviaskilltech /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d aroviaskilltech.com -d www.aroviaskilltech.com
+sudo certbot --nginx -d aroviaskilltechnologies.com -d www.aroviaskilltechnologies.com
 ```
 
 The app sets `trust proxy`, so rate limiting and audit IPs use the real client IP from Nginx.
@@ -140,7 +140,7 @@ MongoDB Atlas also offers automatic backups. Store copies off the server.
 
 ## 9. Go-live checklist
 
-- [ ] `NODE_ENV=production`, `CLIENT_URL=https://aroviaskilltech.com`
+- [ ] `NODE_ENV=production`, `CLIENT_URL=https://aroviaskilltechnologies.com`
 - [ ] Strong `JWT_SECRET` and `ADMIN_PASSWORD`
 - [ ] `MONGODB_URI` points to the production Atlas cluster; the server's IP is allowed in Atlas → Network Access
 - [ ] HTTPS working; `http://` redirects to `https://`
@@ -151,7 +151,7 @@ MongoDB Atlas also offers automatic backups. Store copies off the server.
 - [ ] Admin → System Settings → payment instructions say "bundle" (older databases still say "package amount")
 - [ ] `https://<your-domain>/sitemap.xml` lists your courses; submit it in Google Search Console
 - [ ] Income rules confirmed with the client (royalty basis, monthly slab rule, weekly %)
-- [ ] Test registration with the root member code `ISM100001` → log in → pay → approve payment
+- [ ] Test registration with the root member code `ASM100001` → log in → pay → approve payment
 - [ ] Cloudinary keys set in `.env`; `npm run test:storage` passes on the server
 - [ ] Daily backups scheduled
 - [ ] `pm2 startup` configured so the site comes back after a reboot

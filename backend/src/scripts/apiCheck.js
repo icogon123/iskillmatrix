@@ -651,7 +651,7 @@ await check('audit log records actions and filters', async () => {
 await check('network tree: root, by member ID, unknown', async () => {
   const r = await admin.get('/admin/network'); ok(r); assert.ok(r.body.node);
   ok(await admin.get(`/admin/network?memberId=${a.memberId}`));
-  ok(await admin.get('/admin/network?memberId=ISM999999'), 404);
+  ok(await admin.get('/admin/network?memberId=ASM999999'), 404);
 });
 await check('all reports run, with filters and CSV-ready columns', async () => {
   const t = await admin.get('/admin/reports'); ok(t);

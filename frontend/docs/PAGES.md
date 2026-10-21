@@ -39,7 +39,7 @@ The website uses the flat button variants `solid`, `accent`, `quiet` and `onBran
 |-----|------|---------|
 | `/login` | `public/Login.jsx` | Username or member ID + password, forgot link, "Not registered? Join Now" |
 | `/admin/login` | `public/Login.jsx` (`admin` prop) | Same form, admin wording |
-| `/register?ref=ISM…&bundle=pro` | `public/Register.jsx` | Referral code (live sponsor lookup), profile detail, login access (live username check, password + transaction password), bundle choice with included courses, confirmation; success screen shows member ID |
+| `/register?ref=ASM…&bundle=pro` | `public/Register.jsx` | Referral code (live sponsor lookup), profile detail, login access (live username check, password + transaction password), bundle choice with included courses, confirmation; success screen shows member ID |
 | `/forgot-password` | `public/ForgotPassword.jsx` | Request reset email |
 | `/reset-password?token=…` | `public/ResetPassword.jsx` | Set a new password |
 

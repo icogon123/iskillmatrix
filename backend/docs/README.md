@@ -7,7 +7,7 @@
 | [DATABASE.md](DATABASE.md) | know what each MongoDB collection stores |
 | [INCOME_ENGINE.md](INCOME_ENGINE.md) | understand or change how commissions, bonuses, badges and withdrawals are calculated |
 | [CONFIGURATION.md](CONFIGURATION.md) | set environment variables or admin settings |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | put the site live on aroviaskilltech.com |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | put the site live on aroviaskilltechnologies.com |
 
 Installation and running are covered in the backend [README](../README.md).
 The frontend has its own docs in [`frontend/docs`](../../frontend/docs/README.md).
@@ -16,12 +16,12 @@ The frontend has its own docs in [`frontend/docs`](../../frontend/docs/README.md
 
 | Term | Meaning |
 |------|---------|
-| **Member ID** | Public ID like `ISM100002`. Also the referral code. |
+| **Member ID** | Public ID like `ASM100002`. Also the referral code. |
 | **Sponsor** | The member whose referral code/link was used to register. |
 | **Upline / ancestors** | The sponsor, the sponsor's sponsor, and so on up to the root. |
 | **Downline / team** | Everyone below a member in the sponsor tree. |
 | **Direct / Level 1 team** | Members a person sponsored personally. |
-| **Root member** | Company account `ISM100001`, top of the tree. |
+| **Root member** | Company account `ASM100001`, top of the tree. |
 | **Active member** | Account status `active` **and** a package that has been paid and approved. |
 | **Ledger** | The list of every credit and debit. Wallet balance is calculated from it. |
 | **Lapsed** | Income that would have gone to an inactive upline; recorded but not credited. |

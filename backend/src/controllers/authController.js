@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import Package from '../models/Package.js';
 import AppError from '../utils/AppError.js';
 import env from '../config/env.js';
-import { nextMemberId } from '../utils/ids.js';
+import { nextMemberId, normalizeMemberId } from '../utils/ids.js';
 import { issueToken, clearToken } from '../middleware/auth.js';
 import { reqAudit, audit } from '../services/auditService.js';
 import { notify } from '../services/notificationService.js';
@@ -28,7 +28,7 @@ export async function findSponsor(code) {
   if (!c) return null;
   return User.findOne({
     role: 'member',
-    $or: [{ memberId: c.toUpperCase() }, { username: c.toLowerCase() }],
+    $or: [{ memberId: normalizeMemberId(c) }, { username: c.toLowerCase() }],
   }).select(SPONSOR_FIELDS);
 }
 
@@ -110,7 +110,7 @@ export async function login(req, res) {
   const { identifier, password } = req.body;
   const id = identifier.trim();
   const user = await User.findOne({
-    $or: [{ username: id.toLowerCase() }, { memberId: id.toUpperCase() }],
+    $or: [{ username: id.toLowerCase() }, { memberId: normalizeMemberId(id) }],
   }).select('+password +tokenVersion');
   if (!user || !(await user.checkPassword(password))) throw new AppError('Invalid username / member ID or password', 401);
 
@@ -153,7 +153,7 @@ export async function forgotPassword(req, res) {
   const generic = { message: 'If the account exists, a password reset link has been sent to the registered email.' };
   if (!id) return res.json(generic);
   const user = await User.findOne({
-    $or: [{ username: id.toLowerCase() }, { memberId: id.toUpperCase() }, { email: new RegExp(`^${escapeRegex(id)}$`, 'i') }],
+    $or: [{ username: id.toLowerCase() }, { memberId: normalizeMemberId(id) }, { email: new RegExp(`^${escapeRegex(id)}$`, 'i') }],
   });
   if (!user?.email) return res.json(generic);
 

@@ -11,8 +11,16 @@ export async function nextSequence(name, offset = 0) {
   return offset + doc.seq;
 }
 
+export const MEMBER_ID_PREFIX = 'ASM';
+const LEGACY_MEMBER_ID = /^ISM(?=\d+$)/;
+
 export async function nextMemberId() {
-  return `ISM${await nextSequence('member', 100000)}`;
+  return `${MEMBER_ID_PREFIX}${await nextSequence('member', 100000)}`;
+}
+
+/** Upper-cases a typed member ID and maps the old ISM prefix to ASM, so IDs and referral links shared before the rename still work. */
+export function normalizeMemberId(value) {
+  return String(value || '').trim().toUpperCase().replace(LEGACY_MEMBER_ID, MEMBER_ID_PREFIX);
 }
 
 export async function nextCode(prefix, name) {

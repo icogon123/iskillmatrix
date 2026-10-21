@@ -47,7 +47,7 @@ Open `.env` and set:
 | `MONGODB_DB_NAME` | Database name inside the cluster (default `iskillmatrix`) |
 | `JWT_SECRET` | 32+ random characters (`openssl rand -hex 32`) |
 | `ADMIN_PASSWORD` | Strong password for the first administrator (8+ chars, letter, number, symbol) |
-| `ROOT_PASSWORD` | Optional login password for the company root member `ISM100001` |
+| `ROOT_PASSWORD` | Optional login password for the company root member `ASM100001` |
 | `CLIENT_URL` | Where the website runs (`http://localhost:5173` in development) |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | From the Cloudinary dashboard — required for payment proofs, KYC documents and the QR code |
 | `SMTP_*` | Your email server, so password-reset and notification emails are delivered |
@@ -68,7 +68,7 @@ npm run dev
 - API: **http://localhost:5050/api** (health check: `/api/health`)
 - Restarts automatically when files change (`node --watch`).
 - On the first start against an empty database it creates the default settings, the 10 catalog courses, the 5 packages (course bundles),
-  the administrator and the company root member **ISM100001** (the first sponsor code). Existing data
+  the administrator and the company root member **ASM100001** (the first sponsor code). Existing data
   is never overwritten. There is no demo data.
 
 > Port 5000 is used by AirPlay Receiver on macOS, so the default port is **5050**.
@@ -104,7 +104,7 @@ runs from one port. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 | Account | Login page | Username | Password |
 |---------|-----------|----------|----------|
 | Administrator | `/admin/login` | `ADMIN_USERNAME` (`admin`) | `ADMIN_PASSWORD` from `.env` |
-| Company root member `ISM100001` | `/login` | `aroviaskilltech` or `ISM100001` | `ROOT_PASSWORD` from `.env` |
+| Company root member `ASM100001` | `/login` | `aroviaskilltech` or `ASM100001` | `ROOT_PASSWORD` from `.env` |
 
 These two accounts are created once, on the first start. Changing `.env` afterwards does not change
 them: the admin changes their password from the key icon in the admin sidebar, and the admin can reset

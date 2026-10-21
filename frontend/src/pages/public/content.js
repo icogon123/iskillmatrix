@@ -19,6 +19,8 @@ export const TEAM = [
   { name: 'Sourabh Thakur', photo: '/team/sourabh-thakur.jpg', about: 'Builds the partnerships and growth that move us forward.' },
   { name: 'Kittu Fauzdar', photo: '/team/kittu-fauzdar.jpg', about: 'Helps learners find the right course and stay on track.' },
   { name: 'Pranjali Chaurasiya', photo: '/team/pranjali-chaurasiya.jpg', about: 'Grows our community and the stories we share.' },
+  { name: 'Khushbu yadav', photo: '/team/khushbu_yadav.jpg', about: 'Shapes our courses so every lesson is practical and clear.' },
+  { name: 'Priya Rathore', photo: '/team/priya.jpg', about: 'Grows our community and the stories we share.' },
 ];
 
 export const MISSION =

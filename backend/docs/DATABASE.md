@@ -21,7 +21,7 @@ auditlogs, counters
 
 | ID | Format | Example | Source |
 |----|--------|---------|--------|
-| Member ID / referral code | `ISM` + sequence from 100001 | `ISM100002` | `counters._id = "member"` |
+| Member ID / referral code | `ASM` + sequence from 100001 | `ASM100002` | `counters._id = "member"` |
 | Payment ID | `PAY` + 6 digits | `PAY000024` | `counters._id = "payment"` |
 | Withdrawal ID | `WD` + 6 digits | `WD000002` | `counters._id = "withdrawal"` |
 | Ledger transaction ID | `TXN` + base-36 time + random | `TXNMU308ICC385A3` | generated |
@@ -35,7 +35,7 @@ Members and admins.
 | Field | Type | Notes |
 |-------|------|-------|
 | `role` | `member` \| `admin` | |
-| `memberId` | string, unique (members) | `ISM100002` |
+| `memberId` | string, unique (members) | `ASM100002` |
 | `username` | string, unique, lowercase | login name |
 | `fullName`, `email`, `mobile`, `dob`, `country`, `aadhaar` | | from registration (the admin KYC review compares `aadhaar` with the KYC Aadhaar) |
 | `avatar`, `avatarAsset` | URL, ObjectId → fileassets (`select: false`) | profile picture (public Cloudinary image); the asset is deleted when replaced |
@@ -55,7 +55,7 @@ Members and admins.
 | `walletLock` | Date, `select: false` | short lease during withdrawals, transfers and wallet purchases |
 | `walletSuspended`, `walletSuspendedReason`, `walletSuspendedAt`, `walletSuspendedBy` | | admin wallet freeze: withdrawals, transfers and wallet payments blocked, income still credited |
 | `lastLoginAt` | Date | |
-| `isRoot` | boolean | company root member `ISM100001` |
+| `isRoot` | boolean | company root member `ASM100001` |
 
 Why `ancestors`? Upline payouts read it directly (no recursive queries), and the whole downline of
 X is simply `users.find({ ancestors: X })`. A member's level under X is `ancestors.indexOf(X) + 1`.

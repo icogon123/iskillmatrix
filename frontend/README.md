@@ -48,7 +48,7 @@ Open **http://localhost:5173**.
 | Page | Login |
 |------|-------|
 | Admin panel — http://localhost:5173/admin/login | `ADMIN_USERNAME` / `ADMIN_PASSWORD` from `backend/.env` (first start) |
-| Member panel — http://localhost:5173/login | Real member accounts: register at `/register` with a sponsor code (the first one is `ISM100001`) and log in straight away |
+| Member panel — http://localhost:5173/login | Real member accounts: register at `/register` with a sponsor code (the first one is `ASM100001`) and log in straight away |
 
 All data comes from the real MongoDB database through the API — there are no demo users or sample figures in the frontend.
 

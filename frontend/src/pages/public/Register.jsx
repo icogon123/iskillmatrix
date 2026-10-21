@@ -163,7 +163,7 @@ export function RegisterForm({ fixedSponsor, onDone }) {
           </>
         ) : (
           <>
-            <Input label="Referral code (Sponsor ID)" icon={Hash} placeholder="e.g. ISM100001" value={form.sponsorId} onChange={set('sponsorId')} {...err('sponsorId')}
+            <Input label="Referral code (Sponsor ID)" icon={Hash} placeholder="e.g. ASM100001" value={form.sponsorId} onChange={set('sponsorId')} {...err('sponsorId')}
               right={sponsorRes.isFetching ? <Spinner className="mr-2 size-4" /> : sponsorOk ? <CheckCircle2 className="mr-2 size-4 text-success" /> : sponsorBad ? <XCircle className="mr-2 size-4 text-danger" /> : null} />
             <Input label="Sponsor name" icon={UserCheck} value={sponsorOk ? sponsorRes.data.fullName : ''} placeholder={sponsorBad ? 'Not available' : 'Auto-filled from sponsor ID'} readOnly
               hint={sponsorOk ? `Referred by ${sponsorRes.data.fullName}` : undefined} />

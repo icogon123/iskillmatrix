@@ -7,13 +7,13 @@ Plain-language steps for members and administrators. Amounts are the defaults; t
 ## Part A — Members
 
 ### 1. Join
-1. Open the referral link you received (`aroviaskilltech.com/register?ref=ISM…`) or go to **Join Now** and
+1. Open the referral link you received (`aroviaskilltechnologies.com/register?ref=ASM…`) or go to **Join Now** and
    type the sponsor's member ID. The sponsor's name appears automatically. A sponsor can also register you
    from their own panel (**Join Member**). The sponsor must have bought a bundle (an activated ID).
 2. Fill in your profile: full name, mobile, email, date of birth (18+), country, Aadhaar number.
 3. Choose a **username**, a **login password** (8+ characters with a letter, a number and a symbol) and a
    separate **transaction password** (used only for withdrawals).
-4. Choose your course bundle and submit. Note your **member ID** (e.g. `ISM100031`).
+4. Choose your course bundle and submit. Note your **member ID** (e.g. `ASM100031`).
 5. Log in straight away. Your ID is **not activated** until you buy a bundle: until then you cannot invite
    anyone (your referral code and **Join Member** stay locked).
 
@@ -93,7 +93,7 @@ Log in at **`/admin/login`** with the admin username and the password set in `ba
 site was first started. Change it right away with the **key icon** next to your name at the bottom of the
 sidebar. The sidebar also shows how many items wait in each queue.
 
-The company's own member account is **ISM100001** (username `aroviaskilltech`). Give this code to your first
+The company's own member account is **ASM100001** (username `aroviaskilltech`). Give this code to your first
 members as their sponsor code. You can set its password from Members → AroviaSkillTech → Reset password.
 
 ### Daily routine

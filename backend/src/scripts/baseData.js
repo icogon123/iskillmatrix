@@ -108,12 +108,12 @@ export async function ensureBaseData({ log = true } = {}) {
     }
   }
 
-  await renameOldBrand();
+  await renameOldBrand(log);
 }
 
 // The platform was called iSkillMatrix before. Values that still hold the old defaults are moved to the new name once;
 // anything the admin has already changed is left alone.
-async function renameOldBrand() {
+async function renameOldBrand(log) {
   const renames = [
     ['site.name', 'iSkillMatrix', 'AroviaSkillTech'],
     ['site.email', 'support@iskillmatrix.com', 'aroviaskilltechnologies@gmail.com'],
@@ -129,4 +129,11 @@ async function renameOldBrand() {
   if (!(await User.exists({ username: 'aroviaskilltech' }))) {
     await User.updateOne({ isRoot: true, username: 'iskillmatrix' }, { $set: { username: 'aroviaskilltech' } });
   }
+
+  // Member IDs used the ISM prefix (ISM100002); they are ASM now. Old IDs typed at login or in referral links are
+  // still accepted through normalizeMemberId().
+  const ids = await User.collection.updateMany({ memberId: /^ISM\d+$/ }, [
+    { $set: { memberId: { $concat: ['ASM', { $substrCP: ['$memberId', 3, { $subtract: [{ $strLenCP: '$memberId' }, 3] }] }] } } },
+  ]);
+  if (ids.modifiedCount && log) console.log(`[setup] ${ids.modifiedCount} member ID(s) renamed from ISM… to ASM…`);
 }

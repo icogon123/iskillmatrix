@@ -13,6 +13,7 @@ import { storeUpload } from '../services/storageService.js';
 import { getPaging, paged, escapeRegex } from '../utils/pagination.js';
 import { parseDayIST, addDays } from '../utils/dates.js';
 import { round2 } from '../utils/money.js';
+import { normalizeMemberId } from '../utils/ids.js';
 
 /* ---------- Packages (shown as course bundles) ---------- */
 
@@ -249,7 +250,7 @@ export async function auditLogs(req, res) {
 export async function networkTree(req, res) {
   let nodeId = req.query.node;
   if (!nodeId && req.query.memberId) {
-    const u = await User.findOne({ memberId: String(req.query.memberId).toUpperCase(), role: 'member' }).select('_id').lean();
+    const u = await User.findOne({ memberId: normalizeMemberId(req.query.memberId), role: 'member' }).select('_id').lean();
     if (!u) throw new AppError('Member not found', 404);
     nodeId = u._id;
   }
