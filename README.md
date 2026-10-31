@@ -62,7 +62,7 @@ and transaction is real and stored in the database.
 | Who | Where | Username | Password |
 |-----|-------|----------|----------|
 | Administrator | `/admin/login` | `ADMIN_USERNAME` from `backend/.env` (`admin`) | `ADMIN_PASSWORD` from `backend/.env` |
-| Company root member `ASM100001` (first sponsor code) | `/login` | `aroviaskilltech` or `ASM100001` | `ROOT_PASSWORD` from `backend/.env` |
+| Company root member `AST100001` (first sponsor code) | `/login` | `aroviaskilltech` or `AST100001` | `ROOT_PASSWORD` from `backend/.env` |
 | Members | `/login` | their username or member ID | chosen at registration (can log in right away) |
 
 `ADMIN_PASSWORD` / `ROOT_PASSWORD` are only used when those accounts are first created. After that,

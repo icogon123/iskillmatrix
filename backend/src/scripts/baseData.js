@@ -130,7 +130,7 @@ async function renameOldBrand(log) {
     await User.updateOne({ isRoot: true, username: 'iskillmatrix' }, { $set: { username: 'aroviaskilltech' } });
   }
 
-  // Member IDs used the ISM prefix (ISM100002); they are ASM now. Old IDs typed at login or in referral links are
+  // Member IDs used the ISM prefix (ISM100002); they are AST now. Old IDs typed at login or in referral links are
   // still accepted through normalizeMemberId().
   const ids = await User.collection.updateMany({ memberId: /^ISM\d+$/ }, [
     { $set: { memberId: { $concat: ['AST', { $substrCP: ['$memberId', 3, { $subtract: [{ $strLenCP: '$memberId' }, 3] }] }] } } },

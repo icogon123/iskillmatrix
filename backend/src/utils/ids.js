@@ -18,7 +18,7 @@ export async function nextMemberId() {
   return `${MEMBER_ID_PREFIX}${await nextSequence('member', 100000)}`;
 }
 
-/** Upper-cases a typed member ID and maps the old ISM prefix to ASM, so IDs and referral links shared before the rename still work. */
+/** Upper-cases a typed member ID and maps the old ISM prefix to AST, so IDs and referral links shared before the rename still work. */
 export function normalizeMemberId(value) {
   return String(value || '').trim().toUpperCase().replace(LEGACY_MEMBER_ID, MEMBER_ID_PREFIX);
 }

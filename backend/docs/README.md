@@ -16,12 +16,12 @@ The frontend has its own docs in [`frontend/docs`](../../frontend/docs/README.md
 
 | Term | Meaning |
 |------|---------|
-| **Member ID** | Public ID like `ASM100002`. Also the referral code. |
+| **Member ID** | Public ID like `AST100002`. Also the referral code. |
 | **Sponsor** | The member whose referral code/link was used to register. |
 | **Upline / ancestors** | The sponsor, the sponsor's sponsor, and so on up to the root. |
 | **Downline / team** | Everyone below a member in the sponsor tree. |
 | **Direct / Level 1 team** | Members a person sponsored personally. |
-| **Root member** | Company account `ASM100001`, top of the tree. |
+| **Root member** | Company account `AST100001`, top of the tree. |
 | **Active member** | Account status `active` **and** a package that has been paid and approved. |
 | **Ledger** | The list of every credit and debit. Wallet balance is calculated from it. |
 | **Lapsed** | Income that would have gone to an inactive upline; recorded but not credited. |

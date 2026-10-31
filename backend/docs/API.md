@@ -61,7 +61,7 @@ Base URL: `/api` (development: `http://localhost:5050/api`; through the Vite dev
 }
 ```
 
-**GET /public/sponsor/ASM100001** → `{ "memberId": "ASM100001", "fullName": "AroviaSkillTech" }` · 404 if not found or not active, or if the sponsor has not bought a bundle yet (ID not activated; the message says so).
+**GET /public/sponsor/AST100001** → `{ "memberId": "AST100001", "fullName": "AroviaSkillTech" }` · 404 if not found or not active, or if the sponsor has not bought a bundle yet (ID not activated; the message says so).
 
 **GET /public/site** → `{ site: { name, tagline, email, phone, whatsapp, address }, plan: { weekly, monthlyBonus, badges, royalty, withdrawal: { tdsPercent, adminChargePercent, min } } }`
 
@@ -84,7 +84,7 @@ Base URL: `/api` (development: `http://localhost:5050/api`; through the Vite dev
 **POST /auth/register**
 ```jsonc
 {
-  "sponsorId": "ASM100002",          // member ID or username of an active member who has bought a bundle
+  "sponsorId": "AST100002",          // member ID or username of an active member who has bought a bundle
   "fullName": "Test Member",
   "mobile": "9876543210",            // 10 digits
   "email": "test@example.com",
@@ -100,7 +100,7 @@ Base URL: `/api` (development: `http://localhost:5050/api`; through the Vite dev
   "otp": "123456"                    // from /auth/register/send-otp, sent to this email
 }
 ```
-→ `201 { message, memberId: "ASM100031", username }`. The sponsor gets a notification; the applicant gets an email.
+→ `201 { message, memberId: "AST100031", username }`. The sponsor gets a notification; the applicant gets an email.
 
 **POST /auth/register/send-otp** `{ "email": "test@example.com", "fullName": "Test Member" }`
 → `200 { message, sentTo: "te**@example.com", expiresInMinutes: 10, resendIn: 60 }`.
@@ -154,7 +154,7 @@ The email contains `CLIENT_URL/reset-password?token=…` (valid 30 minutes).
   "wallet": { "balance": 22050, "activationBalance": 3000, "pendingWithdrawal": 2500, "totalWithdrawn": 5000, "totalWithdrawnNet": 4650 },
   "earnings": { "today": 5150, "month": 14150, "last7Days": [{ "date": "2026-09-28", "total": 7375 }], "last7Total": 29550 },
   "team": { "direct": 10, "total": 25, "active": 22, "directActive": 9, "inactive": 3 },
-  "referral": { "code": "ASM100002", "link": "https://aroviaskilltechnologies.com/register?ref=ASM100002" },
+  "referral": { "code": "AST100002", "link": "https://aroviaskilltechnologies.com/register?ref=AST100002" },
   "achievement": { "current": { "key": "silver", "name": "Silver Executive", "threshold": 10000 },
                    "next": { "key": "gold", "…": "…" }, "lifetimeEarnings": 27050, "requiredAmount": 2950, "progress": 85.3, "ladder": [] },
   "kyc": { "status": "approved", "rejectionReason": null },

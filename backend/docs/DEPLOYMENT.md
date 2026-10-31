@@ -66,7 +66,7 @@ pm2 startup            # run the command it prints
 pm2 logs aroviaskilltech  # view logs
 ```
 
-On first start the API creates the settings, course catalog, bundles (packages), admin and root member (`ASM100001`).
+On first start the API creates the settings, course catalog, bundles (packages), admin and root member (`AST100001`).
 Check: `curl http://127.0.0.1:5050/api/health` → `{"ok":true,"db":"connected",…}`. It answers **503** while the
 database is unreachable, so it can be used by an uptime monitor.
 
@@ -151,7 +151,7 @@ MongoDB Atlas also offers automatic backups. Store copies off the server.
 - [ ] Admin → System Settings → payment instructions say "bundle" (older databases still say "package amount")
 - [ ] `https://<your-domain>/sitemap.xml` lists your courses; submit it in Google Search Console
 - [ ] Income rules confirmed with the client (royalty basis, monthly slab rule, weekly %)
-- [ ] Test registration with the root member code `ASM100001` → log in → pay → approve payment
+- [ ] Test registration with the root member code `AST100001` → log in → pay → approve payment
 - [ ] Cloudinary keys set in `.env`; `npm run test:storage` passes on the server
 - [ ] Daily backups scheduled
 - [ ] `pm2 startup` configured so the site comes back after a reboot

@@ -21,7 +21,7 @@ Copy `.env.example` to `.env`.
 | `ADMIN_USERNAME` | `admin` | Username of the first administrator |
 | `ADMIN_PASSWORD` | — | **Required on first start** (when no admin exists yet). 8+ characters with a letter, a number and a symbol. There is no default password |
 | `ADMIN_EMAIL` | empty | Email of the first admin and the root member (used for password-reset emails) |
-| `ROOT_PASSWORD` | — | Optional login password for the company root member `ASM100001`. If empty, the root member gets an unguessable password; the admin can set one later with **Reset password** |
+| `ROOT_PASSWORD` | — | Optional login password for the company root member `AST100001`. If empty, the root member gets an unguessable password; the admin can set one later with **Reset password** |
 | `CLOUDINARY_CLOUD_NAME` | — | **Required for uploads.** Cloudinary → Dashboard → *Cloud name* |
 | `CLOUDINARY_API_KEY` | — | **Required for uploads.** Cloudinary → Settings → API Keys |
 | `CLOUDINARY_API_SECRET` | — | **Required for uploads.** Secret — never share it. Without these three, payment proofs, KYC documents and the QR code can't be uploaded (the server logs a warning) |
