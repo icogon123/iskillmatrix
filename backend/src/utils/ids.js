@@ -11,7 +11,7 @@ export async function nextSequence(name, offset = 0) {
   return offset + doc.seq;
 }
 
-export const MEMBER_ID_PREFIX = 'ASM';
+export const MEMBER_ID_PREFIX = 'AST';
 const LEGACY_MEMBER_ID = /^ISM(?=\d+$)/;
 
 export async function nextMemberId() {
