@@ -348,7 +348,7 @@ A second generate for the same period returns `409` until the first run is cance
 |--------|------|-------------|
 | GET | `/admin/ledger?search=&wallet=main\|activation&category=&status=&direction=&from=&to=&page=&limit=` | All ledger entries + `totals { credit, debit }` |
 | GET | `/admin/audit-logs?action=<prefix>&search=&page=` | Audit trail (30 per page by default) |
-| GET | `/admin/network?node=<userId>` or `?memberId=ASM…` | Tree node with children; default = root member |
+| GET | `/admin/network?node=<userId>` or `?memberId=AST…` | Tree node with children; default = root member |
 
 ### Reports
 
