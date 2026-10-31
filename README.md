@@ -118,7 +118,7 @@ transactions are never recalculated.
 | Rule | Implementation |
 |------|----------------|
 | Plan | Unilevel sponsor tree: unlimited direct referrals, levels follow the sponsor chain |
-| Registration | Referral link (`/register?ref=ASM…`) or code, or **Join Member** in the member panel; no admin approval, the member can log in at once. The ID is *activated* by buying a first bundle; only activated members can sponsor new members |
+| Registration | Referral link (`/register?ref=AST…`) or code, or **Join Member** in the member panel; no admin approval, the member can log in at once. The ID is *activated* by buying a first bundle; only activated members can sponsor new members |
 | Payment | QR / UPI, member submits UTR + screenshot, admin verifies; one live payment per member; a UTR can't be reused; no package upgrades |
 | Package price split | Customer price includes GST 18% + system cost 12%; remainder = package cost (₹910 / 2,100 / 3,500 / 7,700 / 13,020) |
 | Active income | Direct sponsor: ₹800 / 1,500 / 2,000 / 4,500 / 7,000, credited when the payment is approved |
