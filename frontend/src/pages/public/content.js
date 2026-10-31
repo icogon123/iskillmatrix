@@ -8,7 +8,7 @@ export const ABOUT_TEXT =
   'AroviaSkillTech helps people learn the digital skills used every day to create content, run campaigns and sell online — from AI tools and graphic design to video editing, social media and sales.';
 
 // Shown with the founder photo (public/founder/founder.png) in the homepage "About us" section. Add the founder's name here.
-export const FOUNDER = { name: '', role: 'Founder, AroviaSkillTech' };
+export const FOUNDER = { name: '', role: 'Founder, Mr. Rajesh Thakur' };
 
 // About page "Our team". Drop each photo into public/team/ under the file name in `photo`
 // (portrait, ~4:5 works best); until it's there, a placeholder silhouette is shown. `role` is optional.
