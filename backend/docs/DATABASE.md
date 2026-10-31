@@ -21,7 +21,7 @@ auditlogs, counters
 
 | ID | Format | Example | Source |
 |----|--------|---------|--------|
-| Member ID / referral code | `ASM` + sequence from 100001 | `ASM100002` | `counters._id = "member"` |
+| Member ID / referral code | `AST` + sequence from 100001 | `ASM100002` | `counters._id = "member"` |
 | Payment ID | `PAY` + 6 digits | `PAY000024` | `counters._id = "payment"` |
 | Withdrawal ID | `WD` + 6 digits | `WD000002` | `counters._id = "withdrawal"` |
 | Ledger transaction ID | `TXN` + base-36 time + random | `TXNMU308ICC385A3` | generated |
