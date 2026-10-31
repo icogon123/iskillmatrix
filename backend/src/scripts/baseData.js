@@ -133,7 +133,7 @@ async function renameOldBrand(log) {
   // Member IDs used the ISM prefix (ISM100002); they are ASM now. Old IDs typed at login or in referral links are
   // still accepted through normalizeMemberId().
   const ids = await User.collection.updateMany({ memberId: /^ISM\d+$/ }, [
-    { $set: { memberId: { $concat: ['ASM', { $substrCP: ['$memberId', 3, { $subtract: [{ $strLenCP: '$memberId' }, 3] }] }] } } },
+    { $set: { memberId: { $concat: ['AST', { $substrCP: ['$memberId', 3, { $subtract: [{ $strLenCP: '$memberId' }, 3] }] }] } } },
   ]);
-  if (ids.modifiedCount && log) console.log(`[setup] ${ids.modifiedCount} member ID(s) renamed from ISM… to ASM…`);
+  if (ids.modifiedCount && log) console.log(`[setup] ${ids.modifiedCount} member ID(s) renamed from ISM… to AST…`);
 }
