@@ -33,6 +33,9 @@ export const memberApi = api.injectEndpoints({
     statement: b.query({ query: (p) => `/member/wallet/statement${qs(p)}`, providesTags: ['Wallet', 'Ledger'] }),
     memberLookup: b.query({ query: (username) => `/member/members/lookup${qs({ username })}` }),
     transfers: b.query({ query: (p) => `/member/transfers${qs(p)}`, providesTags: ['Transfers'] }),
+    sendTransferOtp: b.mutation({
+      query: (body) => ({ url: '/member/transfers/send-otp', method: 'POST', body }),
+    }),
     createTransfer: b.mutation({
       query: (body) => ({ url: '/member/transfers', method: 'POST', body }),
       invalidatesTags: ['Transfers', 'Wallet', 'Ledger', 'Dashboard', 'Payments'],
@@ -66,7 +69,7 @@ export const memberApi = api.injectEndpoints({
 
 export const {
   useUploadAvatarMutation, useRemoveAvatarMutation, useStatementQuery, useLazyStatementQuery, useLazyMemberLookupQuery, useTransfersQuery,
-  useCreateTransferMutation, useWalletPurchaseMutation, useActivationsQuery, useDepositsQuery, useCreateDepositMutation,
+  useSendTransferOtpMutation, useCreateTransferMutation, useWalletPurchaseMutation, useActivationsQuery, useDepositsQuery, useCreateDepositMutation,
   useDashboardQuery, useProfileQuery, useChangeTxnPasswordMutation, usePaymentInfoQuery, useSubmitPaymentMutation, useKycQuery,
   useSubmitKycMutation, useTeamQuery, useTeamMembersQuery, useTreeNodeQuery, useLazyTreeNodeQuery, useIncomeSummaryQuery, useLedgerQuery,
   useWalletQuery, useWithdrawalsQuery, useSendWithdrawalOtpMutation, useCreateWithdrawalMutation, useCancelWithdrawalMutation, useAchievementsQuery,

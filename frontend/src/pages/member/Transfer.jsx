@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { ArrowLeftRight, Lock, Wallet, Users, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useWalletQuery, useTransfersQuery, useCreateTransferMutation } from '../../api/memberApi';
+import { useWalletQuery, useTransfersQuery, useCreateTransferMutation, useSendTransferOtpMutation } from '../../api/memberApi';
 import { errorMessage } from '../../app/api';
 import {
   PageHeader, Card, CardHeader, Input, Button, Notice, PageLoader, ErrorState, DataTable, Pagination, Tabs,
 } from '../../components/ui';
 import PasswordInput from '../../components/common/PasswordInput';
+import OtpField, { otpSentHint, retryAfter } from '../../components/common/OtpField';
 import MemberFinder from './MemberFinder';
 import Money from '../../components/common/Money';
 import { inr, dateTime } from '../../lib/format';
@@ -24,6 +25,7 @@ const transferProblem = (m) => {
 export default function Transfer() {
   const { data: w, isLoading, error, refetch } = useWalletQuery();
   const [create, { isLoading: saving }] = useCreateTransferMutation();
+  const [sendTransferOtp, { isLoading: sendingOtp }] = useSendTransferOtpMutation();
   const [type, setType] = useState('');
   const [page, setPage] = useState(1);
   const { data: list, isFetching } = useTransfersQuery({ type, page, limit: 10 });
@@ -33,6 +35,10 @@ export default function Transfer() {
   const [amount, setAmount] = useState('');
   const [remarks, setRemarks] = useState('');
   const [txnPassword, setTxnPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpInfo, setOtpInfo] = useState(null);
+  const [otpError, setOtpError] = useState('');
+  const [resendAt, setResendAt] = useState(0);
 
   if (isLoading) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
@@ -42,15 +48,43 @@ export default function Transfer() {
   const tooHigh = amt > w.balance;
   const memberOk = target === 'self' || (member && !transferProblem(member));
   const blocked = Boolean(w.suspended);
+  const amountOk = !blocked && amt > 0 && !tooLow && !tooHigh && memberOk;
+  const otpReady = Boolean(otpInfo) && otpInfo.amount === amt;
+
+  const sendOtp = async () => {
+    setOtpError('');
+    try {
+      const res = await sendTransferOtp({
+        target,
+        username: target === 'member' ? member?.username : undefined,
+        amount: amt,
+      }).unwrap();
+      setOtpInfo({ ...res, amount: amt });
+      setOtp('');
+      setResendAt(Date.now() + res.resendIn * 1000);
+    } catch (err) {
+      if (retryAfter(err)) setResendAt(Date.now() + retryAfter(err) * 1000);
+      setOtpError(errorMessage(err, 'Could not send the OTP'));
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     try {
-      const res = await create({ target, username: target === 'member' ? member.username : undefined, amount: amt, txnPassword, remarks: remarks || undefined }).unwrap();
+      const res = await create({
+        target,
+        username: target === 'member' ? member.username : undefined,
+        amount: amt,
+        txnPassword,
+        otp,
+        remarks: remarks || undefined,
+      }).unwrap();
       toast.success(res.message);
       setAmount('');
       setRemarks('');
       setTxnPassword('');
+      setOtp('');
+      setOtpInfo(null);
     } catch (err) {
       toast.error(errorMessage(err));
     }
@@ -113,7 +147,18 @@ export default function Transfer() {
               <Input label="Note (optional)" value={remarks} maxLength={120} disabled={blocked} onChange={(e) => setRemarks(e.target.value)} placeholder="e.g. For your Standard bundle" />
             )}
             <PasswordInput label="Transaction password" autoComplete="off" value={txnPassword} disabled={blocked} onChange={(e) => setTxnPassword(e.target.value)} required />
-            <Button type="submit" size="lg" loading={saving} disabled={blocked || !amt || tooLow || tooHigh || !txnPassword || !memberOk} className="w-full">
+            <OtpField
+              value={otp}
+              onChange={(v) => { setOtp(v); setOtpError(''); }}
+              onSend={sendOtp}
+              sending={sendingOtp}
+              sent={otpReady}
+              resendAt={resendAt}
+              disabled={!amountOk}
+              error={otpError}
+              hint={otpReady ? otpSentHint(otpInfo) : otpInfo ? 'The amount or recipient changed. Send a new OTP.' : 'We email a 6-digit code to your registered email to confirm this transfer.'}
+            />
+            <Button type="submit" size="lg" loading={saving} disabled={blocked || !amountOk || !txnPassword || !otpReady || otp.length !== 6} className="w-full">
               {target === 'self' ? `Move ${amt ? inr(amt) : ''} to Activation Wallet` : `Send ${amt ? inr(amt) : ''}${member && memberOk ? ` to ${member.fullName}` : ''}`}
             </Button>
           </form>
@@ -127,7 +172,7 @@ export default function Transfer() {
               'The money always lands in the receiver’s Activation Wallet, where it can only be used to activate course bundles.',
               'You can send to members above you (upline) or below you (downline) in your team, using their username.',
               'Check the name shown before you send — transfers cannot be reversed.',
-              'Your transaction password confirms every transfer.',
+              'Both your transaction password and a 6-digit email OTP are required to authorize each transfer.',
             ].map((s, i) => (
               <li key={s} className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-500/25 text-xs font-bold text-brand-200">{i + 1}</span>{s}</li>
             ))}

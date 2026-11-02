@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
-  Users, UserPlus, QrCode, ShieldCheck, Banknote, IndianRupee, Receipt, Landmark, Wallet, PiggyBank, BadgePercent, ArrowRight, UserCheck, HandCoins,
+  Users, UserPlus, QrCode, ShieldCheck, Banknote, IndianRupee, Receipt, Landmark, Wallet, PiggyBank, BadgePercent, ArrowRight, UserCheck, HandCoins, Gift, Sparkles,
 } from 'lucide-react';
 import { useAdminDashboardQuery } from '../../api/adminApi';
 import { PageHeader, Card, CardHeader, StatCard, PageLoader, ErrorState, DataTable } from '../../components/ui';
@@ -67,6 +67,33 @@ export default function AdminDashboard() {
         <StatCard label="Wallet liability" value={inr(f.walletLiability)} hint={`Main ${inr(f.wallets.main)} · Activation ${inr(f.wallets.activation)}`} icon={PiggyBank} tone="red" />
         <StatCard label="Withdrawals paid" value={inr(f.withdrawals.paid)} hint={`TDS ${inr(f.withdrawals.tds)} · Admin ${inr(f.withdrawals.adminCharge)}`} icon={BadgePercent} tone="green" />
       </div>
+
+      <Link
+        to="/admin/processing"
+        className="card card-pad flex flex-col items-start justify-between gap-4 border-gold-400/40 bg-gradient-to-r from-gold-400/10 via-brand-500/5 to-transparent transition hover:border-gold-400 sm:flex-row sm:items-center"
+      >
+        <div className="flex items-center gap-3.5">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gold-400/20 text-gold-400">
+            <Gift className="size-6" />
+          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gold-400">Weekly Bonus Going</p>
+              <span className="inline-flex items-center gap-1 rounded-full bg-gold-400/15 px-2 py-0.5 text-[10px] font-bold text-gold-400">
+                <Sparkles className="size-3" /> Live Pool
+              </span>
+            </div>
+            <p className="mt-1 font-display text-2xl font-black text-fg">{inr(f.weeklyPool?.amount || 0)}</p>
+            <p className="mt-0.5 text-xs text-muted">
+              {f.weeklyPool?.percent || 5}% of company sales ({inr(f.weeklyPool?.companyIncome || 0)}) · {f.weeklyPool?.eligible || 0} members eligible · Current share: <span className="font-semibold text-fg">{inr(f.weeklyPool?.share || 0)}</span> each
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-sm font-semibold text-brand-300">
+          <span>Manage Income Processing</span>
+          <ArrowRight className="size-4" />
+        </div>
+      </Link>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="card-pad">

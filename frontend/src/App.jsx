@@ -100,7 +100,7 @@ export default function App() {
               <Route path="team" element={<Team />} />
               <Route path="genealogy" element={<Genealogy />} />
               <Route path="income" element={<Income />} />
-              <Route path="plan" element={<IncomePlan />} />
+              <Route path="plan" element={<Navigate to="/app/income" replace />} />
               <Route path="wallet" element={<WalletPage />} />
               <Route path="deposit" element={<Deposit />} />
               <Route path="transfer" element={<Transfer />} />

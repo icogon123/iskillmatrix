@@ -35,7 +35,19 @@ export default function Payments() {
           columns={[
             { key: 'id', header: 'Payment', render: (r) => <div><p className="font-semibold">{r.paymentId}</p><p className="text-xs text-muted">{dateTime(r.createdAt)}</p></div> },
             { key: 'member', header: 'Member', render: (r) => <div><p className="font-semibold">{r.user?.fullName}</p><p className="text-xs text-muted">{r.user?.memberId}</p></div> },
-            { key: 'pkg', header: 'Bundle', render: (r) => r.package?.name },
+            {
+              key: 'pkg', header: 'Bundle',
+              render: (r) => (
+                <div>
+                  <p className="font-medium">{r.package?.name}</p>
+                  {r.isUpgrade && (
+                    <span className="inline-block rounded bg-brand-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-300">
+                      Upgrade{r.oldPackage?.name ? ` from ${r.oldPackage.name}` : ''}
+                    </span>
+                  )}
+                </div>
+              ),
+            },
             { key: 'amount', header: 'Amount', render: (r) => <span className="font-semibold">{inr(r.amount)}</span> },
             {
               key: 'utr', header: 'Paid with',
@@ -63,7 +75,7 @@ export default function Payments() {
       </Card>
 
       <ConfirmModal open={modal?.type === 'approve'} onClose={() => setModal(null)} title="Approve payment & activate bundle" confirmLabel="Approve & activate" variant="success" loading={a1}
-        message={modal?.p && <>Confirm you received <b className="text-fg">{inr(modal.p.amount)}</b> with UTR <b className="font-mono text-fg">{modal.p.utr}</b> from {modal.p.user?.fullName}. The {modal.p.package?.name} bundle will be activated and income distributed to the upline immediately.</>}
+        message={modal?.p && <>Confirm you received <b className="text-fg">{inr(modal.p.amount)}</b> with UTR <b className="font-mono text-fg">{modal.p.utr}</b> from {modal.p.user?.fullName}. The {modal.p.package?.name} bundle will be {modal.p.isUpgrade ? 'upgraded' : 'activated'} and income distributed to the upline immediately.</>}
         reasonLabel="Remarks (optional)"
         onConfirm={async ({ reason }) => (await approve({ id: modal.p._id, remarks: reason })) && setModal(null)} />
       <ConfirmModal open={modal?.type === 'reject'} onClose={() => setModal(null)} title="Reject payment" confirmLabel="Reject" variant="danger" loading={a2}

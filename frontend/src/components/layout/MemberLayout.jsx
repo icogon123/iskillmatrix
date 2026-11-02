@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Menu, Bell, Home, Users, IndianRupee, Wallet, MoreHorizontal, LayoutDashboard, BookCheck, ShieldCheck, Network, GraduationCap, Map as MapIcon,
+  Menu, Bell, Home, Users, IndianRupee, Wallet, MoreHorizontal, LayoutDashboard, BookCheck, ShieldCheck, Network, GraduationCap,
   Banknote, Award, Share2, UserCog, LogOut, X, Eye, EyeOff, UserPlus, UserRoundPlus, HandCoins, ArrowLeftRight,
 } from 'lucide-react';
 import Logo from '../common/Logo';
@@ -38,7 +38,6 @@ export const MEMBER_NAV = [
     group: 'Earnings & team',
     items: [
       { to: '/app/income', label: 'Income', icon: IndianRupee },
-      { to: '/app/plan', label: 'Income Plan', icon: MapIcon },
       { to: '/app/achievements', label: 'Achievements', icon: Award },
       { to: '/app/team', label: 'My Team', icon: Users },
       { to: '/app/genealogy', label: 'Genealogy', icon: Network },
