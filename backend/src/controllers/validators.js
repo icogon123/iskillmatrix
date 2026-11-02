@@ -79,12 +79,21 @@ export const registerOtpSchema = z.object({
 
 const usernameRef = z.string().trim().toLowerCase().max(40).optional();
 
+export const transferOtpSchema = z
+  .object({
+    target: z.enum(['self', 'member'], { error: 'Choose where to transfer the money' }),
+    username: usernameRef,
+    amount: z.coerce.number().positive('Enter a valid amount'),
+  })
+  .refine((d) => d.target === 'self' || Boolean(d.username), { message: 'Enter the member’s username', path: ['username'] });
+
 export const transferSchema = z
   .object({
     target: z.enum(['self', 'member'], { error: 'Choose where to transfer the money' }),
     username: usernameRef,
     amount: z.coerce.number().positive('Enter a valid amount'),
     txnPassword: z.string().min(1, 'Enter your transaction password'),
+    otp: z.string().trim().optional(),
     remarks: z.string().trim().max(120).optional(),
   })
   .refine((d) => d.target === 'self' || Boolean(d.username), { message: 'Enter the member’s username', path: ['username'] });

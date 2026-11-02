@@ -9,10 +9,11 @@ import Deposit from '../models/Deposit.js';
 import AppError from '../utils/AppError.js';
 import { getPaging, paged, escapeRegex } from '../utils/pagination.js';
 import { round2 } from '../utils/money.js';
-import { addDays, startOfDayIST, dayKeyIST } from '../utils/dates.js';
+import { addDays, startOfDayIST, dayKeyIST, startOfWeekIST } from '../utils/dates.js';
 import { incomeByCategory, createEntry, getBalance, WALLET_LABELS } from '../services/ledgerService.js';
 import { walletSummary, setWalletSuspension } from '../services/withdrawalService.js';
 import { withWalletLock } from '../services/walletService.js';
+import { weeklyPool } from '../services/runService.js';
 import { teamStats } from '../services/teamService.js';
 import { notify } from '../services/notificationService.js';
 import { reqAudit } from '../services/auditService.js';
@@ -108,6 +109,10 @@ export async function dashboard(_req, res) {
   for (const r of liabilityRows) liability[r._id.wallet] += r._id.direction === 'credit' ? r.total : -r.total;
   const byMethod = Object.fromEntries(methodRows.map((r) => [r._id, round2(r.amount)]));
 
+  const curWeekStart = startOfWeekIST();
+  const curWeekEnd = addDays(curWeekStart, 7);
+  const curWeeklyPool = await weeklyPool(curWeekStart, curWeekEnd);
+
   const joinMap = new Map(joinRows.map((r) => [r._id, r.n]));
   const colMap = new Map(collectionRows.map((r) => [r._id, r.amount]));
   const daily = Array.from({ length: 14 }, (_, i) => {
@@ -132,6 +137,18 @@ export async function dashboard(_req, res) {
       // Bundle sales by how they were paid; wallet sales are funded by deposits or by income already credited.
       salesByMethod: { upi: byMethod.upi || 0, wallet: byMethod.wallet || 0 },
       deposits: { count: depositRows[0]?.n || 0, amount: round2(depositRows[0]?.amount || 0) },
+      weeklyPool: {
+        amount: curWeeklyPool.amount,
+        percent: curWeeklyPool.percent,
+        salesCount: curWeeklyPool.salesCount,
+        companyIncome: curWeeklyPool.companyIncome,
+        eligible: curWeeklyPool.eligible,
+        share: curWeeklyPool.share,
+        distributed: curWeeklyPool.distributed,
+        basis: curWeeklyPool.basis,
+        weekStart: curWeeklyPool.weekStart,
+        weekEnd: curWeeklyPool.weekEnd,
+      },
       withdrawals: {
         requested: round2(withdrawalRows.reduce((a, r) => a + (['rejected', 'cancelled'].includes(r._id) ? 0 : r.amount), 0)),
         paid: round2(w.paid?.amount || 0),

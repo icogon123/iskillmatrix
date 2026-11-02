@@ -11,6 +11,7 @@ import { priceBreakdown } from './paymentService.js';
 import { distributePackageIncome } from './incomeEngine.js';
 import { notify } from './notificationService.js';
 import { audit } from './auditService.js';
+import { sendOtp, verifyOtp } from './otpService.js';
 
 const LOCK_MS = 30_000;
 const inr = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
@@ -79,15 +80,54 @@ export async function lookupMember(viewer, username) {
     bundle: m.package?.name || null,
     relation,
     canReceiveTransfer: approved && !m.isRoot && (relation === 'upline' || relation === 'downline'),
-    canActivate: approved && !m.package,
+    canActivate: approved,
   };
+}
+
+/** Sends an OTP to the member's registered email to confirm a transfer. */
+export async function sendTransferOtp(sender, { target, username, amount }) {
+  const settings = await getSettings();
+  amount = round2(amount);
+  if (!(amount > 0)) throw new AppError('Enter a valid amount');
+  if (amount < settings.wallet.transferMin) throw new AppError(`Minimum transfer is ${inr(settings.wallet.transferMin)}`);
+
+  const fullSender = await User.findById(sender._id).select('+walletSuspended +walletSuspendedReason');
+  if (fullSender?.walletSuspended) throw new AppError(suspendedMessage(fullSender), 403);
+
+  const balance = await getBalance(sender._id, 'main');
+  if (amount > balance) throw new AppError(`Insufficient Main Wallet balance. Available: ${inr(balance)}`);
+
+  let targetDesc = 'your Activation Wallet';
+  if (target === 'member') {
+    const recipient = await findMemberByUsername(username);
+    if (!recipient) throw new AppError('No member found with this username', 404);
+    const relation = relationTo(sender, recipient);
+    if (relation === 'self') throw new AppError('To move money into your own Activation Wallet, choose “My Activation Wallet”');
+    if (!relation) throw new AppError('You can only transfer to members in your upline or your downline team');
+    if (recipient.isRoot) throw new AppError('Transfers to the company account are not allowed');
+    if (recipient.status !== 'active') throw new AppError(`${recipient.fullName}'s account is not active`);
+    targetDesc = `${recipient.fullName} (@${recipient.username})`;
+  } else if (target !== 'self') {
+    throw new AppError('Choose where to transfer the money');
+  }
+
+  if (!sender.email) throw new AppError('Add an email address to your profile to receive the transfer OTP');
+
+  return sendOtp({
+    purpose: 'transfer',
+    subject: String(sender._id),
+    email: sender.email,
+    name: sender.fullName,
+    action: `confirm your transfer of ${inr(amount)} to ${targetDesc}`,
+    meta: { amount: round2(amount) },
+  });
 }
 
 /**
  * Moves money out of the sender's Main Wallet. `target: 'self'` tops up their own Activation Wallet; `target: 'member'`
  * sends it to an upline or downline member (by username), always into the receiver's Activation Wallet.
  */
-export async function transferFunds(sender, { target, username, amount, txnPassword, remarks }, ip) {
+export async function transferFunds(sender, { target, username, amount, txnPassword, otp, remarks }, ip) {
   const settings = await getSettings();
   amount = round2(amount);
   if (!(amount > 0)) throw new AppError('Enter a valid amount');
@@ -112,6 +152,16 @@ export async function transferFunds(sender, { target, username, amount, txnPassw
   return withWalletLock(sender._id, async () => {
     const balance = await getBalance(sender._id, 'main');
     if (amount > balance) throw new AppError(`Insufficient Main Wallet balance. Available: ${inr(balance)}`);
+
+    if (otp !== undefined) {
+      await verifyOtp({
+        purpose: 'transfer',
+        subject: String(sender._id),
+        code: otp,
+        meta: { amount: round2(amount) },
+        metaMismatch: 'This OTP was sent for a different transfer amount. Please request a new OTP.',
+      });
+    }
 
     const reference = await nextCode('TRF', 'transfer');
     const to = self ? 'your Activation Wallet' : `${recipient.fullName} (${recipient.username})`;
@@ -171,76 +221,89 @@ export async function purchaseBundle(payer, { username, packageId, wallet, txnPa
   if (!target) throw new AppError('No member found with this username', 404);
   const who = forSelf ? 'You' : `${target.fullName} (${target.username})`;
   if (target.status !== 'active') throw new AppError(`${who}'s account is not approved yet`);
-  if (target.package) throw new AppError(forSelf ? 'Your bundle is already active. Bundle upgrades are not supported.' : `${who} already has an active bundle`, 409);
+
+  let currentPkg = null;
+  let isUpgrade = false;
+  let chargePrice = pkg.price;
+
+  if (target.package) {
+    currentPkg = await Package.findById(target.package).lean();
+    if (!currentPkg) throw new AppError('Current bundle not found', 404);
+    if (pkg.price <= currentPkg.price) {
+      throw new AppError(forSelf ? 'You can only upgrade to a higher-priced bundle' : `${who} already has an active bundle of this or higher tier`, 409);
+    }
+    isUpgrade = true;
+    chargePrice = round2(pkg.price - currentPkg.price);
+  }
 
   await authorizeWalletDebit(payer._id, txnPassword);
   const settings = await getSettings();
   return withWalletLock(payer._id, async () => {
     const balance = await getBalance(payer._id, wallet);
-    if (pkg.price > balance) {
-      throw new AppError(`Insufficient ${WALLET_LABELS[wallet]} balance. Available ${inr(balance)}, bundle price ${inr(pkg.price)}.`);
+    if (chargePrice > balance) {
+      throw new AppError(`Insufficient ${WALLET_LABELS[wallet]} balance. Available ${inr(balance)}, required ${inr(chargePrice)}.`);
+    }
+    if (await Payment.exists({ userLock: String(target._id) })) {
+      throw new AppError(forSelf ? 'You already have a payment under verification' : `${who} already has a bundle payment under verification`, 409);
     }
     const now = new Date();
-    let payment;
-    try {
-      payment = await Payment.create({
-        paymentId: await nextCode('PAY', 'payment'),
-        user: target._id,
-        package: pkg._id,
-        ...priceBreakdown(pkg.price, settings),
-        method: 'wallet',
-        wallet,
-        paidBy: payer._id,
-        paymentDate: now,
-        status: 'approved',
-        verifiedAt: now,
-        adminRemarks: forSelf ? `Paid from ${WALLET_LABELS[wallet]}` : `Paid by ${payer.fullName} (${payer.memberId}) from ${WALLET_LABELS[wallet]}`,
-        userLock: String(target._id),
-      });
-    } catch (err) {
-      if (err.code === 11000 && err.keyPattern?.userLock) {
-        throw new AppError(forSelf ? 'You already have a payment under verification' : `${who} already has a bundle payment under verification`, 409);
-      }
-      throw err;
-    }
+    const payment = await Payment.create({
+      paymentId: await nextCode('PAY', 'payment'),
+      user: target._id,
+      package: pkg._id,
+      oldPackage: isUpgrade ? currentPkg._id : undefined,
+      isUpgrade,
+      ...priceBreakdown(chargePrice, settings),
+      method: 'wallet',
+      wallet,
+      paidBy: payer._id,
+      paymentDate: now,
+      status: 'approved',
+      verifiedAt: now,
+      adminRemarks: forSelf
+        ? (isUpgrade ? `Upgraded to ${pkg.name} from ${WALLET_LABELS[wallet]}` : `Paid from ${WALLET_LABELS[wallet]}`)
+        : (isUpgrade ? `Upgraded to ${pkg.name} by ${payer.fullName} from ${WALLET_LABELS[wallet]}` : `Paid by ${payer.fullName} (${payer.memberId}) from ${WALLET_LABELS[wallet]}`),
+    });
 
     const buyer = await User.findOneAndUpdate(
-      { _id: target._id, package: null, status: 'active' },
+      { _id: target._id, status: 'active', package: isUpgrade ? currentPkg._id : null },
       { $set: { package: pkg._id, selectedPackage: pkg._id, packageActivatedAt: now } },
       { returnDocument: 'after' },
     );
     if (!buyer) {
       await Payment.deleteOne({ _id: payment._id });
-      throw new AppError(`${who} already has an active bundle`, 409);
+      throw new AppError(`${who}'s bundle status has changed`, 409);
     }
     await createEntry({
       user: payer._id,
       wallet,
       direction: 'debit',
       category: 'bundle_purchase',
-      grossAmount: pkg.price,
+      grossAmount: chargePrice,
       payment: payment._id,
       package: pkg._id,
       counterparty: target._id,
       reference: payment.paymentId,
       idempotencyKey: `PURCHASE:${payment._id}`,
-      remarks: forSelf ? `${pkg.name} bundle activated for you` : `${pkg.name} bundle activated for ${target.fullName} (${target.memberId})`,
+      remarks: forSelf
+        ? (isUpgrade ? `Upgrade to ${pkg.name} (from ${currentPkg.name})` : `${pkg.name} bundle activated for you`)
+        : (isUpgrade ? `Upgrade to ${pkg.name} for ${target.fullName}` : `${pkg.name} bundle activated for ${target.fullName} (${target.memberId})`),
     });
-    const result = await distributePackageIncome(payment, buyer, pkg);
+    const result = await distributePackageIncome(payment, buyer, pkg, currentPkg);
 
     await notify(buyer._id, {
-      title: 'Bundle activated',
+      title: isUpgrade ? 'Bundle upgraded' : 'Bundle activated',
       message: forSelf
-        ? `Your ${pkg.name} bundle is active (paid from your ${WALLET_LABELS[wallet]}).`
-        : `${payer.fullName} (${payer.username}) activated the ${pkg.name} bundle for you. Your courses are now unlocked.`,
+        ? (isUpgrade ? `Your bundle has been upgraded to ${pkg.name} (paid from your ${WALLET_LABELS[wallet]}).` : `Your ${pkg.name} bundle is active (paid from your ${WALLET_LABELS[wallet]}).`)
+        : (isUpgrade ? `${payer.fullName} (${payer.username}) upgraded your bundle to ${pkg.name}.` : `${payer.fullName} (${payer.username}) activated the ${pkg.name} bundle for you. Your courses are now unlocked.`),
       type: 'payment',
       link: '/app/courses',
       email: !forSelf,
     });
-    await audit(payer, 'payment.wallet', {
+    await audit(payer, isUpgrade ? 'payment.wallet_upgrade' : 'payment.wallet', {
       entityType: 'Payment',
       entityId: payment.paymentId,
-      details: { member: buyer.memberId, package: pkg.key, amount: pkg.price, wallet, incomeEntries: result.created },
+      details: { member: buyer.memberId, package: pkg.key, isUpgrade, amount: chargePrice, wallet, incomeEntries: result.created },
       ip,
     });
     return { payment, member: { fullName: buyer.fullName, username: buyer.username, memberId: buyer.memberId }, package: pkg.name };

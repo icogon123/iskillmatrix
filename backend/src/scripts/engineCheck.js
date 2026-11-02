@@ -146,10 +146,27 @@ await check('Approving an already-approved payment is refused', async () => {
   await assert.rejects(() => approvePayment(admin, bPayment._id, 'again'), /already processed/);
 });
 
-await check('A second live payment for the same member is blocked', async () => {
+await check('A second pending payment for the same member is blocked', async () => {
+  const PTest = await addMember('PTest', root);
+  await Payment.create({
+    paymentId: 'PAYP1', user: PTest._id, package: pkgs.basic._id, amount: 3000, paymentDate: new Date(), utr: 'UTRP1', userLock: String(PTest._id), utrLock: 'UTRP1',
+  });
   await assert.rejects(() => Payment.create({
-    paymentId: 'PAYDUP', user: B._id, package: pkgs.pro._id, amount: 1, paymentDate: new Date(), utr: 'UTRDUP', userLock: String(B._id), utrLock: 'UTRDUP',
+    paymentId: 'PAYP2', user: PTest._id, package: pkgs.standard._id, amount: 2000, paymentDate: new Date(), utr: 'UTRP2', userLock: String(PTest._id), utrLock: 'UTRP2',
   }), /duplicate key/);
+});
+
+await check('Package upgrade: upgrading from Standard to Pro pays the income difference', async () => {
+  const a7ActiveBefore = await credited(A7, 'active');
+  const upPayment = await Payment.create({
+    paymentId: 'PAYUP1', user: B._id, package: pkgs.pro._id, oldPackage: pkgs.standard._id, isUpgrade: true,
+    amount: pkgs.pro.price - pkgs.standard.price, paymentDate: new Date(), utr: 'UTRUP1', userLock: String(B._id), utrLock: 'UTRUP1',
+  });
+  await approvePayment(admin, upPayment._id, 'upgrade approved');
+  const a7ActiveAfter = await credited(A7, 'active');
+  assert.equal(a7ActiveAfter - a7ActiveBefore, 5000); // Pro active 7000 - Standard active 2000 = 5000
+  const bUser = await User.findById(B._id);
+  assert.equal(String(bUser.package), String(pkgs.pro._id));
 });
 
 await check('Inactive upline income is recorded as lapsed (not credited)', async () => {
@@ -420,7 +437,15 @@ await check('A member activates their own bundle from their Activation Wallet', 
   assert.equal(String((await User.findById(S1._id)).package), String(pkgs.starter._id));
   assert.deepEqual(await getBalances(S1._id), { main: 0, activation: 0 });
   const s1 = await User.findById(S1._id);
-  await assert.rejects(() => purchaseBundle(s1, { packageId: pkgs.basic._id, wallet: 'main', txnPassword: TXN }), /already active/);
+  await assert.rejects(() => purchaseBundle(s1, { packageId: pkgs.starter._id, wallet: 'main', txnPassword: TXN }), /higher-priced bundle/);
+  // Upgrading to Basic costs ₹1,700 (3000 - 1300); without balance it fails
+  await assert.rejects(() => purchaseBundle(s1, { packageId: pkgs.basic._id, wallet: 'main', txnPassword: TXN }), /Insufficient Main Wallet balance/);
+  // Fund S1 with ₹1,700 in Activation Wallet and upgrade
+  await transferFunds(P, { target: 'member', username: S1.username, amount: 1700, txnPassword: TXN });
+  const up = await purchaseBundle(s1, { packageId: pkgs.basic._id, wallet: 'activation', txnPassword: TXN });
+  assert.equal(String((await User.findById(S1._id)).package), String(pkgs.basic._id));
+  assert.equal(up.payment.isUpgrade, true);
+  assert.equal(up.payment.amount, 1700);
 });
 
 await check('Deposits credit the Activation Wallet once; rejection frees the UTR; UTRs are shared with bundle payments', async () => {

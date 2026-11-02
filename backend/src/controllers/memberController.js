@@ -16,7 +16,7 @@ import { badgeProgress } from '../services/badgeService.js';
 import { teamStats, levelSummary, levelMembers, treeNode, isInDownline } from '../services/teamService.js';
 import { walletSummary, requestWithdrawal, cancelWithdrawal, quote, sendWithdrawalOtp } from '../services/withdrawalService.js';
 import { submitPayment as submitPaymentSvc, priceBreakdown } from '../services/paymentService.js';
-import { lookupMember, transferFunds, purchaseBundle } from '../services/walletService.js';
+import { lookupMember, transferFunds, purchaseBundle, sendTransferOtp } from '../services/walletService.js';
 import { submitDeposit as submitDepositSvc } from '../services/depositService.js';
 import { reqAudit } from '../services/auditService.js';
 import { storeUpload, removeAsset, fileRef, publicAssetUrl } from '../services/storageService.js';
@@ -146,9 +146,33 @@ export async function paymentInfo(req, res) {
   const settings = await getSettings();
   const packages = await Package.find({ status: 'active' }).sort({ sortOrder: 1, price: 1 }).lean();
   const [payments, wallets] = await Promise.all([
-    Payment.find({ user: req.user._id }).sort({ createdAt: -1 }).populate('package', 'name key').populate('paidBy', 'fullName username').lean(),
+    Payment.find({ user: req.user._id }).sort({ createdAt: -1 }).populate('package', 'name key price').populate('oldPackage', 'name key price').populate('paidBy', 'fullName username').lean(),
     getBalances(req.user._id),
   ]);
+  const activePkg = req.user.package ? packages.find((p) => String(p._id) === String(req.user.package)) : null;
+  const hasPending = payments.some((p) => p.status === 'pending');
+
+  const packagesOut = packages.map((p) => {
+    const isCurrent = Boolean(activePkg && String(p._id) === String(activePkg._id));
+    const isHigher = Boolean(activePkg && p.price > activePkg.price);
+    const isLower = Boolean(activePkg && p.price < activePkg.price);
+    const upgradePrice = isHigher ? round2(p.price - activePkg.price) : 0;
+    const priceToPay = activePkg ? (isHigher ? upgradePrice : 0) : p.price;
+    return {
+      _id: p._id,
+      key: p.key,
+      name: p.name,
+      price: p.price,
+      isCurrent,
+      canUpgrade: isHigher,
+      isLower,
+      upgradePrice,
+      courses: p.courses || [],
+      benefits: p.benefits || [],
+      ...priceBreakdown(priceToPay > 0 ? priceToPay : p.price, settings),
+    };
+  });
+
   res.json({
     payment: {
       upiId: settings.payment.upiId,
@@ -156,13 +180,11 @@ export async function paymentInfo(req, res) {
       qrImage: publicAssetUrl(settings.payment.qrImage),
       instructions: settings.payment.instructions,
     },
-    packages: packages.map((p) => ({
-      _id: p._id, key: p.key, name: p.name, price: p.price, courses: p.courses || [], benefits: p.benefits || [], ...priceBreakdown(p.price, settings),
-    })),
+    packages: packagesOut,
     selectedPackage: req.user.selectedPackage,
-    activePackage: req.user.package,
+    activePackage: activePkg || null,
     payments,
-    canSubmit: !req.user.package && !payments.some((p) => p.status === 'pending'),
+    canSubmit: (!activePkg || packages.some((p) => p.price > (activePkg.price || 0))) && !hasPending,
     wallets,
     walletSuspended: Boolean(req.user.walletSuspended),
   });
@@ -346,6 +368,10 @@ export async function memberLookup(req, res) {
   res.json({ member: await lookupMember(req.user, req.query.username) });
 }
 
+export async function transferOtp(req, res) {
+  res.json(await sendTransferOtp(req.user, req.body));
+}
+
 export async function createTransfer(req, res) {
   const result = await transferFunds(req.user, req.body, req.ip);
   res.status(201).json({
@@ -374,8 +400,9 @@ export async function listTransfers(req, res) {
 export async function walletPurchase(req, res) {
   const result = await purchaseBundle(req.user, req.body, req.ip);
   const self = String(result.payment.user) === String(req.user._id);
+  const actionText = result.payment.isUpgrade ? 'upgraded' : 'activated';
   res.status(201).json({
-    message: self ? `${result.package} bundle activated` : `${result.package} bundle activated for ${result.member.fullName}`,
+    message: self ? `${result.package} bundle ${actionText}` : `${result.package} bundle ${actionText} for ${result.member.fullName}`,
     ...result,
   });
 }

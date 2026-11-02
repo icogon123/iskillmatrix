@@ -6,7 +6,7 @@ import { validate } from '../middleware/validate.js';
 import { privateUpload, publicImageUpload } from '../middleware/upload.js';
 import {
   registerSchema, loginSchema, changePasswordSchema, changeTxnPasswordSchema, kycSchema, withdrawalSchema, passwordRule,
-  transferSchema, walletPurchaseSchema, withdrawalOtpSchema, registerOtpSchema,
+  transferSchema, transferOtpSchema, walletPurchaseSchema, withdrawalOtpSchema, registerOtpSchema,
 } from '../controllers/validators.js';
 import { z } from 'zod';
 import * as auth from '../controllers/authController.js';
@@ -77,6 +77,7 @@ m.post('/wallet/purchase', validate(walletPurchaseSchema), member.walletPurchase
 m.get('/wallet/activations', member.listActivations);
 m.get('/members/lookup', member.memberLookup);
 m.get('/transfers', member.listTransfers);
+m.post('/transfers/send-otp', otpLimiter, validate(transferOtpSchema), member.transferOtp);
 m.post('/transfers', validate(transferSchema), member.createTransfer);
 m.get('/deposits', member.depositInfo);
 m.post('/deposits', privateUpload.single('proof'), member.createDeposit);

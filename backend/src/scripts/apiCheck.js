@@ -331,7 +331,8 @@ await check('approve payment → A active, sponsor (root) paid active income, re
   const r = await admin.post(`/admin/payments/${payA._id}/approve`, { remarks: 'verified' }); ok(r);
   ok(await admin.post(`/admin/payments/${payA._id}/approve`, {}), 409);
   const me = await A.get('/auth/me'); assert.equal(me.body.user.isPackageActive, true);
-  const info = await A.get('/member/payment-info'); assert.equal(info.body.canSubmit, false);
+  const info = await A.get('/member/payment-info'); assert.equal(info.body.canSubmit, true);
+  // Same or lower package cannot be re-purchased
   ok(await A.call('POST', '/member/payments', { form: fileForm({ packageId: standardId, utr: 'UTR-A-0004' }, { proof: PNG }) }), 400);
 });
 await check('A’s ID is now activated: B joins under A and logs in', async () => {
@@ -452,6 +453,22 @@ await check('transfer: self, to downline/upline; refused for other branch / wron
   const lk = await A.get('/member/members/lookup?username=bob_b'); ok(lk); assert.equal(lk.body.member.relation, 'downline');
   ok(await A.get('/member/members/lookup?username=nobody_here'), 404);
 });
+await check('transfer OTP: send-otp sends 6-digit code; invalid code fails, valid code completes transfer', async () => {
+  const o = await A.post('/member/transfers/send-otp', { target: 'self', amount: 100 }); ok(o, 200);
+  assert.ok(o.body.devCode);
+  ok(await A.post('/member/transfers', { target: 'self', amount: 100, txnPassword: tpwd, otp: '000000' }), 400);
+  ok(await A.post('/member/transfers', { target: 'self', amount: 100, txnPassword: tpwd, otp: o.body.devCode }), 201);
+});
+await check('package upgrade: A upgrades Standard -> Premium paying difference ₹6,000; admin verifies', async () => {
+  const premId = String(pkgs.premium._id);
+  const upRes = await A.call('POST', '/member/payments', { form: fileForm({ packageId: premId, utr: 'UTR-A-UPGRADE' }, { proof: PNG }) });
+  ok(upRes, 201);
+  assert.equal(upRes.body.payment.isUpgrade, true);
+  assert.equal(upRes.body.payment.amount, 6000); // 11000 - 5000 = 6000
+  ok(await admin.post(`/admin/payments/${upRes.body.payment._id}/approve`, { remarks: 'upgrade approved' }));
+  const me = await A.get('/auth/me');
+  assert.equal(String(me.body.user.package?._id || me.body.user.package), premId);
+});
 await check('activation wallet buys bundle for another member (P2P); no double activation', async () => {
   const D2 = new Client('D2');
   const reg = await registerWithOtp(regBody(b.memberId, standardId, { username: 'erin_e' })); ok(reg, 201);
@@ -524,6 +541,8 @@ await check('dashboard + members list/filters + detail', async () => {
   const dsh = await admin.get('/admin/dashboard'); ok(dsh);
   assert.ok(dsh.body.members.total >= 4);
   assert.equal(dsh.body.daily.length, 14);
+  assert.ok('weeklyPool' in dsh.body.finance);
+  assert.ok(dsh.body.finance.weeklyPool.percent >= 0);
   for (const q of ['', '?status=active', '?package=none', '?kyc=approved', '?search=alice', '?wallet=suspended', '?badge=bronze']) ok(await admin.get(`/admin/members${q}`));
   const r = await admin.get(`/admin/members/${aid}`); ok(r);
   assert.ok(!('password' in r.body.user) && !('txnPassword' in r.body.user));

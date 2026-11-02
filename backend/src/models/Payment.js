@@ -5,6 +5,8 @@ const paymentSchema = new mongoose.Schema(
     paymentId: { type: String, required: true, unique: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     package: { type: mongoose.Schema.Types.ObjectId, ref: 'Package', required: true },
+    oldPackage: { type: mongoose.Schema.Types.ObjectId, ref: 'Package' },
+    isUpgrade: { type: Boolean, default: false },
     amount: { type: Number, required: true },
     // upi: paid to the company QR and verified by the admin. wallet: paid from a member's wallet and approved at once.
     method: { type: String, enum: ['upi', 'wallet'], default: 'upi' },

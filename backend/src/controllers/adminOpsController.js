@@ -94,7 +94,7 @@ export async function listPayments(req, res) {
   const paging = getPaging(req.query);
   const q = { ...(req.query.status && req.query.status !== 'all' ? { status: req.query.status } : {}), ...(await withReferenceSearch(req.query.search, 'paymentId')) };
   const [items, total] = await Promise.all([
-    Payment.find(q).populate('user', 'memberId fullName mobile sponsor').populate('package', 'name price').populate('verifiedBy', 'fullName')
+    Payment.find(q).populate('user', 'memberId fullName mobile sponsor').populate('package', 'name price').populate('oldPackage', 'name price').populate('verifiedBy', 'fullName')
       .populate('paidBy', 'memberId fullName username')
       .sort({ createdAt: -1 }).skip(paging.skip).limit(paging.limit).lean(),
     Payment.countDocuments(q),
