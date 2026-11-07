@@ -4,6 +4,7 @@ import { Button } from '../../components/ui';
 import CourseIcon, { categoryTone } from '../../components/common/CourseIcon';
 import { inr } from '../../lib/format';
 import { ABOUT_HEADLINE, ABOUT_TEXT, FOUNDER, TEAM, MISSION, VISION, VALUES, WHY_POINTS, TESTIMONIALS } from './content';
+import { FeaturedImageSection } from "./path/to/your/sections";
 
 /* ---------- Layout ---------- */
 
