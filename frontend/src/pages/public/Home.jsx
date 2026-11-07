@@ -18,6 +18,7 @@ export default function Home() {
       <HeroSlider />
       <AboutSection />
       <TeamSection />
+      <FeaturedImageSection />
       <WhyUsSection />
 
       {/* Popular courses */}
