@@ -223,6 +223,12 @@ function TeamCard({ name, role, photo, about }) {
     </li>
   );
 }
+/* the main ads*/
+
+<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBGOhEkLyRCFskaMo1X2a2MR-DjH-co6LoZ48nOvfPZKfTL-QCQxlihLa8S_HJqPkcC1gTTyawc98Q5r6jIYV01fNoPpSrEi3ShZzwZHQvwkFCdHNEErkGdhvxIjTLxswOHRpWNHt4g4I0OOvwNNDZwElEvEvHQuazEKb0HbRB6QowvrXj7yAzoVmv1ENM/s1600/arr.jpg"></img>
+
+
+
 
 /** The team in a 3-up grid (homepage and About page). */
 export function TeamSection() {
