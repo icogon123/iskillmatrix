@@ -224,9 +224,22 @@ function TeamCard({ name, role, photo, about }) {
   );
 }
 /* the main ads*/
+/* ---------- Featured Image Section ---------- */
 
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBGOhEkLyRCFskaMo1X2a2MR-DjH-co6LoZ48nOvfPZKfTL-QCQxlihLa8S_HJqPkcC1gTTyawc98Q5r6jIYV01fNoPpSrEi3ShZzwZHQvwkFCdHNEErkGdhvxIjTLxswOHRpWNHt4g4I0OOvwNNDZwElEvEvHQuazEKb0HbRB6QowvrXj7yAzoVmv1ENM/s1600/arr.jpg"></img>
-
+export function FeaturedImageSection() {
+  return (
+    <section className={`${container} py-16 sm:py-24`}>
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl shadow-xl">
+        <img
+          src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBGOhEkLyRCFskaMo1X2a2MR-DjH-co6LoZ48nOvfPZKfTL-QCQxlihLa8S_HJqPkcC1gTTyawc98Q5r6jIYV01fNoPpSrEi3ShZzwZHQvwkFCdHNEErkGdhvxIjTLxswOHRpWNHt4g4I0OOvwNNDZwElEvEvHQuazEKb0HbRB6QowvrXj7yAzoVmv1ENM/s1600/arr.jpg"
+          alt="AroviaSkillTech"
+          className="w-full h-auto object-cover"
+          loading="lazy"
+        />
+      </div>
+    </section>
+  );
+}
 
 
 
