@@ -175,7 +175,7 @@ export default function Activate() {
       ) : active ? (
         <Notice tone="green" icon={CheckCircle2} title={`Your ${currentPkg?.name || approved?.package?.name || ''} bundle is active`}>
           Activated on {date(approved?.verifiedAt)}{approved?.method === 'wallet' ? ` (paid from ${paidWith(approved)})` : ''}. Your courses are unlocked.
-          Self upgrades are not available — to move to a higher bundle, ask a member in your upline to upgrade you through P2P Activation.
+          Self upgrades are not available — to move to a higher bundle, ask a member in your upline or downline to upgrade you through P2P Activation.
         </Notice>
       ) : (
         <div className="space-y-4">
