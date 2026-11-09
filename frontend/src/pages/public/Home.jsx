@@ -6,8 +6,7 @@ import {
   container, SectionHeader, TextLink, CourseCard, CourseGridSkeleton, AboutSection, TeamSection, WhyUsSection, VisionMissionSection, Steps, TestimonialsSection,
   FaqSection, CtaBand, LoadError, FeaturedImageSection,
 } from './sections';
-import { FeaturedImageSection } from "./path/to/your/sections";
-import ImagePopup from "./components/ImagePopup";
+import ImagePopup from './ImagePopup';
 
 export default function Home() {
   usePageTitle();

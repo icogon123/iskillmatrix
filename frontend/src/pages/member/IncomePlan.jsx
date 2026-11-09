@@ -140,14 +140,15 @@ export default function IncomePlan() {
         <Card className="card-pad">
           <CardHeader title="Weekly income" />
           <p className="mt-3 text-sm text-muted">
-            Every week (Mon–Sun), {weeklyPct}% of the company’s total bundle sales goes into a weekly pool. The pool is shared equally by every member who
-            made {qualifying} direct sales of the same bundle (Standard, Premium or Pro) that week, and is credited automatically after the week closes.
+            Every week (Mon–Sun), {weeklyPct}% of the company’s total bundle sales goes into a weekly pool. Every member who
+            made {qualifying} direct sales of the same bundle (Standard, Premium or Pro) that week gets their part of the pool according to their work: {weeklyPct}% of
+            all their direct sales that week. It is credited automatically after the week closes.
           </p>
           <ul className="mt-4 space-y-2 text-sm">
             {[
               ['Qualify', `${qualifying} same-bundle direct sales in the week`],
               ['Weekly pool', `${weeklyPct}% of company sales`],
-              ['Your share', 'Pool ÷ qualified members'],
+              ['Your share', `${weeklyPct}% of your direct sales`],
             ].map(([k, v]) => (
               <li key={k} className="flex justify-between gap-3 rounded-xl bg-fg/[0.04] px-3 py-2">
                 <span>{k}</span>
@@ -156,7 +157,7 @@ export default function IncomePlan() {
             ))}
           </ul>
           <p className="mt-3 text-xs text-subtle">
-            Example: company sales ₹1,00,000 → pool {inr(100000 * (weeklyPct / 100))}; 10 qualified members → {inr(10000 * (weeklyPct / 100))} each
+            Example: company sales ₹1,00,000 → pool {inr(100000 * (weeklyPct / 100))}. You qualified and your direct sales were ₹20,000 (20% of the company’s sales) → you get {inr(20000 * (weeklyPct / 100))}, 20% of the pool.
           </p>
         </Card>
         <Card className="card-pad">

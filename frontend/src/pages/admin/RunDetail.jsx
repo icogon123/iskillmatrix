@@ -56,7 +56,9 @@ export default function RunDetail() {
           <StatCard label="Company sales in the week" value={inr(pool.companyIncome)} hint={`${pool.salesCount} bundle${pool.salesCount === 1 ? '' : 's'} · ${pool.basis === 'net' ? 'after GST & system cost' : 'amount received'}`} tone="blue" />
           <StatCard label={`Pool (${pool.percent}%)`} value={inr(pool.amount)} tone="gold" />
           <StatCard label="Eligible members" value={pool.eligible} tone="green" />
-          <StatCard label="Equal share each" value={inr(pool.share)} hint={pool.eligible ? `Remainder ${inr(pool.amount - pool.share * pool.eligible)} stays with the company` : 'Pool stays with the company'} />
+          {pool.split === 'sales'
+            ? <StatCard label="Paid by sales" value={inr(pool.distributed)} hint={`Each member gets ${pool.percent}% of their direct sales · ${inr(pool.retained)} stays with the company`} />
+            : <StatCard label="Equal share each" value={inr(pool.share)} hint={pool.eligible ? `Remainder ${inr(pool.amount - pool.share * pool.eligible)} stays with the company` : 'Pool stays with the company'} />}
         </div>
       )}
       {run.status === 'approved' && <Notice tone="green" icon={CheckCircle2} title={`Approved ${dateTime(run.approvedAt)} by ${by(run.approvedBy)}`}>All payable entries were credited to member wallets.</Notice>}

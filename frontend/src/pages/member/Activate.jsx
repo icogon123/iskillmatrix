@@ -27,9 +27,9 @@ const paidWith = (p) =>
     : 'UPI / QR';
 
 /** Pays for the selected bundle from one of the member's wallets; activates at once. */
-function WalletPay({ data, pkg, payableAmount, isUpgrade }) {
+function WalletPay({ data, pkg }) {
   const [purchase, { isLoading }] = useWalletPurchaseMutation();
-  const payable = payableAmount ?? (pkg?.price || 0);
+  const payable = pkg?.price || 0;
   const [wallet, setWallet] = useState(() => (data.wallets.activation >= payable ? 'activation' : 'main'));
   const [txnPassword, setTxnPassword] = useState('');
   const balance = data.wallets[wallet] || 0;
@@ -47,7 +47,7 @@ function WalletPay({ data, pkg, payableAmount, isUpgrade }) {
 
   return (
     <Card className="card-pad lg:col-span-3">
-      <CardHeader title="2. Pay from your wallet" subtitle={`No admin verification needed — the bundle ${isUpgrade ? 'upgrades' : 'activates'} as soon as you confirm.`} />
+      <CardHeader title="2. Pay from your wallet" subtitle="No admin verification needed — the bundle activates as soon as you confirm." />
       {data.walletSuspended ? (
         <Notice tone="red" icon={Lock} title="Your wallet is suspended" className="mt-4">Wallet payments are on hold. You can still pay by UPI / QR.</Notice>
       ) : (
@@ -55,7 +55,7 @@ function WalletPay({ data, pkg, payableAmount, isUpgrade }) {
           <WalletChoice wallets={data.wallets} value={wallet} onChange={setWallet} price={payable} />
           {pkg && (
             <div className="space-y-1.5 rounded-xl bg-fg/[0.04] p-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted">{pkg.name} bundle {isUpgrade ? 'upgrade' : ''}</span><span className="font-semibold">{inr(payable)}</span></div>
+              <div className="flex justify-between"><span className="text-muted">{pkg.name} bundle</span><span className="font-semibold">{inr(payable)}</span></div>
               <div className="flex justify-between"><span className="text-muted">{WALLET_LABELS[wallet]} after payment</span>
                 <span className={short ? 'text-danger' : ''}>{short ? 'Not enough balance' : <Money value={balance - payable} />}</span></div>
             </div>
@@ -68,7 +68,7 @@ function WalletPay({ data, pkg, payableAmount, isUpgrade }) {
           )}
           <PasswordInput label="Transaction password" autoComplete="off" value={txnPassword} onChange={(e) => setTxnPassword(e.target.value)} required />
           <Button type="submit" variant="gold" loading={isLoading} disabled={!pkg || short || !txnPassword} className="w-full sm:w-auto">
-            {pkg ? `Pay ${inr(payable)} & ${isUpgrade ? 'upgrade' : 'activate'}` : 'Pay & activate'}
+            {pkg ? `Pay ${inr(payable)} & activate` : 'Pay & activate'}
           </Button>
         </form>
       )}
@@ -112,22 +112,12 @@ export default function Activate() {
   const [method, setMethod] = useState('upi');
 
   const currentPkg = useMemo(() => data?.packages.find((p) => p.isCurrent), [data]);
-  const isUpgradeMode = Boolean(data?.activePackage && currentPkg);
-  const canUpgrade = useMemo(() => Boolean(data?.packages.some((p) => p.canUpgrade)), [data]);
-  const upgradeCandidates = useMemo(() => data?.packages.filter((p) => p.canUpgrade) || [], [data]);
 
   useEffect(() => {
-    if (data && !packageId) {
-      if (isUpgradeMode && upgradeCandidates.length > 0) {
-        setPackageId(upgradeCandidates[0]._id);
-      } else {
-        setPackageId(data.selectedPackage || data.packages[0]?._id || '');
-      }
-    }
-  }, [data, packageId, isUpgradeMode, upgradeCandidates]);
+    if (data && !packageId) setPackageId(data.selectedPackage || data.packages[0]?._id || '');
+  }, [data, packageId]);
 
   const pkg = useMemo(() => data?.packages.find((p) => p._id === packageId), [data, packageId]);
-  const payableAmount = isUpgradeMode && pkg?.canUpgrade ? pkg.upgradePrice : (pkg?.price || 0);
 
   if (isLoading) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
@@ -146,7 +136,7 @@ export default function Activate() {
     fd.append('proof', proof);
     try {
       await submit(fd).unwrap();
-      toast.success(isUpgradeMode ? 'Upgrade payment submitted for verification' : 'Payment submitted for verification');
+      toast.success('Payment submitted for verification');
       setUtr('');
       setProof(null);
     } catch (err) {
@@ -154,14 +144,14 @@ export default function Activate() {
     }
   };
 
-  const showForm = (!active || (isUpgradeMode && canUpgrade)) && !pending;
+  const showForm = !active && !pending;
 
   return (
     <div>
       <PageHeader
         icon={BookCheck}
-        title={isUpgradeMode ? 'Upgrade Course Bundle' : 'Activate Bundle'}
-        subtitle={isUpgradeMode ? 'Upgrade your bundle to access more courses by paying only the price difference.' : 'Pay with the company QR code. Your bundle activates after admin verification.'}
+        title="Activate Bundle"
+        subtitle="Pay with the company QR code. Your bundle activates after admin verification."
       />
 
       {showForm && (
@@ -182,68 +172,35 @@ export default function Activate() {
         <Notice tone="blue" icon={Clock} title="Payment under verification">
           {pending.paymentId} · {pending.isUpgrade ? `Upgrade to ${pending.package?.name}` : pending.package?.name} · {inr(pending.amount)} · UTR {pending.utr}. You will be notified once it is approved.
         </Notice>
-      ) : active && !canUpgrade ? (
-        <Notice tone="green" icon={CheckCircle2} title={`Your ${approved?.package?.name || currentPkg?.name || ''} bundle is active`}>
-          Activated on {date(approved?.verifiedAt)}{approved?.method === 'wallet' ? ` (paid from ${paidWith(approved)})` : ''}. You are already on the highest plan, so all courses and maximum income benefits are unlocked.
+      ) : active ? (
+        <Notice tone="green" icon={CheckCircle2} title={`Your ${currentPkg?.name || approved?.package?.name || ''} bundle is active`}>
+          Activated on {date(approved?.verifiedAt)}{approved?.method === 'wallet' ? ` (paid from ${paidWith(approved)})` : ''}. Your courses are unlocked.
+          Self upgrades are not available — to move to a higher bundle, ask a member in your upline to upgrade you through P2P Activation.
         </Notice>
       ) : (
         <div className="space-y-4">
-          {isUpgradeMode && (
-            <Notice tone="blue" icon={CheckCircle2} title={`Your ${currentPkg?.name || ''} bundle is currently active`}>
-              Current plan price: <b className="text-fg">{inr(currentPkg?.price)}</b>. Select a higher bundle below to upgrade by paying only the remaining difference.
-            </Notice>
-          )}
 
           <div className="grid gap-4 lg:grid-cols-5">
             <Card className="card-pad lg:col-span-2">
-              <CardHeader title={isUpgradeMode ? '1. Choose bundle to upgrade to' : '1. Choose your bundle'} />
+              <CardHeader title="1. Choose your bundle" />
               <div className="mt-4 space-y-2">
                 {data.packages.map((p) => {
-                  const isCurrent = p.isCurrent;
-                  const isLower = p.isLower;
-                  const disabled = isCurrent || isLower;
                   const selected = packageId === p._id;
                   return (
                     <label key={p._id}
-                      className={`flex items-center gap-3 rounded-xl border p-3 transition ${
-                        disabled
-                          ? 'cursor-not-allowed opacity-50 border-line bg-fg/[0.02]'
-                          : selected
-                            ? 'cursor-pointer border-gold-400/60 bg-gold-400/10'
-                            : 'cursor-pointer border-line hover:border-brand-500/40'
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${
+                        selected ? 'border-gold-400/60 bg-gold-400/10' : 'border-line hover:border-brand-500/40'
                       }`}>
-                      <input type="radio" name="pkg" className="sr-only" checked={selected} disabled={disabled} onChange={() => setPackageId(p._id)} />
+                      <input type="radio" name="pkg" className="sr-only" checked={selected} onChange={() => setPackageId(p._id)} />
                       <span className={`size-4 rounded-full border-2 ${selected ? 'border-gold-400 bg-gold-400' : 'border-subtle'}`} />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold">{p.name}</p>
-                        {isCurrent && <span className="text-[10px] font-bold text-success uppercase">Current Plan</span>}
-                        {isLower && <span className="text-[10px] text-subtle">Lower tier</span>}
-                      </div>
-                      <div className="text-right">
-                        {isUpgradeMode && p.canUpgrade ? (
-                          <>
-                            <p className="font-bold text-gold-400">{inr(p.upgradePrice)}</p>
-                            <p className="text-[10px] text-muted">Full {inr(p.price)}</p>
-                          </>
-                        ) : (
-                          <p className="font-bold">{inr(p.price)}</p>
-                        )}
-                      </div>
+                      <div className="min-w-0 flex-1"><p className="font-semibold">{p.name}</p></div>
+                      <p className="font-bold">{inr(p.price)}</p>
                     </label>
                   );
                 })}
               </div>
 
-              {pkg && isUpgradeMode && pkg.canUpgrade && (
-                <div className="mt-4 space-y-1.5 rounded-xl bg-fg/[0.04] p-3 text-xs text-muted">
-                  <div className="flex justify-between"><span>New bundle price</span><span className="text-fg">{inr(pkg.price)}</span></div>
-                  <div className="flex justify-between"><span>Current plan credit ({currentPkg?.name})</span><span className="text-success">− {inr(currentPkg?.price)}</span></div>
-                  <div className="flex justify-between border-t border-line pt-1.5 font-semibold text-fg"><span>Upgrade amount to pay</span><span className="text-gold-400">{inr(pkg.upgradePrice)}</span></div>
-                  <div className="flex justify-between"><span>GST included in price</span><span>{inr(pkg.gstAmount)}</span></div>
-                </div>
-              )}
-
-              {pkg && !isUpgradeMode && (
+              {pkg && (
                 <div className="mt-4 space-y-1.5 rounded-xl bg-fg/[0.04] p-3 text-xs text-muted">
                   <div className="flex justify-between"><span>Bundle fee (incl. GST)</span><span className="text-fg">{inr(pkg.amount)}</span></div>
                   <div className="flex justify-between"><span>GST included</span><span>{inr(pkg.gstAmount)}</span></div>
@@ -253,7 +210,7 @@ export default function Activate() {
             </Card>
 
             {method === 'wallet' ? (
-              <WalletPay data={data} pkg={pkg} payableAmount={payableAmount} isUpgrade={isUpgradeMode} />
+              <WalletPay data={data} pkg={pkg} />
             ) : (
               <Card className="card-pad lg:col-span-3">
                 <CardHeader title="2. Scan & pay" subtitle={data.payment.instructions} />
@@ -270,8 +227,8 @@ export default function Activate() {
                   </div>
                   <div className="space-y-3">
                     <div className="rounded-xl border border-gold-400/40 bg-gold-400/10 p-3">
-                      <p className="text-xs text-muted">{isUpgradeMode ? 'Upgrade amount to pay' : 'Amount to pay'}</p>
-                      <p className="font-display text-2xl font-black text-gold-400">{pkg ? inr(payableAmount) : '—'}</p>
+                      <p className="text-xs text-muted">Amount to pay</p>
+                      <p className="font-display text-2xl font-black text-gold-400">{pkg ? inr(pkg.price) : '—'}</p>
                     </div>
                     {data.payment.upiId && (
                       <div className="rounded-xl border border-line p-3">
@@ -292,8 +249,8 @@ export default function Activate() {
                     <Input label="Payment date" type="date" value={paymentDate} max={todayKey()} onChange={(e) => setPaymentDate(e.target.value)} required />
                   </div>
                   <FileField label="Payment screenshot / proof" file={proof} onChange={setProof} required />
-                  <Button type="submit" loading={saving} disabled={!packageId || !utr || (isUpgradeMode && !pkg?.canUpgrade)} className="w-full sm:w-auto">
-                    {isUpgradeMode ? 'Submit upgrade for verification' : 'Submit for verification'}
+                  <Button type="submit" loading={saving} disabled={!packageId || !utr} className="w-full sm:w-auto">
+                    Submit for verification
                   </Button>
                 </form>
               </Card>

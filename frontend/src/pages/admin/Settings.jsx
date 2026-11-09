@@ -131,7 +131,7 @@ export default function Settings() {
       {tab === 'income' && (
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="card-pad space-y-4">
-            <CardHeader title="Weekly income pool" subtitle="Weekly % of the company’s sales, shared equally by every member who qualifies that week" />
+            <CardHeader title="Weekly income pool" subtitle="Weekly % of the company’s sales. Each member who qualifies that week gets this % of their own direct sales (their part of the pool); the rest stays with the company" />
             <div className="grid gap-4 sm:grid-cols-2">
               <Input label="Pool % of weekly sales" type="number" value={s.weekly.percent} onChange={set('weekly', 'percent')} />
               <Input label="Same-bundle direct sales to qualify" type="number" value={s.weekly.qualifyingSales} onChange={set('weekly', 'qualifyingSales')}

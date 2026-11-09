@@ -26,7 +26,7 @@ function WeeklyPool({ lastWeek }) {
       <div className="card-pad pb-0">
         <CardHeader
           title="Weekly bonus pool"
-          subtitle={d ? `Week ${date(d.weekStart)} – ${date(new Date(d.weekEnd) - 1)} · ${d.percent}% of company sales, shared equally by every member with ${d.qualifyingSales}+ same-bundle direct sales` : 'Loading…'}
+          subtitle={d ? `Week ${date(d.weekStart)} – ${date(new Date(d.weekEnd) - 1)} · ${d.percent}% of company sales. Members with ${d.qualifyingSales}+ same-bundle direct sales get ${d.percent}% of their own direct sales (their part of the pool); the rest stays with the company` : 'Loading…'}
           action={<div className="flex items-center gap-2">{isFetching && <Spinner className="size-4" />}<Tabs value={which} onChange={setWhich} tabs={[{ value: 'current', label: 'This week' }, { value: 'last', label: 'Last week' }]} /></div>} />
         {error && <p className="mt-3 text-sm text-danger">{error?.data?.message || 'Could not load the weekly pool.'}</p>}
         {d && (
@@ -35,7 +35,7 @@ function WeeklyPool({ lastWeek }) {
               <StatCard label="Company sales" value={inr(d.companyIncome)} hint={`${d.salesCount} bundle${d.salesCount === 1 ? '' : 's'} · ${d.basis === 'net' ? 'after GST & system cost' : 'amount received'}`} icon={IndianRupee} tone="blue" />
               <StatCard label={`Pool (${d.percent}%)`} value={inr(d.amount)} icon={Coins} tone="gold" />
               <StatCard label="Eligible members" value={d.eligible} hint={d.members.length > d.eligible ? `${d.members.length - d.eligible} qualified but inactive` : undefined} icon={Users} tone="green" />
-              <StatCard label="Share per member" value={inr(d.share)} hint={d.eligible ? `${inr(d.distributed)} distributed` : 'Nobody qualifies yet'} icon={Gift} tone="violet" />
+              <StatCard label="Paid to members" value={inr(d.distributed ?? 0)} hint={d.eligible ? `${inr(d.retained ?? 0)} stays with the company` : 'Nobody qualifies yet — pool stays with the company'} icon={Gift} tone="violet" />
             </div>
             <p className="mt-3 text-xs text-muted">{poolStatus(d)}</p>
           </>
@@ -49,13 +49,17 @@ function WeeklyPool({ lastWeek }) {
           { key: 'member', header: 'Member', render: (r) => <Link to={`/admin/members/${r._id}`} className="hover:text-brand-200"><p className="font-semibold">{r.fullName}</p><p className="text-xs text-muted">{r.memberId}</p></Link> },
           { key: 'sales', header: 'Qualifying direct sales', render: (r) => <span className="text-xs">{r.sales.map((x) => `${x.count} × ${x.package}`).join(', ')}</span> },
           {
+            key: 'volume', header: 'All direct sales', align: 'right',
+            render: (r) => <div><p className="font-semibold">{inr(r.directSales)}</p><p className="text-xs text-muted">{r.directSalesCount} bundle{r.directSalesCount === 1 ? '' : 's'} · {r.poolPercent}% of pool</p></div>,
+          },
+          {
             key: 'status', header: 'Status',
             render: (r) => (r.eligible
               ? <StatusBadge status="active" label="Eligible" />
               : <StatusBadge status="inactive" label={r.status !== 'active' ? `Not eligible: ${r.status}` : 'Not eligible: no bundle'} />),
           },
           { key: 'wallet', header: 'Wallet', render: (r) => (r.walletSuspended ? <StatusBadge status="suspended" label="Suspended" /> : <span className="text-xs text-subtle">—</span>) },
-          { key: 'share', header: 'Share', align: 'right', render: (r) => <span className="font-bold">{r.eligible ? inr(d.share) : '—'}</span> },
+          { key: 'share', header: 'Share', align: 'right', render: (r) => <span className="font-bold">{r.eligible ? inr(r.share) : '—'}</span> },
         ]}
         empty={<p className="py-8 text-center text-sm text-subtle">No member has {d?.qualifyingSales ?? 3} same-bundle direct sales in this week yet.</p>} />
     </Card>
@@ -127,7 +131,7 @@ export default function Processing() {
       <WeeklyPool lastWeek={data.suggestions.week} />
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Generator type="weekly" icon={CalendarRange} title="Weekly income" text="Week runs Monday–Sunday (IST). Shares the week’s pool equally among qualified members — use for a week that was not processed automatically." inputType="date"
+        <Generator type="weekly" icon={CalendarRange} title="Weekly income" text="Week runs Monday–Sunday (IST). Splits the week’s pool among qualified members by their direct sales — use for a week that was not processed automatically." inputType="date"
           value={week} onChange={setWeek} onGenerate={onGenerate} loading={busy('weekly')} />
         <Generator type="monthly_bonus" icon={CalendarDays} title="Monthly bonus" text="Slab bonus on the member’s Active income credited in the month." inputType="month"
           value={month} onChange={setMonth} onGenerate={onGenerate} loading={busy('monthly_bonus')} />

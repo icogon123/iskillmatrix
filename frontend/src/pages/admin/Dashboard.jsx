@@ -85,7 +85,7 @@ export default function AdminDashboard() {
             </div>
             <p className="mt-1 font-display text-2xl font-black text-fg">{inr(f.weeklyPool?.amount || 0)}</p>
             <p className="mt-0.5 text-xs text-muted">
-              {f.weeklyPool?.percent || 5}% of company sales ({inr(f.weeklyPool?.companyIncome || 0)}) · {f.weeklyPool?.eligible || 0} members eligible · Current share: <span className="font-semibold text-fg">{inr(f.weeklyPool?.share || 0)}</span> each
+              {f.weeklyPool?.percent || 5}% of company sales ({inr(f.weeklyPool?.companyIncome || 0)}) · {f.weeklyPool?.eligible || 0} members eligible · Paid by sales: <span className="font-semibold text-fg">{inr(f.weeklyPool?.distributed || 0)}</span>
             </p>
           </div>
         </div>

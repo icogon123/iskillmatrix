@@ -39,7 +39,7 @@ submit again. Approved KYC is required to withdraw.
 | Active income | Immediately when someone you referred gets their bundle approved (₹800–₹7,000) |
 | Passive income | When someone deeper in your team buys a bundle — you earn as their Level 1, 2, 3… upline |
 | Non-working (working) bonus | ₹200 / ₹500 / ₹1,000 extra on your direct Standard / Premium / Pro sales, credited at 12:00 AM |
-| Weekly income | 5% of the company's weekly sales is shared equally by everyone with 3 direct sales of the same bundle (Standard/Premium/Pro) in that week (Mon–Sun) |
+| Weekly income | 5% of the company's weekly sales is the pool; everyone with 3 direct sales of the same bundle (Standard/Premium/Pro) in that week (Mon–Sun) gets their part by sales: 5% of all their direct sales that week. The rest stays with the company |
 | Monthly bonus | Your active income in a month above ₹20,000 / ₹50,000 / ₹1,00,000 → ₹1,500 / ₹4,000 / ₹10,000 |
 | Royalty | From Emerald Executive badge: 5–10% of your team's monthly income |
 
@@ -112,8 +112,8 @@ The non-working bonus is credited automatically every night at 12:00 AM. **Incom
 how many are pending and lets you credit them now if needed.
 
 ### Weekly (automatic, Monday 12:05 AM)
-The weekly pool (5% of the week's company sales, shared equally by every member with 3 same-bundle
-direct sales) is calculated and credited automatically right after the week closes. **Income Processing**
+The weekly pool (5% of the week's company sales; every member with 3 same-bundle direct sales gets
+5% of their own direct sales, the rest stays with the company) is calculated and credited automatically right after the week closes. **Income Processing**
 → *Weekly bonus pool* shows this week's sales, pool, who qualifies so far and each share; switch to
 *Last week* to see the closed week and its run. To review before money moves, turn off
 *Settings → Income rules → Credit wallets without waiting for approval*: the run then waits for
