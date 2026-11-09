@@ -135,7 +135,7 @@ export default function PublicLayout() {
             <p>© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. All rights reserved.</p>
             <p>
               Developed by{' '}
-              <a href="https://testing.icogon.com/" target="_blank" rel="noopener noreferrer" className={`font-semibold ${footerLink}`}>Icogon Pvt. Ltd.</a>
+              <a href="https://icogon.com/" target="_blank" rel="noopener noreferrer" className={`font-semibold ${footerLink}`}>Icogon Pvt. Ltd.</a>
             </p>
           </div>
         </div>
