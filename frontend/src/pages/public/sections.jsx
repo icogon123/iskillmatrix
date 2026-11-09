@@ -231,7 +231,7 @@ export function FeaturedImageSection() {
     <section className={`${container} py-16 sm:py-24`}>
       <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl shadow-xl">
         <img
-          src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBGOhEkLyRCFskaMo1X2a2MR-DjH-co6LoZ48nOvfPZKfTL-QCQxlihLa8S_HJqPkcC1gTTyawc98Q5r6jIYV01fNoPpSrEi3ShZzwZHQvwkFCdHNEErkGdhvxIjTLxswOHRpWNHt4g4I0OOvwNNDZwElEvEvHQuazEKb0HbRB6QowvrXj7yAzoVmv1ENM/s1600/arr.jpg"
+          src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjf0pbBvsyVlbiUXgOL-JQ6LITuu8LbXBR1t9apjqSaSNNg_7wCNQA2nTB6y3NngsuQ5e0sF-71t5RA6-t9TCJCgvuwUWHokE-7QcRU3Yy8Up0C2qnp0Osy1x9DL4ZgqjKN70dhQcLYLSh9sWcWSiqeKyZAmrITZBilaD8s_0CBRH_NcW7tE92j2j3VJXkT/s1600/ar.jpeg"
           alt="AroviaSkillTech"
           className="w-full h-auto object-cover"
           loading="lazy"
