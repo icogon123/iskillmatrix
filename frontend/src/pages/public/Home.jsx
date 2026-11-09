@@ -7,6 +7,7 @@ import {
   FaqSection, CtaBand, LoadError, FeaturedImageSection,
 } from './sections';
 import { FeaturedImageSection } from "./path/to/your/sections";
+import ImagePopup from "./components/ImagePopup";
 
 export default function Home() {
   usePageTitle();
@@ -19,6 +20,7 @@ export default function Home() {
       <HeroSlider />
       <AboutSection />
       <TeamSection />
+      <ImagePopup />
       <FeaturedImageSection />
       <WhyUsSection />
 
