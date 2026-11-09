@@ -4,7 +4,7 @@ import { useCoursesQuery } from '../../api/publicApi';
 import { usePageTitle } from '../../lib/usePageTitle';
 import {
   container, SectionHeader, TextLink, CourseCard, CourseGridSkeleton, AboutSection, TeamSection, WhyUsSection, VisionMissionSection, Steps, TestimonialsSection,
-  FaqSection, CtaBand, LoadError,
+  FaqSection, CtaBand, LoadError, FeaturedImageSection,
 } from './sections';
 
 
