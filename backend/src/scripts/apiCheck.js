@@ -331,9 +331,9 @@ await check('approve payment → A active, sponsor (root) paid active income, re
   const r = await admin.post(`/admin/payments/${payA._id}/approve`, { remarks: 'verified' }); ok(r);
   ok(await admin.post(`/admin/payments/${payA._id}/approve`, {}), 409);
   const me = await A.get('/auth/me'); assert.equal(me.body.user.isPackageActive, true);
-  const info = await A.get('/member/payment-info'); assert.equal(info.body.canSubmit, true);
-  // Same or lower package cannot be re-purchased
-  ok(await A.call('POST', '/member/payments', { form: fileForm({ packageId: standardId, utr: 'UTR-A-0004' }, { proof: PNG }) }), 400);
+  // An active member cannot buy or upgrade their own bundle again (upgrades are P2P only, done by another member)
+  const info = await A.get('/member/payment-info'); assert.equal(info.body.canSubmit, false);
+  ok(await A.call('POST', '/member/payments', { form: fileForm({ packageId: standardId, utr: 'UTR-A-0004' }, { proof: PNG }) }), 409);
 });
 await check('A’s ID is now activated: B joins under A and logs in', async () => {
   const s = await anon.get(`/public/sponsor/${a.memberId}`); ok(s);
@@ -459,15 +459,14 @@ await check('transfer OTP: send-otp sends 6-digit code; invalid code fails, vali
   ok(await A.post('/member/transfers', { target: 'self', amount: 100, txnPassword: tpwd, otp: '000000' }), 400);
   ok(await A.post('/member/transfers', { target: 'self', amount: 100, txnPassword: tpwd, otp: o.body.devCode }), 201);
 });
-await check('package upgrade: A upgrades Standard -> Premium paying difference ₹6,000; admin verifies', async () => {
+await check('self upgrade refused: A (Standard) cannot upgrade their own bundle by UPI or wallet', async () => {
   const premId = String(pkgs.premium._id);
-  const upRes = await A.call('POST', '/member/payments', { form: fileForm({ packageId: premId, utr: 'UTR-A-UPGRADE' }, { proof: PNG }) });
-  ok(upRes, 201);
-  assert.equal(upRes.body.payment.isUpgrade, true);
-  assert.equal(upRes.body.payment.amount, 6000); // 11000 - 5000 = 6000
-  ok(await admin.post(`/admin/payments/${upRes.body.payment._id}/approve`, { remarks: 'upgrade approved' }));
-  const me = await A.get('/auth/me');
-  assert.equal(String(me.body.user.package?._id || me.body.user.package), premId);
+  ok(await A.call('POST', '/member/payments', { form: fileForm({ packageId: premId, utr: 'UTR-A-UPGRADE' }, { proof: PNG }) }), 409);
+  ok(await A.post('/member/wallet/purchase', { packageId: premId, wallet: 'main', txnPassword: tpwd }), 409);
+  const info = await A.get('/member/payment-info'); ok(info);
+  assert.equal(info.body.canSubmit, false);
+  const lk = await A.get('/member/members/lookup?username=bob_b'); ok(lk);
+  assert.equal(lk.body.member.canUpgrade, true);
 });
 await check('activation wallet buys bundle for another member (P2P); no double activation', async () => {
   const D2 = new Client('D2');

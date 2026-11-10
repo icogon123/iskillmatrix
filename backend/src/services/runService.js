@@ -57,7 +57,11 @@ async function finalizeRun(run) {
  *  - A member qualifies with `qualifyingSales` (default 3) direct sales of the same weekly-eligible bundle
  *    (Standard/Premium/Pro) approved in the week. With "only active members receive income" on, they must
  *    also be active with a bundle; the company root account never takes a share.
- *  - Every eligible member gets the same share, rounded down to the paisa; the remainder stays with the company.
+ *  - The pool is split by each member's work, not equally: a qualified member gets
+ *      pool × (their direct sales in the week ÷ company sales in the week)  =  weekly% × their direct sales,
+ *    rounded down to the paisa. "Direct sales" = every approved bundle sale (any bundle, new IDs and upgrades) of
+ *    members they sponsor, on the same basis as the pool. The part of the pool not earned by qualified members
+ *    stays with the company, so a lone qualifier does not take the whole pool.
  */
 export async function weeklyPool(start, end) {
   const settings = await getSettings();
@@ -88,41 +92,65 @@ export async function weeklyPool(start, end) {
     if (!salesBySponsor.has(key)) salesBySponsor.set(key, []);
     salesBySponsor.get(key).push({ package: pkgById.get(String(g._id.package))?.name, count: g.count });
   }
+
+  // Each qualified sponsor's total direct sales in the week (all bundles), on the pool's basis: their slice of the pool.
+  const qualifiedIds = groups.map((g) => g._id.sponsor);
+  const volumes = qualifiedIds.length ? await Payment.aggregate([
+    { $match: inWeek },
+    { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'buyer', pipeline: [{ $project: { sponsor: 1 } }] } },
+    { $unwind: '$buyer' },
+    { $match: { 'buyer.sponsor': { $in: qualifiedIds } } },
+    { $group: { _id: '$buyer.sponsor', count: { $sum: 1 }, amount: { $sum: '$amount' }, net: { $sum: { $ifNull: ['$packageCost', '$amount'] } } } },
+  ]) : [];
+  const volumeBySponsor = new Map(volumes.map((v) => [String(v._id), {
+    count: v.count,
+    value: round2(poolBasis === 'net' ? v.net : v.amount),
+  }]));
   const users = await User.find({ _id: { $in: [...salesBySponsor.keys()] }, isRoot: { $ne: true } })
     .select('memberId fullName status package walletSuspended')
     .lean();
   const enforce = settings.income.requireActiveBeneficiary;
   const members = users
-    .map((u) => ({
-      _id: u._id,
-      memberId: u.memberId,
-      fullName: u.fullName,
-      status: u.status,
-      hasPackage: Boolean(u.package),
-      walletSuspended: Boolean(u.walletSuspended),
-      sales: salesBySponsor.get(String(u._id)),
-      eligible: !enforce || isEligible(u),
-    }))
-    .sort((a, b) => Number(b.eligible) - Number(a.eligible) || String(a.memberId).localeCompare(String(b.memberId)));
+    .map((u) => {
+      const volume = volumeBySponsor.get(String(u._id)) || { count: 0, value: 0 };
+      // percent% of their direct sales, in whole paise rounded down, so the shares never exceed the pool.
+      const share = Math.floor((Math.round(volume.value * 100) * percent) / 100 + 1e-9) / 100;
+      return {
+        _id: u._id,
+        memberId: u.memberId,
+        fullName: u.fullName,
+        status: u.status,
+        hasPackage: Boolean(u.package),
+        walletSuspended: Boolean(u.walletSuspended),
+        sales: salesBySponsor.get(String(u._id)),
+        directSalesCount: volume.count,
+        directSales: volume.value,
+        // Their part of the company's sales, i.e. of the pool, in %.
+        poolPercent: companyIncome ? round2((volume.value / companyIncome) * 100) : 0,
+        share,
+        eligible: !enforce || isEligible(u),
+      };
+    })
+    .sort((a, b) => Number(b.eligible) - Number(a.eligible) || b.share - a.share || String(a.memberId).localeCompare(String(b.memberId)));
 
-  const eligible = members.filter((m) => m.eligible).length;
-  // Integer paise so the shares never add up to more than the pool.
-  const share = eligible ? Math.floor(Math.round(amount * 100) / eligible) / 100 : 0;
+  const payable = members.filter((m) => m.eligible);
+  const distributed = round2(payable.reduce((t, m) => t + m.share, 0));
   return {
     percent,
     qualifyingSales,
     basis: poolBasis,
+    split: 'sales',
     salesCount: sales?.count || 0,
     companyIncome,
     amount,
-    eligible,
-    share,
-    distributed: round2(share * eligible),
+    eligible: payable.length,
+    distributed,
+    retained: round2(amount - distributed),
     members,
   };
 }
 
-/** Weekly Income: generates the week's pool and one equal pending share per eligible member. */
+/** Weekly Income: generates the week's pool and one pending share per eligible member, sized by their direct sales. */
 export async function generateWeekly(weekOf, adminId, { trigger = 'manual' } = {}) {
   const date = parseDayIST(weekOf);
   if (!date) throw new AppError('Invalid week date');
@@ -134,26 +162,24 @@ export async function generateWeekly(weekOf, adminId, { trigger = 'manual' } = {
   const pool = await weeklyPool(start, end);
   run.pool = {
     basis: pool.basis, salesCount: pool.salesCount, companyIncome: pool.companyIncome, percent: pool.percent,
-    amount: pool.amount, eligible: pool.eligible, share: pool.share,
+    amount: pool.amount, eligible: pool.eligible, split: pool.split, distributed: pool.distributed, retained: pool.retained,
   };
   const inr = (n) => `₹${n.toLocaleString('en-IN')}`;
-  if (pool.share > 0) {
-    for (const m of pool.members) {
-      if (!m.eligible) continue;
-      await createEntry({
-        user: m._id,
-        direction: 'credit',
-        category: 'weekly',
-        grossAmount: pool.share,
-        rate: pool.percent,
-        basisAmount: pool.companyIncome,
-        status: 'pending',
-        run: run._id,
-        period: periodKey,
-        idempotencyKey: `WEEKLY:${periodKey}:${m._id}`,
-        remarks: `Equal share of the ${pool.percent}% weekly pool ${inr(pool.amount)} (company sales ${inr(pool.companyIncome)}) among ${pool.eligible} qualified member${pool.eligible === 1 ? '' : 's'} · qualified with ${m.sales.map((x) => `${x.count} ${x.package}`).join(', ')} sales in week of ${periodKey}`,
-      });
-    }
+  for (const m of pool.members) {
+    if (!m.eligible || !(m.share > 0)) continue;
+    await createEntry({
+      user: m._id,
+      direction: 'credit',
+      category: 'weekly',
+      grossAmount: m.share,
+      rate: pool.percent,
+      basisAmount: m.directSales,
+      status: 'pending',
+      run: run._id,
+      period: periodKey,
+      idempotencyKey: `WEEKLY:${periodKey}:${m._id}`,
+      remarks: `${pool.percent}% of your direct sales ${inr(m.directSales)} (${m.directSalesCount} bundle${m.directSalesCount === 1 ? '' : 's'}) = your ${m.poolPercent}% part of the weekly pool ${inr(pool.amount)} (company sales ${inr(pool.companyIncome)}) · qualified with ${m.sales.map((x) => `${x.count} ${x.package}`).join(', ')} sales in week of ${periodKey}`,
+    });
   }
   return finalizeRun(run);
 }

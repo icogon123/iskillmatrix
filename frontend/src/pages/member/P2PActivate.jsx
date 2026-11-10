@@ -15,10 +15,10 @@ import { inr, dateTime } from '../../lib/format';
 const bundlesFor = (packages, m) => (m?.bundle ? packages.filter((p) => p.price > (m.bundlePrice || 0)) : packages);
 
 const activationProblem = (packages) => (m) => {
-  if (m.relation === 'self') return m.bundle ? 'You cannot upgrade your own bundle. A member in your upline or downline can upgrade it for you.' : 'To activate your own bundle, use Activate Bundle in the menu.';
+  if (m.relation === 'self') return m.bundle ? 'You cannot upgrade your own bundle. Any other member in the network can upgrade it for you.' : 'To activate your own bundle, use Activate Bundle in the menu.';
   if (m.status !== 'active') return 'This member’s account is not approved yet.';
   if (m.bundle) {
-    if (!m.canUpgrade) return `Already has the ${m.bundle} bundle. You can only upgrade members in your upline or downline.`;
+    if (!m.canUpgrade) return `Already has the ${m.bundle} bundle and cannot be upgraded.`;
     if (!bundlesFor(packages, m).length) return `Already on the highest bundle (${m.bundle}).`;
     return null;
   }
@@ -65,7 +65,7 @@ export default function P2PActivate() {
   return (
     <div>
       <PageHeader icon={UserPlus} title="P2P Activation"
-        subtitle="Activate a course bundle for another member, or upgrade a member in your upline or downline to a higher bundle, with your wallet balance. It is active at once." />
+        subtitle="Activate a course bundle for another member, or upgrade any member in the network to a higher bundle, with your wallet balance. It is active at once." />
 
       {data.walletSuspended && (
         <Notice tone="red" icon={Lock} title="Your wallet is suspended" className="mb-5">Wallet payments are on hold until the admin reactivates your wallet.</Notice>
@@ -106,8 +106,8 @@ export default function P2PActivate() {
               'Pick the bundle and the wallet that pays — your Activation Wallet or your Main Wallet.',
               'Confirm with your transaction password. The bundle is active instantly and income is shared with the upline as usual.',
               'The member must be approved. A member who has no bundle can be activated by anyone.',
-              'To upgrade, the member must be in your upline or downline (not another branch) and you can only move them to a higher bundle. The full price of the new bundle is charged, and it counts as a new ID activation — the upline earns every bonus in full.',
-              'You cannot upgrade your own bundle — ask a member in your upline or downline to upgrade it for you.',
+              'You can upgrade any member in the network — upline, downline or another branch, at any level — and you can only move them to a higher bundle. The full price of the new bundle is charged, and it counts as a new ID activation — the upline earns every bonus in full.',
+              'You cannot upgrade your own bundle — ask any other member in the network to upgrade it for you.',
             ].map((s, i) => (
               <li key={s} className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-500/25 text-xs font-bold text-brand-200">{i + 1}</span>{s}</li>
             ))}

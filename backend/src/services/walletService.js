@@ -61,7 +61,7 @@ export async function findMemberByUsername(username) {
   if (!u) return null;
   return User.findOne({ username: u, role: 'member' })
     .select('memberId username fullName status package ancestors isRoot avatar')
-    .populate('package', 'name')
+    .populate('package', 'name price')
     .lean();
 }
 
@@ -78,9 +78,12 @@ export async function lookupMember(viewer, username) {
     avatar: m.avatar,
     status: m.status,
     bundle: m.package?.name || null,
+    bundlePrice: m.package?.price ?? null,
     relation,
     canReceiveTransfer: approved && !m.isRoot && (relation === 'upline' || relation === 'downline'),
-    canActivate: approved,
+    canActivate: approved && relation !== 'self',
+    // Upgrades are P2P only: a member can move anyone else in the network (any branch, any level) up to a higher bundle.
+    canUpgrade: approved && Boolean(m.package) && !m.isRoot && relation !== 'self',
   };
 }
 
@@ -210,6 +213,9 @@ export async function transferFunds(sender, { target, username, amount, txnPassw
 /**
  * Buys a course bundle with wallet funds, for the payer or for another member found by username (P2P activation).
  * Approved at once: the bundle is activated and income is distributed exactly as for an admin-approved UPI payment.
+ * Upgrades are P2P only: a member may upgrade any other member in the network (upline, downline or another branch, at
+ * any level) to a higher bundle, paying the full bundle price.
+ * Members cannot upgrade their own bundle.
  */
 export async function purchaseBundle(payer, { username, packageId, wallet, txnPassword }, ip) {
   if (!WALLETS.includes(wallet)) throw new AppError('Choose the wallet to pay from');
@@ -227,13 +233,16 @@ export async function purchaseBundle(payer, { username, packageId, wallet, txnPa
   let chargePrice = pkg.price;
 
   if (target.package) {
+    if (forSelf) throw new AppError('Your bundle is already active. Self upgrades are not available — any other member in the network can upgrade your bundle for you.', 409);
+    if (target.isRoot) throw new AppError(`${who} already has an active bundle and cannot be upgraded.`, 409);
     currentPkg = await Package.findById(target.package).lean();
     if (!currentPkg) throw new AppError('Current bundle not found', 404);
     if (pkg.price <= currentPkg.price) {
-      throw new AppError(forSelf ? 'You can only upgrade to a higher-priced bundle' : `${who} already has an active bundle of this or higher tier`, 409);
+      throw new AppError(`${who} already has an active bundle of this or higher tier. Choose a higher bundle.`, 409);
     }
     isUpgrade = true;
-    chargePrice = round2(pkg.price - currentPkg.price);
+    // Upgrades charge the full price of the new bundle (no credit for the current one).
+    chargePrice = pkg.price;
   }
 
   await authorizeWalletDebit(payer._id, txnPassword);
@@ -289,7 +298,8 @@ export async function purchaseBundle(payer, { username, packageId, wallet, txnPa
         ? (isUpgrade ? `Upgrade to ${pkg.name} (from ${currentPkg.name})` : `${pkg.name} bundle activated for you`)
         : (isUpgrade ? `Upgrade to ${pkg.name} for ${target.fullName}` : `${pkg.name} bundle activated for ${target.fullName} (${target.memberId})`),
     });
-    const result = await distributePackageIncome(payment, buyer, pkg, currentPkg);
+    // A P2P upgrade is charged the full bundle price, so it earns the upline every bonus in full, like a new ID.
+    const result = await distributePackageIncome(payment, buyer, pkg, currentPkg, { fullIncome: true });
 
     await notify(buyer._id, {
       title: isUpgrade ? 'Bundle upgraded' : 'Bundle activated',

@@ -22,7 +22,7 @@ Plain-language steps for members and administrators. Amounts are the defaults; t
 2. Check the bundle and amount, scan the QR code (or use the UPI ID) and pay the **exact** amount.
 3. Enter the UTR / reference number from your payment app, the payment date, and upload a screenshot.
 4. Submit. The status shows *Pending* until the admin verifies it. Once approved your bundle is active, its courses unlock under **My Courses**,
-   and you can earn from your team. Bundle upgrades are not available, so choose carefully. The full income plan is under **Income Plan**.
+   and you can earn from your team. You cannot upgrade your own bundle, but any other member in the network (upline, downline or another branch) can upgrade it for you through **P2P Activation**, at the full price of the new bundle. The full income plan is under **Income Plan**.
 
 ### 3. Complete KYC
 **KYC** → enter Aadhaar and PAN numbers, upload both documents, add bank name, account holder,

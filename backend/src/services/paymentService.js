@@ -21,19 +21,13 @@ export async function submitPayment(user, { packageId, utr, paymentDate }, proof
   const pkg = await Package.findOne({ _id: packageId, status: 'active' }).lean();
   if (!pkg) throw new AppError('Please select a valid course bundle');
 
-  let currentPkg = null;
-  let isUpgrade = false;
-  let chargeAmount = pkg.price;
-
+  // Self upgrades are not allowed: a bundle can only be upgraded by another member through P2P activation.
   if (user.package) {
-    currentPkg = await Package.findById(user.package).lean();
-    if (!currentPkg) throw new AppError('Current bundle not found', 404);
-    if (pkg.price <= currentPkg.price) {
-      throw new AppError('You can only upgrade to a higher-priced bundle');
-    }
-    isUpgrade = true;
-    chargeAmount = round2(pkg.price - currentPkg.price);
+    throw new AppError('Your bundle is already active. Self upgrades are not available — any other member in the network can upgrade your bundle for you.', 409);
   }
+  const isUpgrade = false;
+  const currentPkg = null;
+  const chargeAmount = pkg.price;
 
   if (!proofFile) throw new AppError('Upload the payment screenshot / proof');
   const cleanUtr = String(utr || '').trim().toUpperCase();

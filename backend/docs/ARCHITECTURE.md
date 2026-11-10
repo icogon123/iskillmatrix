@@ -139,7 +139,7 @@ verifies, with exact rupee amounts:
 - badges from lifetime earnings;
 - withdrawal charges, KYC and transaction-password checks, insufficient balance, reject/cancel refunds,
   paid-with-reference, and concurrent requests;
-- weekly pool split equally among qualified members (inactive excluded, paisa rounding), automatic processing,
+- weekly pool split by sales among qualified members (weekly% of each one's direct sales) (inactive excluded, paisa rounding), automatic processing,
   duplicate and unfinished-week protection, cancel and regenerate;
 - wallet suspension blocking withdrawals and payouts;
 - two wallets: income lands in Main; transfers to own / upline / downline Activation Wallet (other branches and the root

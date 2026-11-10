@@ -21,7 +21,9 @@ Active member ─► KYC (Aadhaar + PAN + bank) ─► submitted ─► under re
                      └► rejected: member can submit a new payment
 ```
 
-- Package upgrades are **not** supported: one approved package per member.
+- Self upgrades are **not** supported. Upgrades are P2P only: any member can upgrade any other member anywhere in
+  the tree (upline, downline or another branch, any level) to a higher package, charged the full package price and
+  paying the upline every bonus in full, like a new ID.
 - Admin can later set a member to `inactive` or `suspended` (blocks login and new income) and back to `active`.
 
 ## 2. Packages and the price split
@@ -82,7 +84,7 @@ Income does **not** roll up to the next person.
 - Admin → Income Processing can credit due entries now, or force all pending entries.
 - Turn automatic crediting off in Settings → Income rules.
 
-## 5. Weekly income (company pool, shared equally)
+## 5. Weekly income (company pool, split by sales)
 
 1. Week = Monday 00:00 → Sunday 23:59:59 IST.
 2. **Pool** = weekly% (5) × the company's approved bundle sales in the week — all bundles, by amount
@@ -90,11 +92,14 @@ Income does **not** roll up to the next person.
 3. A member **qualifies** with `qualifyingSales` (3) **direct** sales of the **same weekly-eligible bundle**
    (Standard, Premium, Pro) approved in the week. With *Only active members receive income* on, they must
    also be active with a bundle. The company root account never takes a share.
-4. **Share** = pool ÷ number of qualified members, the same for everyone, rounded **down** to the paisa
-   (the remainder stays with the company). More sales or more bundles do not give a bigger share.
-5. No qualified member → no entries; the pool stays with the company.
+4. **Share** = pool × (member's direct sales ÷ company sales) = weekly% × the member's **direct sales** in the
+   week, rounded **down** to the paisa. Direct sales = every approved bundle sale (any bundle, new IDs and
+   P2P upgrades) of members they sponsor, counted on the same basis as the pool. More sales → bigger share.
+5. The part of the pool not earned by qualified members stays with the company — a lone qualifier gets only
+   their own part, never the whole pool. No qualified member → no entries; the whole pool stays with the company.
 
-Example: company sales ₹1,000 → pool 5% = ₹50 → 10 qualified members → ₹5 each.
+Example: company sales ₹1,00,000 → pool 5% = ₹5,000. A qualified with ₹20,000 of direct sales → ₹1,000
+(20% of the pool); B qualified with ₹10,000 → ₹500; the other ₹3,500 stays with the company.
 
 **Automatic processing** (`weekly.autoProcess`, on by default): `jobs/scheduler.js` generates the run at
 **Monday 12:05 AM IST** right after the week closes and, with `weekly.autoApprove` (on by default),
@@ -103,7 +108,7 @@ A week that already has a run of any status — including one the admin cancelle
 automatically. On server start it catches up on the week that just closed (within 2 days).
 
 **Live view**: Admin → Income Processing → *Weekly bonus pool* shows this week's (or last week's)
-company sales, pool, the members who qualify so far and the share each would get.
+company sales, pool, the members who qualify so far, their direct sales and the share each would get.
 
 Manual: Income Processing → Weekly income → pick any day of a finished week → **Generate** (entries are
 `pending`) → review → **Approve & credit** (or **Cancel run** and generate again). A week can only be

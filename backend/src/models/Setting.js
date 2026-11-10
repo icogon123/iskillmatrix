@@ -28,7 +28,7 @@ const settingSchema = new mongoose.Schema(
       systemCostPercent: { type: Number, default: 12 },
     },
     weekly: {
-      // Pool = percent × the company's bundle sales in the week, shared equally by the qualified members.
+      // Pool = percent × the company's bundle sales in the week, split by sales: each qualified member gets percent × their own direct sales.
       percent: { type: Number, default: 5 },
       // Same-bundle direct sales (weekly-eligible bundles) a member needs in the week to qualify.
       qualifyingSales: { type: Number, default: 3 },

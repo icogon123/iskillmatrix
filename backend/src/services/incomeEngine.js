@@ -13,11 +13,17 @@ const isEligible = (u) => Boolean(u && u.status === 'active' && u.package);
  *  - Non-Working Bonus   → direct sponsor (pending, credited at the 12:00 AM run)
  *  - Passive Income      → level 1 = sponsor's sponsor, level 2 = next upline, … (credited immediately)
  * Every entry carries an idempotency key derived from the payment, so re-running is a no-op.
+ *
+ * Upgrades: with `fullIncome` (P2P upgrades, which charge the full bundle price) the upgrade counts exactly like a
+ * new ID activation and every bonus is paid in full. Without it (legacy upgrades that charged only the price
+ * difference) only the difference between the new and old bundle's income is paid.
  */
-export async function distributePackageIncome(payment, buyer, pkg, oldPkg = null) {
+export async function distributePackageIncome(payment, buyer, pkg, oldPkg = null, { fullIncome = false } = {}) {
   if (!oldPkg && payment.oldPackage) {
     oldPkg = await Package.findById(payment.oldPackage).lean();
   }
+  // The bundle whose income is deducted from this payout: none when the upgrade is paid in full.
+  const credit = fullIncome ? null : oldPkg;
   const settings = await getSettings();
   const upline = buyer.ancestors || [];
   if (!upline.length) return { created: 0 };
@@ -36,7 +42,7 @@ export async function distributePackageIncome(payment, buyer, pkg, oldPkg = null
   const sponsorId = uplineIds[0];
   const sponsor = byId.get(String(sponsorId));
 
-  const activePayout = Math.max(0, (pkg.activeIncome || 0) - (oldPkg?.activeIncome || 0));
+  const activePayout = Math.max(0, (pkg.activeIncome || 0) - (credit?.activeIncome || 0));
   if (activePayout > 0) {
     const status = statusFor(sponsor, 'completed');
     const e = await createEntry({
@@ -52,7 +58,7 @@ export async function distributePackageIncome(payment, buyer, pkg, oldPkg = null
     if (e) created += 1;
   }
 
-  const nonWorkingPayout = Math.max(0, (pkg.nonWorkingBonus || 0) - (oldPkg?.nonWorkingBonus || 0));
+  const nonWorkingPayout = Math.max(0, (pkg.nonWorkingBonus || 0) - (credit?.nonWorkingBonus || 0));
   if (nonWorkingPayout > 0) {
     const status = statusFor(sponsor, 'pending');
     const e = await createEntry({
@@ -70,7 +76,7 @@ export async function distributePackageIncome(payment, buyer, pkg, oldPkg = null
   }
 
   for (let i = 0; i < (pkg.passiveLevels || []).length; i += 1) {
-    const amount = Math.max(0, (Number(pkg.passiveLevels[i]) || 0) - (Number(oldPkg?.passiveLevels?.[i]) || 0));
+    const amount = Math.max(0, (Number(pkg.passiveLevels[i]) || 0) - (Number(credit?.passiveLevels?.[i]) || 0));
     const beneficiaryId = uplineIds[i + 1];
     if (!beneficiaryId) break;
     if (amount <= 0) continue;

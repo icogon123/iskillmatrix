@@ -17,7 +17,7 @@ async function runNonWorking(trigger) {
 async function runWeekly(trigger, opts) {
   const run = await autoProcessWeekly(opts);
   if (!run) return;
-  console.log(`[jobs] weekly pool ${run.periodKey}: ₹${run.pool?.amount} → ${run.itemsCount} × ₹${run.pool?.share} (${run.status}, ${trigger})`);
+  console.log(`[jobs] weekly pool ${run.periodKey}: ₹${run.pool?.amount} → ₹${run.pool?.distributed} to ${run.itemsCount} member(s), ₹${run.pool?.retained} retained (${run.status}, ${trigger})`);
   await audit(null, `income.weekly_${run.status === 'approved' ? 'approved' : 'generated'}`, {
     entityType: 'IncomeRun',
     entityId: run._id,

@@ -152,26 +152,17 @@ export async function paymentInfo(req, res) {
   const activePkg = req.user.package ? packages.find((p) => String(p._id) === String(req.user.package)) : null;
   const hasPending = payments.some((p) => p.status === 'pending');
 
-  const packagesOut = packages.map((p) => {
-    const isCurrent = Boolean(activePkg && String(p._id) === String(activePkg._id));
-    const isHigher = Boolean(activePkg && p.price > activePkg.price);
-    const isLower = Boolean(activePkg && p.price < activePkg.price);
-    const upgradePrice = isHigher ? round2(p.price - activePkg.price) : 0;
-    const priceToPay = activePkg ? (isHigher ? upgradePrice : 0) : p.price;
-    return {
-      _id: p._id,
-      key: p.key,
-      name: p.name,
-      price: p.price,
-      isCurrent,
-      canUpgrade: isHigher,
-      isLower,
-      upgradePrice,
-      courses: p.courses || [],
-      benefits: p.benefits || [],
-      ...priceBreakdown(priceToPay > 0 ? priceToPay : p.price, settings),
-    };
-  });
+  // Self upgrades are not offered; upgrades happen only through P2P activation by another member (anywhere in the tree), at full price.
+  const packagesOut = packages.map((p) => ({
+    _id: p._id,
+    key: p.key,
+    name: p.name,
+    price: p.price,
+    isCurrent: Boolean(activePkg && String(p._id) === String(activePkg._id)),
+    courses: p.courses || [],
+    benefits: p.benefits || [],
+    ...priceBreakdown(p.price, settings),
+  }));
 
   res.json({
     payment: {
@@ -184,7 +175,7 @@ export async function paymentInfo(req, res) {
     selectedPackage: req.user.selectedPackage,
     activePackage: activePkg || null,
     payments,
-    canSubmit: (!activePkg || packages.some((p) => p.price > (activePkg.price || 0))) && !hasPending,
+    canSubmit: !activePkg && !hasPending,
     wallets,
     walletSuspended: Boolean(req.user.walletSuspended),
   });
@@ -412,7 +403,7 @@ export async function listActivations(req, res) {
   const paging = getPaging(req.query);
   const q = { paidBy: req.user._id, method: 'wallet' };
   const [items, total] = await Promise.all([
-    Payment.find(q).populate('user', 'memberId fullName username').populate('package', 'name').sort({ createdAt: -1 }).skip(paging.skip).limit(paging.limit).lean(),
+    Payment.find(q).populate('user', 'memberId fullName username').populate('package', 'name').populate('oldPackage', 'name').sort({ createdAt: -1 }).skip(paging.skip).limit(paging.limit).lean(),
     Payment.countDocuments(q),
   ]);
   res.json(paged(items, total, paging));

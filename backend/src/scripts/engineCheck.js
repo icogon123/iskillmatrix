@@ -16,10 +16,10 @@ import Otp from '../models/Otp.js';
 import { ensureBaseData } from './baseData.js';
 import env from '../config/env.js';
 import { nextMemberId } from '../utils/ids.js';
-import { approvePayment, rejectPayment } from '../services/paymentService.js';
+import { approvePayment, rejectPayment, submitPayment } from '../services/paymentService.js';
 import { distributePackageIncome, processNonWorking } from '../services/incomeEngine.js';
 import { getBalance, getBalances, createEntry, walletStatement } from '../services/ledgerService.js';
-import { transferFunds, purchaseBundle } from '../services/walletService.js';
+import { transferFunds, purchaseBundle, lookupMember, relationTo } from '../services/walletService.js';
 import { approveDeposit, rejectDeposit, utrInUse } from '../services/depositService.js';
 import { requestWithdrawal as requestWithdrawalRaw, sendWithdrawalOtp, adminUpdateWithdrawal, cancelWithdrawal, setWalletSuspension } from '../services/withdrawalService.js';
 import { generateWeekly, generateMonthlyBonus, generateRoyalty, approveRun, cancelRun, weeklyPool, autoProcessWeekly } from '../services/runService.js';
@@ -232,10 +232,10 @@ await check('Concurrent withdrawals cannot overdraw the wallet', async () => {
   assert.ok((await getBalance(A6._id)) >= 0);
 });
 
-// Weekly pool: company sales last week × 5%, shared equally by members with ≥ 3 same-bundle direct sales.
-//   X: 7 Standard (₹35,000) → qualifies   Z: 3 Premium (₹33,000) → qualifies
+// Weekly pool: company sales last week × 5%, split by sales among members with ≥ 3 same-bundle direct sales.
+//   X: 7 Standard (₹35,000) → qualifies → 5% = ₹1,750   Z: 3 Premium (₹33,000) → qualifies → ₹1,650
 //   Q: 3 Standard (₹15,000) but inactive → excluded   T: 2 Pro (₹37,200) → not enough sales
-//   Company sales ₹1,20,200 → pool ₹6,010 → 2 eligible → ₹3,005 each
+//   Company sales ₹1,20,200 → pool ₹6,010 → ₹3,400 paid, ₹2,610 stays with the company
 const lastWeek = addDays(startOfWeekIST(), -7);
 const X = await addMember('X', root);
 await buy(X, 'standard');
@@ -256,39 +256,53 @@ await buy(T, 'standard');
 await directSales(T, 'pro', 2, 'S');
 await Payment.updateMany({ _id: { $in: wkPayments } }, { verifiedAt: addDays(lastWeek, 2) });
 
-await check('Weekly pool: 5% of company sales ₹1,20,200 = ₹6,010 shared equally by 2 qualified members → ₹3,005 each', async () => {
+await check('Weekly pool: ₹6,010 (5% of ₹1,20,200) split by sales → X ₹1,750, Z ₹1,650, ₹2,610 stays with the company', async () => {
   const preview = await weeklyPool(lastWeek, addDays(lastWeek, 7));
   assert.equal(preview.companyIncome, 120200);
   assert.equal(preview.amount, 6010);
   assert.equal(preview.eligible, 2);
-  assert.equal(preview.share, 3005);
-  assert.deepEqual(preview.members.map((m) => [m.fullName, m.eligible]), [['X', true], ['Z', true], ['Q', false]]);
+  assert.deepEqual(preview.members.map((m) => [m.fullName, m.eligible, m.directSales, m.share]),
+    [['X', true, 35000, 1750], ['Z', true, 33000, 1650], ['Q', false, 15000, 750]]);
+  assert.equal(preview.distributed, 3400);
+  assert.equal(preview.retained, 2610);
 
   const run = await generateWeekly(dayKeyIST(lastWeek), admin._id);
   assert.equal(run.pool.amount, 6010);
+  assert.equal(run.pool.distributed, 3400);
   assert.equal(run.itemsCount, 2);
-  assert.equal(run.totalAmount, 6010);
+  assert.equal(run.totalAmount, 3400);
   const entries = await Ledger.find({ run: run._id }).lean();
-  assert.deepEqual(entries.map((e) => String(e.user)).sort(), [String(X._id), String(Z._id)].sort());
-  assert.ok(entries.every((e) => e.netAmount === 3005 && e.status === 'pending'));
+  const byUser = Object.fromEntries(entries.map((e) => [String(e.user), e]));
+  assert.equal(byUser[String(X._id)].netAmount, 1750);
+  assert.equal(byUser[String(X._id)].basisAmount, 35000);
+  assert.equal(byUser[String(Z._id)].netAmount, 1650);
+  assert.ok(entries.every((e) => e.status === 'pending'));
   await assert.rejects(() => generateWeekly(dayKeyIST(lastWeek), admin._id), /already been generated/);
   await cancelRun(run._id, admin._id);
   assert.equal(await autoProcessWeekly(), null, 'auto-processing must not re-create a week the admin cancelled');
   const run2 = await generateWeekly(dayKeyIST(lastWeek), admin._id);
   await approveRun(run2._id, admin._id);
-  assert.equal(await credited(X, 'weekly'), 3005);
-  assert.equal(await credited(Z, 'weekly'), 3005);
+  assert.equal(await credited(X, 'weekly'), 1750);
+  assert.equal(await credited(Z, 'weekly'), 1650);
   assert.equal(await credited(Q, 'weekly'), 0);
 });
 
-await check('Weekly pool shares round down to the paisa and never exceed the pool', async () => {
-  // Same week, 3 eligible: ₹6,010 / 3 = ₹2,003.33 each, ₹0.01 stays with the company.
+await check('Weekly pool: a lone or extra qualifier only gets their own part; shares never exceed the pool', async () => {
+  // Q made active too: 3 eligible, ₹1,750 + ₹1,650 + ₹750 = ₹4,150; T's ₹37,200 of Pro sales (not qualified) stays with the company.
   await User.updateOne({ _id: Q._id }, { status: 'active' });
   const p = await weeklyPool(lastWeek, addDays(lastWeek, 7));
-  await User.updateOne({ _id: Q._id }, { status: 'inactive' });
   assert.equal(p.eligible, 3);
-  assert.equal(p.share, 2003.33);
-  assert.equal(p.distributed, 6009.99);
+  assert.equal(p.distributed, 4150);
+  assert.equal(p.retained, 1860);
+  // Only Z active-and-qualified: Z still gets only ₹1,650 (27.45% of the pool), not the whole ₹6,010.
+  await User.updateMany({ _id: { $in: [Q._id, X._id] } }, { status: 'inactive' });
+  const solo = await weeklyPool(lastWeek, addDays(lastWeek, 7));
+  await User.updateOne({ _id: X._id }, { status: 'active' });
+  await User.updateOne({ _id: Q._id }, { status: 'inactive' });
+  assert.equal(solo.eligible, 1);
+  assert.equal(solo.distributed, 1650);
+  assert.equal(solo.members.find((m) => m.fullName === 'Z').poolPercent, 27.45);
+  assert.ok(solo.distributed <= solo.amount);
 });
 
 await check('Weekly auto-processing generates and credits a closed week once (no qualifiers → empty run)', async () => {
@@ -429,23 +443,63 @@ await check('P2P activation from the Activation Wallet; active members, pending 
   await assert.rejects(() => purchaseBundle(P, { username: pending.username, packageId: pkgs.starter._id, wallet: 'main', txnPassword: TXN }), /not approved/);
 });
 
+let S1;
 await check('A member activates their own bundle from their Activation Wallet', async () => {
-  const S1 = await addMember('S1', P);
+  S1 = await addMember('S1', P);
   await transferFunds(P, { target: 'member', username: S1.username, amount: 1300, txnPassword: TXN });
   const { payment } = await purchaseBundle(S1, { packageId: pkgs.starter._id, wallet: 'activation', txnPassword: TXN });
   assert.equal(String(payment.user), String(S1._id));
   assert.equal(String((await User.findById(S1._id)).package), String(pkgs.starter._id));
   assert.deepEqual(await getBalances(S1._id), { main: 0, activation: 0 });
+});
+
+await check('Upgrades are P2P only: no self upgrades, anyone in the tree (any branch, any level), higher bundle only, full price and full income', async () => {
   const s1 = await User.findById(S1._id);
-  await assert.rejects(() => purchaseBundle(s1, { packageId: pkgs.starter._id, wallet: 'main', txnPassword: TXN }), /higher-priced bundle/);
-  // Upgrading to Basic costs ₹1,700 (3000 - 1300); without balance it fails
-  await assert.rejects(() => purchaseBundle(s1, { packageId: pkgs.basic._id, wallet: 'main', txnPassword: TXN }), /Insufficient Main Wallet balance/);
-  // Fund S1 with ₹1,700 in Activation Wallet and upgrade
-  await transferFunds(P, { target: 'member', username: S1.username, amount: 1700, txnPassword: TXN });
-  const up = await purchaseBundle(s1, { packageId: pkgs.basic._id, wallet: 'activation', txnPassword: TXN });
-  assert.equal(String((await User.findById(S1._id)).package), String(pkgs.basic._id));
+  // A member cannot upgrade their own bundle, by wallet or by UPI.
+  await transferFunds(P, { target: 'member', username: s1.username, amount: 3000, txnPassword: TXN });
+  await assert.rejects(() => purchaseBundle(s1, { packageId: pkgs.basic._id, wallet: 'activation', txnPassword: TXN }), /Self upgrades are not available/);
+  await assert.rejects(() => submitPayment(s1, { packageId: pkgs.basic._id, utr: 'UTRSELFUP1' }, null), /Self upgrades are not available/);
+  // R is on another branch of the tree; the lookup still offers the upgrade.
+  assert.equal((await lookupMember(R, s1.username)).canUpgrade, true);
+  // Same or lower bundle is refused.
+  await assert.rejects(() => purchaseBundle(P, { username: s1.username, packageId: pkgs.starter._id, wallet: 'main', txnPassword: TXN }), /this or higher tier/);
+
+  // P (S1's sponsor) upgrades S1 Starter → Basic: charged the full ₹3,000, not the ₹1,700 difference.
+  const before = await getBalances(P._id);
+  const up = await purchaseBundle(P, { username: s1.username, packageId: pkgs.basic._id, wallet: 'main', txnPassword: TXN });
   assert.equal(up.payment.isUpgrade, true);
-  assert.equal(up.payment.amount, 1700);
+  assert.equal(up.payment.amount, pkgs.basic.price);
+  assert.equal(String(up.payment.oldPackage), String(pkgs.starter._id));
+  assert.equal(String((await User.findById(s1._id)).package), String(pkgs.basic._id));
+  assert.equal((await Ledger.findOne({ payment: up.payment._id, category: 'bundle_purchase' })).netAmount, pkgs.basic.price);
+  // The upgrade counts like a new ID: the sponsor earns Basic's full active income and non-working bonus.
+  const active = await Ledger.findOne({ payment: up.payment._id, category: 'active' });
+  assert.equal(active.grossAmount, pkgs.basic.activeIncome);
+  assert.equal(String(active.user), String(P._id));
+  if (pkgs.basic.nonWorkingBonus) assert.equal((await Ledger.findOne({ payment: up.payment._id, category: 'non_working' })).grossAmount, pkgs.basic.nonWorkingBonus);
+  assert.equal((await getBalances(P._id)).main, before.main - pkgs.basic.price + active.netAmount);
+
+  // Upstream works too: DN (in UP's downline) upgrades their upline UP Starter → Standard at the full ₹5,000.
+  const UP = await addMember('UP', P);
+  await purchaseBundle(P, { username: UP.username, packageId: pkgs.starter._id, wallet: 'main', txnPassword: TXN });
+  const DN = await addMember('DN', await User.findById(UP._id));
+  await purchaseBundle(P, { username: DN.username, packageId: pkgs.starter._id, wallet: 'main', txnPassword: TXN });
+  await transferFunds(P, { target: 'member', username: DN.username, amount: pkgs.standard.price, txnPassword: TXN });
+  const dn = await User.findById(DN._id);
+  assert.equal((await lookupMember(dn, UP.username)).canUpgrade, true);
+  assert.equal((await lookupMember(R, UP.username)).canUpgrade, true); // another branch can upgrade too
+  const upstream = await purchaseBundle(dn, { username: UP.username, packageId: pkgs.standard._id, wallet: 'activation', txnPassword: TXN });
+  assert.equal(upstream.payment.isUpgrade, true);
+  assert.equal(upstream.payment.amount, pkgs.standard.price);
+  assert.equal(String((await User.findById(UP._id)).package), String(pkgs.standard._id));
+  assert.equal((await Ledger.findOne({ payment: upstream.payment._id, category: 'active' })).grossAmount, pkgs.standard.activeIncome);
+  // Cross-branch works too: R (on another branch, not in UP's upline or downline) upgrades UP Standard → Pro.
+  assert.equal(relationTo(R, await User.findById(UP._id)), null);
+  await createEntry({ user: R._id, direction: 'credit', category: 'adjustment_credit', grossAmount: pkgs.pro.price, idempotencyKey: 'ADJ:CROSSUPGRADE:R', remarks: 'test' });
+  const cross = await purchaseBundle(await User.findById(R._id), { username: UP.username, packageId: pkgs.pro._id, wallet: 'main', txnPassword: TXN });
+  assert.equal(cross.payment.isUpgrade, true);
+  assert.equal(cross.payment.amount, pkgs.pro.price);
+  assert.equal(String((await User.findById(UP._id)).package), String(pkgs.pro._id));
 });
 
 await check('Deposits credit the Activation Wallet once; rejection frees the UTR; UTRs are shared with bundle payments', async () => {

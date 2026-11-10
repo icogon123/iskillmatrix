@@ -174,7 +174,7 @@ The statement's "pre" and "after" balances are worked out from the same sums, so
 | `itemsCount`, `totalAmount` | payable entries |
 | `generatedBy`, `approvedBy`, `approvedAt`, `cancelledBy`, `cancelledAt`, `settingsVersion` | `generatedBy`/`approvedBy` are empty for automatic runs |
 | `trigger` | `manual` \| `auto` (scheduler) |
-| `pool { basis, salesCount, companyIncome, percent, amount, eligible, share }` | weekly runs: the company pool and the equal share |
+| `pool { basis, salesCount, companyIncome, percent, amount, eligible, split, distributed, retained, share }` | weekly runs: the company pool, what was paid by sales and what the company kept (`share` = the equal share of older runs) |
 | `activeKey` (unique, sparse) | `type:periodKey` while not cancelled → one live run per period |
 
 ## settings
