@@ -115,14 +115,14 @@ export default function Dashboard() {
                   : 'Credited every Monday'}
             </p>
           </Link>
-          <Card className="card-pad">
+          {/* <Card className="card-pad">
             <p className="text-xs font-semibold text-muted">Pending Withdrawal</p>
             <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.wallet.pendingWithdrawal} /></p>
           </Card>
           <Card className="card-pad">
             <p className="text-xs font-semibold text-muted">Total Withdrawn</p>
             <p className="mt-1 text-lg font-bold sm:text-xl"><Money value={d.wallet.totalWithdrawn} /></p>
-          </Card>
+          </Card> */}
         </div>
       </div>
 
